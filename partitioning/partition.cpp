@@ -63,7 +63,7 @@ class Partitioner {
   Histogram hist;
 
   // 2^n sized histogram
-  Partitioner() : hist{2 << USE_BITS} {}
+  Partitioner() : hist{1 << USE_BITS} {}
 
   /*
    * Hash Function for partitioning
