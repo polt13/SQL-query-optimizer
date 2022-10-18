@@ -1,6 +1,6 @@
 #include <stdint.h>
 
-//#define n // Least Significant Bits (LSB)
+//#define n 3// Least Significant Bits (LSB)
 #define N 1
 #define M 1
 
@@ -23,9 +23,16 @@ class bucket
 class hashTable
 {
     private:
-    bucket *buckets[M];
+    bucket *buckets;
+    uint32_t num_buckets;
 
     public:
+    hashTable(uint32_t num_buckets)
+    {
+        this->num_buckets = num_buckets;
+        this->buckets = new bucket[this->num_buckets];
+    }
+    ~hashTable() { delete buckets; }
 };
 
 /*
