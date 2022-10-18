@@ -4,6 +4,7 @@
 
 class LinkedList {
   uint64_t size;
+  Node* start;
 
   struct Node {
     uint32_t elem;
@@ -12,10 +13,8 @@ class LinkedList {
     Node(uint32_t elem) { this->elem = elem; }
   }
 
-  Node* start;
-
- public:
-  void insert(uint32_t element) {
+  public : void
+           insert(uint32_t element) {
     Node** traverse = &start;
     while (*traverse) traverse = &((*traverse)->next);
     *traverse = new Node(element);
@@ -48,21 +47,23 @@ class Histogram {
  public:
   Histogram(uint64_t size) {
     // create histogram with 2^n entries -- zero initialize all
-    histogram = new LinkedList[size];
+    // each row  is basically a partition
+    h = new LinkedList[size];
     this->size = size;
   }
 
   void insert(uint32_t index, uint32_t val) { h[index].insert(val) }
-}
 
-~Histogram() {
-  delete histogram;
-}
+  ~Histogram() {
+    // cleanup the list later
+  }
+};
 
 class Partitioner {
   Histogram hist;
 
-  Partitioner(uint32_t size) : hist{size} {}
+  // 2^n sized histogram
+  Partitioner() : hist{2 << USE_BITS} {}
 
   /*
    * Hash Function for partitioning
@@ -81,8 +82,6 @@ class Partitioner {
     uint32_t r_entries = r.getAmount();
 
     relation temp(r_entries);
-
-    uint64_t hist_entries = 2 << USE_BITS;
 
     // partition based on payload
     for (int t = 0; t < r_entries; t++) {
