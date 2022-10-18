@@ -24,11 +24,11 @@ class LinkedList {
   void find(uint32_t element) {
     Node* traverse = start;
     while (traverse) {
-      traverse = traverse->next;
       if (traverse->elem == element) {
         std::cout << "found\n";
         break;
       }
+      traverse = traverse->next;
     }
   }
 
