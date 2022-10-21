@@ -71,7 +71,7 @@ class Partitioner {
     }
   }
 
-  void partition2(relation r) {
+  void partition2() {
     bool partitionsFit = true;
 
     for (uint64_t i = 0; i < hist->getPartitionCount(); i++) {
@@ -110,7 +110,7 @@ class Partitioner {
 
   void partition(relation r) {
     partition1(r);
-    partition2(r);
+    partition2();
   }
   ~Partitioner() { delete hist; }
 };
