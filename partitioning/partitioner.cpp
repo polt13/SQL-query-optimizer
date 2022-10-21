@@ -1,4 +1,5 @@
-#include "../include/interface.h"
+#include "../include/dataForm.h"
+#include "../include/partition.h"
 #include <cstdio>
 #define USE_BITS 2       // first partitioning
 #define USE_BITS_NEXT 4  // 2nd partitioning
@@ -6,63 +7,19 @@
 
 class Histogram;
 
-// basically a linked list containing all records with equal n final bits
-class Partition {
-  struct Node {
-    tuple t;
-    Node* next;
-
-    Node(tuple t, Node* next = nullptr) {
-      this->t = t;
-      this->next = next;
-    }
-  };
-
-  // length of the partition : number of tuples in it
-  uint64_t len;
-
-  Node* start;
-  Node* end;
-
- public:
-  // append new rowID at the end of the list
-  void append(tuple t) {
-    if (len == 0)
-      start = end = new Node(t);
-    else {
-      // always maintain a pointer that points to the last node, so we can
-      // immediately insert
-      end->next = new Node(t);
-      end = end->next;
-    }
-    len++;
-  }
-
-  void find(int64_t key) const {
-    Node* traverse = start;
-    while (traverse) {
-      if (traverse->t.getKey() == key) {
-        std::printf("Found item with key %ld", key);
-        break;
-      }
-      traverse = traverse->next;
-    }
-  }
-
-  // length of a partition, in terms of number of bytes
-  uint64_t getLen() const { return len; }
-
-  // size of a partition in BYTES
-  uint64_t getSize() const {
-    // linked list entries * size of node
-    return sizeof(Node) * len;
-  }
-
-  Partition() {
-    start = end = nullptr;
-    len = 0;
-  }
-};
+/*
+ * Hash Function for partitioning
+ * Get the n Least Significant Bits (LSB)
+ *
+ */
+uint64_t hash1(uint64_t key, uint64_t n) {
+  uint64_t num = 1;
+  num <<= n;
+  // e.g. n = 3
+  // 1000 - 1 = 111
+  // val = key & (2^n - 1); // bitwise AND
+  return key & (num - 1);
+}
 
 class Histogram {
   // histogram = array of partitions
@@ -81,6 +38,7 @@ class Histogram {
     return h[partitionNumber];
   }
 
+  // partition size in BYTES
   uint64_t getPartitionSize(int64_t partitionIndex) const {
     return h[partitionIndex].getSize();
   }
@@ -99,23 +57,6 @@ class Partitioner {
   Histogram* hist;
   uint64_t r_entries;
 
-  // 2^n sized histogram
-  Partitioner() : hist{new Histogram(1 << USE_BITS)} {}
-
-  /*
-   * Hash Function for partitioning
-   * Get the n Least Significant Bits (LSB)
-   *
-   */
-  uint64_t hash1(uint64_t key, uint64_t n) {
-    uint64_t num = 1;
-    num <<= n;
-    // e.g. n = 3
-    // 1000 - 1 = 111
-    // val = key & (2^n - 1); // bitwise AND
-    return key & (num - 1);
-  }
-
   void partition1(relation r) {
     r_entries = r.getAmount();
 
@@ -123,8 +64,10 @@ class Partitioner {
     for (int64_t t = 0; t < r_entries; t++) {
       // index indicates which partition the tuple goes to
       // t is the value = row_id
-      int64_t index = hash1(r.getTuple(t).getPayload(), USE_BITS);
-      hist->insert(index, r.getTuple(t));
+      tuple record = r.getTuple(t);
+      // partition based on the payload
+      int64_t index = hash1(record.getPayload(), USE_BITS);
+      hist->insert(index, record);
     }
   }
 
@@ -146,20 +89,28 @@ class Partitioner {
       // for every partition, for every record..
       for (int64_t p = 0; p < old->getPartitionCount(); p++) {
         const Partition& partition = old->getPartition(p);
+        // repartition based on new BIT SET and insert to hist
         int64_t partitionRecords = partition.getLen();
-        // partition the partitions and insert the entries in new histogram
-        for (int64_t t = 0; t < partitionRecords; t++) {
-          // TRAVERSE RECORDS IN PARTITION AND INSERT THEM BACK
-          int64_t index = hash1(traverse->t.getPayload(), USE_BITS_NEXT);
-          hist->insert(index, traverse->t);
+        Node* traverse = partition.getPartitionList();
+        for (int64_t r = 0; r < partitionRecords; r++) {
+          tuple record = traverse->t;
+          int64_t new_index = hash1(record.getPayload(), USE_BITS_NEXT);
+          hist->insert(new_index, record);
           traverse = traverse->next;
         }
       }
-
       // delete histogram from pass 1
       delete old;
     }
   }
 
+ public:
+  // 2^n sized histogram
+  Partitioner() : hist{new Histogram(1 << USE_BITS)} {}
+
+  void partition(relation r) {
+    partition1(r);
+    partition2(r);
+  }
   ~Partitioner() { delete hist; }
 };
