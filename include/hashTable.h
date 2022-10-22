@@ -1,6 +1,9 @@
 #ifndef HT_H
 #define HT_H
 #include "dataForm.h"
+#include "partition.h"
+
+#define H 4 // whatever
 
 class bitmap
 {
@@ -15,10 +18,15 @@ class bitmap
 class bucket
 {
     private:
-    uint32_t val;
+    uint64_t val;
     bitmap *Bitmap;
 
     public:
+    // Getters
+    uint64_t getVal() const;
+    // Setters
+    void setVal(uint64_t);
+    
     bucket() { this->Bitmap = new bitmap(); }
     ~bucket() { delete Bitmap; }
 };
@@ -27,16 +35,20 @@ class hashTable
 {
     private:
     bucket *buckets;
-    uint32_t num_buckets;
+    uint64_t num_buckets;
 
     public:
-    hashTable(uint32_t num_buckets)
-    {
-        this->num_buckets = num_buckets;
-        this->buckets = new bucket[this->num_buckets];
-    }
-    ~hashTable() { delete buckets; }
+    // Getters
+    uint64_t getBucketCount() const;
 
-    void insert(Histogram, uint32_t);
+    uint64_t hash2(uint64_t);
+
+    void insert(const tuple &);
+
+    void fillHT(const Partition &);
+
+    hashTable(uint64_t num_tuples);
+
+    ~hashTable() { delete buckets; }
 };
 #endif
