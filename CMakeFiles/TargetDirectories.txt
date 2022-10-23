@@ -1,0 +1,3 @@
+/mnt/c/Users/polta/Downloads/project/CMakeFiles/edit_cache.dir
+/mnt/c/Users/polta/Downloads/project/CMakeFiles/rebuild_cache.dir
+/mnt/c/Users/polta/Downloads/project/CMakeFiles/Project_JJ_Part1.dir

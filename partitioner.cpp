@@ -1,7 +1,7 @@
 #include "partitioner.h"
 
 void Partitioner::partition1(relation r) {
-  r_entries = r.getAmount();
+  int64_t r_entries = r.getAmount();
 
   // partition based on payload
   for (int64_t t = 0; t < r_entries; t++) {
@@ -20,12 +20,13 @@ void Partitioner::partition2() {
   for (uint64_t i = 0; i < hist->getPartitionCount(); i++) {
     if (hist->getPartitionSize(i) > L2_SIZE) {
       partitionsFit = false;
-      std::printf("Partition %ld doesn't fit in L2", i);
+      std::printf("\nPartition %ld doesn't fit in L2\n", i);
       break;
     }
   }
 
   if (partitionsFit == false) {
+    std::printf("Second pass needed\n");
     // discard old histogram, create a new using n2
     Histogram* old = hist;
     hist = new Histogram(1 << USE_BITS_NEXT);
@@ -64,6 +65,13 @@ uint64_t Partitioner::hash1(uint64_t key, uint64_t n) {
   // 1000 - 1 = 111
   // val = key & (2^n - 1); // bitwise AND
   return key & (num - 1);
+}
+
+void Partitioner::printPartitions() const {
+  for (int64_t i = 0; i < hist->getPartitionCount(); i++) {
+    std::printf("\nPartition %ld\n", i);
+    hist->getPartition(i).print();
+  }
 }
 
 // 2^n sized histogram

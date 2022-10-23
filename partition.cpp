@@ -35,7 +35,25 @@ uint64_t Partition::getSize() const {
   return sizeof(Node) * len;
 }
 
+void Partition::print() const {
+  Node* traverse = start;
+  for (int64_t i = 0; i < len; i++) {
+    std::printf("tuple key : %ld, payload : %ld\n", traverse->t.getKey(),
+                traverse->t.getPayload());
+    traverse = traverse->next;
+  }
+}
+
 Partition::Partition() {
   start = end = nullptr;
   len = 0;
+}
+
+Partition::~Partition() {
+  Node* traverse = start;
+  for (int i = 0; i < len; i++) {
+    Node* t = traverse;
+    traverse = traverse->next;
+    delete t;
+  }
 }

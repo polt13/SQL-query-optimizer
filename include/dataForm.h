@@ -9,6 +9,12 @@ class tuple {
  public:
   int64_t getKey() { return key; }
   int64_t getPayload() { return payload; }
+  tuple(int64_t key, int64_t payload) {
+    this->key = key;
+    this->payload = payload;
+  }
+
+  tuple() = default;
 };
 
 /*
@@ -16,19 +22,17 @@ class tuple {
  * It consists of an array of tuples and a size of the relation.
  */
 class relation {
-  tuple *tuples;
+  const tuple *tuples;
   uint64_t num_tuples;
 
  public:
-  relation(uint64_t num_tuples) {
+  relation(tuple *tuples, uint64_t num_tuples) {
     this->num_tuples = num_tuples;
-    this->tuples = new tuple[this->num_tuples];
+    this->tuples = tuples;
   }
 
   uint64_t getAmount() { return num_tuples; }
-  tuple &getTuple(uint64_t index) { return tuples[index]; }
-
-  ~relation() { delete tuples; }
+  const tuple &getTuple(uint64_t index) { return tuples[index]; }
 };
 
 /*

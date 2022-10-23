@@ -6,23 +6,24 @@
 
 #define USE_BITS 2       // first partitioning
 #define USE_BITS_NEXT 4  // 2nd partitioning
-#define L2_SIZE 496
+#define L2_SIZE 20
 
 class Partitioner {
   Histogram* hist;
-  uint64_t r_entries;
 
   void partition1(relation);
 
   void partition2();
 
-  uint64_t hash1(uint64_t, uint64_t);
-
  public:
+  static uint64_t hash1(uint64_t, uint64_t);
+
   // 2^n sized histogram
   Partitioner();
 
   void partition(relation);
+
+  void printPartitions() const;
 
   ~Partitioner();
 };
