@@ -3,52 +3,45 @@
 #include "dataForm.h"
 #include "partition.h"
 
-#define H 4 // whatever
+#define H 4  // whatever
 
-class bitmap
-{
-    private:
-    bool arr[H];
+class bucket {
+ private:
+  uint64_t val;
+  bool flag;
+  bucket *Bitmap[H];
 
-    public:
-    bitmap() {}
-    ~bitmap() {}
+ public:
+  // Getters
+  uint64_t getVal() const;
+  bool getFlag() const;
+  bucket *getBitmapBucket(uint64_t);
+  // Setters
+  void setVal(uint64_t);
+  void setFlag(bool);
+  void setBitmapBucket(uint64_t, bucket *);
+
+  bucket();
+  ~bucket() { delete Bitmap; }
 };
 
-class bucket
-{
-    private:
-    uint64_t val;
-    bitmap *Bitmap;
+class hashTable {
+ private:
+  bucket *buckets;
+  uint64_t num_buckets;
 
-    public:
-    // Getters
-    uint64_t getVal() const;
-    // Setters
-    void setVal(uint64_t);
-    
-    bucket() { this->Bitmap = new bitmap(); }
-    ~bucket() { delete Bitmap; }
-};
+ public:
+  // Getters
+  uint64_t getBucketCount() const;
 
-class hashTable
-{
-    private:
-    bucket *buckets;
-    uint64_t num_buckets;
+  uint64_t hash2(uint64_t);
 
-    public:
-    // Getters
-    uint64_t getBucketCount() const;
+  void insert(const tuple &);
 
-    uint64_t hash2(uint64_t);
+  void fillHT(const Partition &);
 
-    void insert(const tuple &);
+  hashTable(uint64_t num_tuples);
 
-    void fillHT(const Partition &);
-
-    hashTable(uint64_t num_tuples);
-
-    ~hashTable() { delete buckets; }
+  ~hashTable() { delete buckets; }
 };
 #endif

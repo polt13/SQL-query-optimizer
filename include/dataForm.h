@@ -7,8 +7,8 @@ class tuple {
   int64_t payload;  // value
 
  public:
-  int64_t getKey() { return key; }
-  int64_t getPayload() { return payload; }
+  int64_t getKey() const { return key; }
+  int64_t getPayload() const { return payload; }
 };
 
 /*
