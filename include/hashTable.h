@@ -7,22 +7,22 @@
 
 class bucket {
  private:
-  uint64_t val;
+  tuple *mytuple;
   bool flag;
   bucket *Bitmap[H];
 
  public:
   // Getters
-  uint64_t getVal() const;
+  tuple *getTuple() const;
   bool getFlag() const;
   bucket *getBitmapBucket(uint64_t);
   // Setters
-  void setVal(uint64_t);
+  void setTuple(tuple *);
   void setFlag(bool);
   void setBitmapBucket(uint64_t, bucket *);
 
   bucket();
-  ~bucket() { delete Bitmap; }
+  ~bucket();
 };
 
 class hashTable {
@@ -34,14 +34,15 @@ class hashTable {
   // Getters
   uint64_t getBucketCount() const;
 
-  uint64_t hash2(uint64_t);
+  uint64_t hash2(int64_t);
 
-  void insert(const tuple &);
+  void insert(tuple *);
 
   void fillHT(const Partition &);
 
-  hashTable(uint64_t num_tuples);
+  void findEntry(int64_t);
 
-  ~hashTable() { delete buckets; }
+  hashTable(uint64_t);
+  ~hashTable();
 };
 #endif
