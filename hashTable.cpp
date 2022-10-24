@@ -45,6 +45,7 @@ void hashTable::insert(tuple *t) {
     // Check if Neighbourhood is FULL
     bool flag = true;  // Assume it's full
     for (uint64_t i = 0; i < H; i++) {
+      if (hashVal + i >= this->num_buckets) break;
       if (this->buckets[hashVal].getBitmapBucket(i)->getFlag() == false) {
         flag = false;  // Neighbourhood NOT full
         break;
@@ -121,6 +122,7 @@ hashTable::hashTable(uint64_t num_tuples) {
     for (uint64_t i = 0; i < this->num_buckets; i++) {
       uint64_t index = i;
       for (uint64_t y = 0; y < H; y++)
+        // e.g. last bucket's bitmap points to nullptr(s)
         if (index < this->num_buckets) {
           this->buckets[i].setBitmapBucket(y, &buckets[index]);
           index++;
