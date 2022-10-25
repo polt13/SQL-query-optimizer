@@ -3,23 +3,26 @@
 #include "dataForm.h"
 #include "partition.h"
 
-#define H 4  // whatever
+#define HBHD_SIZE 32  // Neigbourhood size
 
 class bucket {
  private:
   tuple *mytuple;
   bool flag;
-  bucket *Bitmap[H];
+  bool Bitmap[HBHD_SIZE];
+  //bucket *Bitmap[HBHD_SIZE];
 
  public:
   // Getters
   tuple *getTuple() const;
   bool getFlag() const;
-  bucket *getBitmapBucket(uint64_t);
+  bool getBitmapIndex(uint64_t) const;
+  //bucket *getBitmapBucket(uint64_t);
   // Setters
   void setTuple(tuple *);
   void setFlag(bool);
-  void setBitmapBucket(uint64_t, bucket *);
+  void setBitmapIndex(uint64_t, bool);
+  //void setBitmapBucket(uint64_t, bucket *);
 
   bucket();
   ~bucket();
