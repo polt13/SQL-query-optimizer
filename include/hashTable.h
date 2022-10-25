@@ -31,7 +31,7 @@ class bucket {
 class hashTable {
  private:
   bucket *buckets;
-  uint64_t num_buckets;
+  uint64_t num_buckets; // Basically HT Size
 
  public:
   // Getters
