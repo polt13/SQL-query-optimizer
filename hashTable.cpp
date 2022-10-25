@@ -23,10 +23,7 @@ void bucket::setBitmapIndex(uint64_t index, bool flag) {
   this->Bitmap[index] = mybucket;
 } */
 
-bucket::bucket() {
-  this->mytuple = nullptr;
-  this->occupied = false;
-}
+bucket::bucket() : mytuple{nullptr}, occupied{false}, Bitmap{} {}
 
 bucket::~bucket() {}
 
@@ -42,6 +39,7 @@ uint64_t hashTable::hash2(int64_t key) {
 // Insert all tuples of a partition into the hashTable
 void hashTable::insert(tuple *t) {
   uint64_t hashVal = hash2(t->getKey());  // not sure if Key
+  bool flag;
 
   // ----- Implement Hopscotch Hashing -----
   if (this->buckets[hashVal].getOccupied() == false) {
@@ -50,7 +48,7 @@ void hashTable::insert(tuple *t) {
     this->buckets[hashVal].setBitmapIndex(0, true);
   } else {
     // Check if Neighbourhood is FULL
-    bool flag = true;  // Assume it's full
+    flag = true;  // Assume it's full
     for (uint64_t i = 0; i < NBHD_SIZE; i++) {
       // if (hashVal + i >= this->num_buckets) break; // assume it's a circle
       if (this->buckets[hashVal].getBitmapIndex(i) == false) {
@@ -58,7 +56,7 @@ void hashTable::insert(tuple *t) {
         break;
       }
     }
-    // Step 1. Empty slot NOT FOUND -
+    // Step 1. FULL Neighbourhood
     if (flag == true) {
       // Rehash needed
       // call rehash function
@@ -66,53 +64,58 @@ void hashTable::insert(tuple *t) {
       return;
     }
     // Step 2.
-    for (uint64_t j = hashVal; j < this->num_buckets; j++) {
+    uint64_t j;
+    flag = false;
+    for (j = hashVal; j < this->num_buckets; j++)
       if (this->buckets[j].getOccupied() == false) {  // Empty slot found
-        // Step 3.
-        while ((j - hashVal) % this->num_buckets >= NBHD_SIZE) {
-          // Step 3.a.
-          for (uint64_t k = j - NBHD_SIZE + 1; k < j; k++) {
-            bool flag = false;
-            // Search for an element in Neighbourhood
-            for (uint64_t x = 0; x < NBHD_SIZE; x++) {
-              if (k + x >= this->num_buckets) break;
-              if (this->buckets[k].getBitmapIndex(x) == true) {
-                flag = true;  // Element found
-                // Step 3.c
-                this->buckets[j].setTuple(this->buckets[k + x].getTuple());
-                this->buckets[j].setOccupied(true);
-                this->buckets[k].setBitmapIndex((x + (j - k - x)), true);
+        flag = true;
+        break;
+      }
 
-                this->buckets[k].setBitmapIndex(x, false);
-                this->buckets[k + x].setTuple(nullptr);
-                this->buckets[k + x].setOccupied(false);
-                // Step 3.d.
-                j = k + x;
-                break;
-              }
-            }
-            // Step 3.b. No element found
-            if (flag == false) {
-              // Rehash needed
-              // call rehash function
-              // insert(t);
-              return;
-            }
+    if (flag == false) {
+      // No empty slot - Rehash needed
+      // call rehash function
+      // insert(t);
+    }
+
+    // Step 3.
+    while ((j - hashVal) % this->num_buckets >= NBHD_SIZE) {
+      // Step 3.a.
+      for (uint64_t k = j - NBHD_SIZE + 1; k < j; k++) {
+        flag = false;
+        // Search for an element in Neighbourhood
+        for (uint64_t x = 0; x < NBHD_SIZE; x++) {
+          if (k + x >= this->num_buckets) break;
+          if (this->buckets[k].getBitmapIndex(x) == true) {
+            flag = true;  // Element found
+            // Step 3.c
+            this->buckets[j].setTuple(this->buckets[k + x].getTuple());
+            this->buckets[j].setOccupied(true);
+            this->buckets[k].setBitmapIndex((x + (j - k - x)), true);
+
+            this->buckets[k].setBitmapIndex(x, false);
+            this->buckets[k + x].setTuple(nullptr);
+            this->buckets[k + x].setOccupied(false);
+            // Step 3.d.
+            j = k + x;
+            break;
           }
         }
-        // Step 4
-        // Save tuple here
-        this->buckets[j].setTuple(t);
-        this->buckets[j].setOccupied(true);
-        this->buckets[j].setBitmapIndex(j, true);
+        // Step 3.b. No element found
+        if (flag == false) {
+          // Rehash needed
+          // call rehash function
+          // insert(t);
+          return;
+        }
       }
     }
-    // No empty slot - Rehash needed
-    // call rehash function
-    // insert(t);
+    // Step 4
+    // Save tuple here
+    this->buckets[j].setTuple(t);
+    this->buckets[j].setOccupied(true);
+    this->buckets[j].setBitmapIndex(j, true);
   }
-
-  // this->buckets[hashVal].setVal(t.getKey());
 }
 
 void hashTable::fillHT(const Partition &part) {
@@ -141,7 +144,7 @@ void hashTable::findEntry(int64_t key) {
   }
 }
 
-hashTable::hashTable(uint64_t num_tuples) {
+hashTable::hashTable(uint64_t num_tuples) : num_buckets{num_tuples} {
   if (num_tuples > 0) {
     /*
     this->num_buckets = 1;
@@ -155,7 +158,6 @@ hashTable::hashTable(uint64_t num_tuples) {
       while (this->num_buckets < num_tuples) this->num_buckets <<= 1;
     }
     */
-    this->num_buckets = num_tuples;
     this->buckets = new bucket[this->num_buckets];
 
     /* for (uint64_t i = 0; i < this->num_buckets; i++) {
@@ -169,10 +171,8 @@ hashTable::hashTable(uint64_t num_tuples) {
     } */
   }
   // HashTable is Empty
-  else {
-    this->num_buckets = 0;
+  else
     this->buckets = nullptr;
-  }
 }
 
 hashTable::~hashTable() { delete[] buckets; }
