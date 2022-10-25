@@ -28,7 +28,7 @@ bucket::bucket() {
   this->occupied = false;
 }
 
-bucket::~bucket() { delete mytuple; }
+bucket::~bucket() {}
 
 // ------------------------------------------------------------------
 
@@ -52,7 +52,7 @@ void hashTable::insert(tuple *t) {
     // Check if Neighbourhood is FULL
     bool flag = true;  // Assume it's full
     for (uint64_t i = 0; i < NBHD_SIZE; i++) {
-      if (hashVal + i >= this->num_buckets) break;
+      // if (hashVal + i >= this->num_buckets) break; // assume it's a circle
       if (this->buckets[hashVal].getBitmapIndex(i) == false) {
         flag = false;  // Neighbourhood NOT full
         break;
@@ -66,12 +66,12 @@ void hashTable::insert(tuple *t) {
       return;
     }
     // Step 2.
-    for (uint64_t j = hashVal; j < NBHD_SIZE; j++) {
+    for (uint64_t j = hashVal; j < this->num_buckets; j++) {
       if (this->buckets[j].getOccupied() == false) {  // Empty slot found
         // Step 3.
         while ((j - hashVal) % this->num_buckets >= NBHD_SIZE) {
           // Step 3.a.
-          for (uint64_t k = j - NBHD_SIZE - 1; k < j; k++) {
+          for (uint64_t k = j - NBHD_SIZE + 1; k < j; k++) {
             bool flag = false;
             // Search for an element in Neighbourhood
             for (uint64_t x = 0; x < NBHD_SIZE; x++) {
