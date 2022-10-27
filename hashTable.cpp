@@ -1,4 +1,5 @@
 #include "hashTable.h"
+#include <cmath>
 
 tuple *bucket::getTuple() const { return this->mytuple; }
 
@@ -36,6 +37,20 @@ uint64_t hashTable::hash2(int64_t key) {
   return key % this->num_buckets;
 }
 
+void hashTable::rehash() {
+  std::printf("Rehashing");
+  int64_t old_bucket_count = num_buckets;
+  bucket *old_buckets = buckets;
+
+  num_buckets = old_bucket_count * 2 + 1;
+  buckets = new bucket[num_buckets];
+
+  for (int64_t i = 0; i < old_bucket_count; i++)
+    insert(old_buckets[i].getTuple());
+
+  delete[] old_buckets;
+}
+
 // Insert all tuples of a partition into the hashTable
 void hashTable::insert(tuple *t) {
   uint64_t hashVal = hash2(t->getPayload());  // not sure if Key
@@ -57,9 +72,8 @@ void hashTable::insert(tuple *t) {
     }
     // Step 1. FULL Neighbourhood
     if (flag == true) {
-      // Rehash needed
-      // call rehash function
-      // insert(t);
+      rehash();
+      insert(t);
       return;
     }
     // Step 2.
@@ -75,13 +89,17 @@ void hashTable::insert(tuple *t) {
 
     if (flag == false) {
       // No empty slot - Rehash needed
-      // call rehash function
-      // insert(t);
+      rehash();
+      insert(t);
     }
     // Step 3.
-    while ((j - hashVal) % this->num_buckets >= NBHD_SIZE) {
+    while ((std::abs((int64_t)(j - hashVal)) % this->num_buckets) >=
+           NBHD_SIZE) {
       // Step 3.a.
-      for (uint64_t k = j - NBHD_SIZE + 1; k < j; k++) {
+      for (int64_t k = j - NBHD_SIZE + 1; k < j; k++) {
+        // in case where the index turns out negative,  cycle back to the end
+        if (k < 0) k = num_buckets - k;
+
         flag = false;
         // Search for an element in Neighbourhood
         for (uint64_t x = 0; x < NBHD_SIZE; x++) {
@@ -93,8 +111,8 @@ void hashTable::insert(tuple *t) {
             this->buckets[k].setBitmapIndex((j - k), true);
 
             this->buckets[k].setBitmapIndex(x, false);
-            this->buckets[k + x].setTuple(nullptr);
-            this->buckets[k + x].setOccupied(false);
+            this->buckets[(k + x) % num_buckets].setTuple(nullptr);
+            this->buckets[(k + x) % num_buckets].setOccupied(false);
             // Step 3.d.
             j = k + x;
             break;
@@ -103,8 +121,8 @@ void hashTable::insert(tuple *t) {
         // Step 3.b. | No element found
         if (flag == false) {
           // Rehash needed
-          // call rehash function
-          // insert(t);
+          rehash();
+          insert(t);
           return;
         }
       }
