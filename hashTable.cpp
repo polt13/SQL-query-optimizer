@@ -1,4 +1,5 @@
 #include "hashTable.h"
+
 #include <cmath>
 
 tuple *bucket::getTuple() const { return this->mytuple; }
@@ -96,41 +97,39 @@ void hashTable::insert(tuple *t) {
     while ((std::abs((int64_t)(j - hashVal)) % this->num_buckets) >=
            NBHD_SIZE) {
       // Step 3.a.
-      for (int64_t k = j - NBHD_SIZE + 1; k < j; k++) {
-        // in case where the index turns out negative,  cycle back to the end
-        if (k < 0) k = num_buckets - k;
-
-        flag = false;
-        // Search for an element in Neighbourhood
-        for (uint64_t x = 0; x < NBHD_SIZE; x++) {
-          if (this->buckets[k].getBitmapIndex(x) == true) {
-            flag = true;  // Element found
-            // Step 3.c
-            this->buckets[j].setTuple(this->buckets[k + x].getTuple());
-            this->buckets[j].setOccupied(true);
-            this->buckets[k].setBitmapIndex((j - k), true);
-
-            this->buckets[k].setBitmapIndex(x, false);
-            this->buckets[(k + x) % num_buckets].setTuple(nullptr);
-            this->buckets[(k + x) % num_buckets].setOccupied(false);
-            // Step 3.d.
-            j = k + x;
-            break;
-          }
+      int64_t k = j - NBHD_SIZE + 1;
+      // in case where the index turns out negative, cycle back to the end
+      if (k < 0) k = num_buckets + k;
+      // Search NBHD_SIZE - 1 
+      for (uint64_t x = 0; x < NBHD_SIZE - 1; x++) {
+        if (this->buckets[k].getBitmapIndex(x) == true) {
+          flag = true;  // Element found
+          this->buckets[j].setTuple(
+              this->buckets[(k + x) % num_buckets].getTuple());
+          this->buckets[j].setOccupied(true);
+          this->buckets[k].setBitmapIndex((NBHD_SIZE - 1), true);
+          // Step 3.c
+          this->buckets[(k + x) % num_buckets].setTuple(nullptr);
+          this->buckets[(k + x) % num_buckets].setOccupied(false);
+          this->buckets[k].setBitmapIndex(x, false);
+          // Step 3.d.
+          j = (k + x) % this->num_buckets;
+          break;
         }
-        // Step 3.b. | No element found
-        if (flag == false) {
-          // Rehash needed
-          rehash();
-          insert(t);
-          return;
-        }
+      }
+      // Step 3.b. | No element found
+      if (flag == false) {
+        // Rehash needed
+        rehash();
+        insert(t);
+        return;
       }
     }
     // Step 4 | Save tuple here
     this->buckets[j].setTuple(t);
     this->buckets[j].setOccupied(true);
-    this->buckets[hashVal].setBitmapIndex((j - hashVal), true);
+    this->buckets[hashVal].setBitmapIndex(std::abs((int64_t)(j - hashVal)),
+                                          true);
   }
 }
 

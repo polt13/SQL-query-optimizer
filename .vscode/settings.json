@@ -43,7 +43,13 @@
         "sstream": "cpp",
         "stdexcept": "cpp",
         "streambuf": "cpp",
-        "typeinfo": "cpp"
+        "typeinfo": "cpp",
+        "chrono": "cpp",
+        "ctime": "cpp",
+        "set": "cpp",
+        "unordered_set": "cpp",
+        "ratio": "cpp",
+        "thread": "cpp"
     },
     "C_Cpp.clang_format_style": "Google"
 }
