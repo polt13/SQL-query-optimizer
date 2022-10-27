@@ -18,9 +18,7 @@ uint64_t Histogram::getPartitionSize(int64_t partitionIndex) const {
 
 uint64_t Histogram::getPartitionCount() const { return partitions; }
 
-// insert a rowID to the right partition (index are the final n bits)
+// insert a tuple to the right partition (index are the final n bits)
 void Histogram::insert(int64_t index, tuple t) { h[index].append(t); }
 
-Histogram::~Histogram() {
-  // cleanup list later..
-}
+Histogram::~Histogram() { delete[] h; }
