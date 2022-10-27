@@ -134,8 +134,8 @@ void hashTable::insert(tuple *t) {
   }
 }
 
-void hashTable::fillHT(const Partition &part) {
-  Node *traverse = part.getPartitionList();
+void hashTable::fillHT(const HistEntry &part) {
+  Node *traverse = part.getHistEntries();
   while (traverse) {
     insert(&(traverse->t));
     traverse = traverse->next;

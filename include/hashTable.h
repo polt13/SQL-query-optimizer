@@ -16,13 +16,13 @@ class bucket {
   // Getters
   tuple *getTuple() const;
   bool getOccupied() const;
-  bool getBitmapIndex(uint64_t) const;
-  // bucket *getBitmapBucket(uint64_t);
+  bool getBitmapIndex(int64_t) const;
+  // bucket *getBitmapBucket(int64_t);
   //  Setters
   void setTuple(tuple *);
   void setOccupied(bool);
-  void setBitmapIndex(uint64_t, bool);
-  // void setBitmapBucket(uint64_t, bucket *);
+  void setBitmapIndex(int64_t, bool);
+  // void setBitmapBucket(int64_t, bucket *);
 
   bucket();
   ~bucket();
@@ -31,23 +31,23 @@ class bucket {
 class hashTable {
  private:
   bucket *buckets;
-  uint64_t num_buckets;  // Basically HT Size
+  int64_t num_buckets;  // Basically HT Size
 
  public:
   // Getters
-  uint64_t getBucketCount() const;
+  int64_t getBucketCount() const;
 
-  uint64_t hash2(int64_t);
+  int64_t hash2(int64_t);
 
   void insert(tuple *);
 
   void rehash();
 
-  void fillHT(const Partition &);
+  void fillHT(const HistEntry &);
 
   void findEntry(int64_t);
 
-  hashTable(uint64_t);
+  hashTable(int64_t);
   ~hashTable();
 };
 #endif

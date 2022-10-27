@@ -1,22 +1,15 @@
 #include "histogram.h"
 
-Histogram::Histogram(uint64_t size) {
+Histogram::Histogram(int64_t size) {
   // create histogram with 2^n entries -- zero initialize all
   // each row  is basically a partition
-  h = new Partition[size];
-  partitions = size;
+  h = new HistEntry[size];
+  entries = size;
 }
 
-const Partition& Histogram::getPartition(int64_t partitionNumber) const {
-  return h[partitionNumber];
-}
+const HistEntry& Histogram::getEntry(int64_t index) const { return h[index]; }
 
-// partition size in BYTES
-uint64_t Histogram::getPartitionSize(int64_t partitionIndex) const {
-  return h[partitionIndex].getSize();
-}
-
-uint64_t Histogram::getPartitionCount() const { return partitions; }
+int64_t Histogram::getEntriesCount() const { return entries; }
 
 // insert a tuple to the right partition (index are the final n bits)
 void Histogram::insert(int64_t index, tuple t) { h[index].append(t); }

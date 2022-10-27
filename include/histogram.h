@@ -5,18 +5,15 @@
 
 class Histogram {
   // histogram = array of partitions
-  Partition* h;
-  uint64_t partitions;
+  HistEntry* h;
+  uint64_t entries;
 
  public:
-  Histogram(uint64_t size);
+  Histogram(int64_t);
 
-  const Partition& getPartition(int64_t) const;
+  const HistEntry& getEntry(int64_t) const;
 
-  // partition size in BYTES
-  uint64_t getPartitionSize(int64_t) const;
-
-  uint64_t getPartitionCount() const;
+  int64_t getEntriesCount() const;
 
   // insert a rowID to the right partition (index are the final n bits)
   void insert(int64_t, tuple);

@@ -16,14 +16,14 @@ class Partitioner {
   void partition2();
 
  public:
-  static uint64_t hash1(uint64_t, uint64_t);
+  static int64_t hash1(uint64_t, uint64_t);
 
   // 2^n sized histogram
   Partitioner();
 
   void partition(relation);
 
-  void printPartitions() const;
+  void printEntries() const;
 
   ~Partitioner();
 };

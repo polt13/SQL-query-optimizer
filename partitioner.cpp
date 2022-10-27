@@ -17,7 +17,7 @@ void Partitioner::partition1(relation r) {
 void Partitioner::partition2() {
   bool partitionsFit = true;
 
-  for (uint64_t i = 0; i < hist->getPartitionCount(); i++) {
+  for (int64_t i = 0; i < hist->getEntriesCount(); i++) {
     if (hist->getPartitionSize(i) > L2_SIZE) {
       partitionsFit = false;
       std::printf("\nPartition %ld doesn't fit in L2\n", i);
@@ -31,11 +31,11 @@ void Partitioner::partition2() {
     Histogram* old = hist;
     hist = new Histogram(1 << USE_BITS_NEXT);
     // for every partition, for every record..
-    for (int64_t p = 0; p < old->getPartitionCount(); p++) {
-      const Partition& partition = old->getPartition(p);
+    for (int64_t p = 0; p < old->getEntriesCount(); p++) {
+      const HistEntry& partition = old->getEntry(p);
       // repartition based on new BIT SET and insert to hist
       int64_t partitionRecords = partition.getLen();
-      Node* traverse = partition.getPartitionList();
+      Node* traverse = partition.getHistEntries();
       for (int64_t r = 0; r < partitionRecords; r++) {
         tuple record = traverse->t;
         int64_t new_index = hash1(record.getPayload(), USE_BITS_NEXT);
@@ -58,7 +58,7 @@ void Partitioner::partition(relation r) {
  * Get the n Least Significant Bits (LSB)
  *
  */
-uint64_t Partitioner::hash1(uint64_t key, uint64_t n) {
+int64_t Partitioner::hash1(uint64_t key, uint64_t n) {
   uint64_t num = 1;
   num <<= n;
   // e.g. n = 3
@@ -67,10 +67,10 @@ uint64_t Partitioner::hash1(uint64_t key, uint64_t n) {
   return key & (num - 1);
 }
 
-void Partitioner::printPartitions() const {
-  for (int64_t i = 0; i < hist->getPartitionCount(); i++) {
+void Partitioner::printEntries() const {
+  for (int64_t i = 0; i < hist->getEntriesCount(); i++) {
     std::printf("\nPartition %ld\n", i);
-    hist->getPartition(i).print();
+    hist->getEntry(i).print();
   }
 }
 
