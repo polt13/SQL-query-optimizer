@@ -74,12 +74,12 @@ clean: CMakeFiles/Project_JJ_Part1.dir/clean
 CMakeFiles/Project_JJ_Part1.dir/all:
 	$(MAKE) -f CMakeFiles/Project_JJ_Part1.dir/build.make CMakeFiles/Project_JJ_Part1.dir/depend
 	$(MAKE) -f CMakeFiles/Project_JJ_Part1.dir/build.make CMakeFiles/Project_JJ_Part1.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/mnt/c/Users/polta/Downloads/project/CMakeFiles --progress-num=1,2,3,4,5 "Built target Project_JJ_Part1"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/mnt/c/Users/polta/Downloads/project/CMakeFiles --progress-num=1,2,3,4,5,6 "Built target Project_JJ_Part1"
 .PHONY : CMakeFiles/Project_JJ_Part1.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/Project_JJ_Part1.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/c/Users/polta/Downloads/project/CMakeFiles 5
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/c/Users/polta/Downloads/project/CMakeFiles 6
 	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/Project_JJ_Part1.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/c/Users/polta/Downloads/project/CMakeFiles 0
 .PHONY : CMakeFiles/Project_JJ_Part1.dir/rule

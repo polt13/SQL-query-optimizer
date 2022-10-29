@@ -6,37 +6,19 @@
 
 #IncludeRegexTransform: 
 
-/mnt/c/Users/polta/Downloads/project/partitioner.cpp
-partitioner.h
-/mnt/c/Users/polta/Downloads/project/partitioner.h
-
-include/dataForm.h
-cstdint
--
-
-include/histogram.h
-partition.h
-include/partition.h
-cstdint
--
-
-include/node.h
-dataForm.h
-include/dataForm.h
-
-include/partition.h
-dataForm.h
-include/dataForm.h
-node.h
-include/node.h
+/mnt/c/Users/polta/Downloads/project/list.cpp
+list.h
+/mnt/c/Users/polta/Downloads/project/list.h
 cstdio
 -
 
-include/partitioner.h
+include/dataForm.h
+cstdint
+-
+
+include/list.h
 dataForm.h
 include/dataForm.h
 cstdint
 -
-histogram.h
-include/histogram.h
 

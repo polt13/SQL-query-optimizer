@@ -22,7 +22,7 @@ class tuple {
  * It consists of an array of tuples and a size of the relation.
  */
 class relation {
-  const tuple *tuples;
+  tuple *tuples;
   uint64_t num_tuples;
 
  public:
@@ -30,9 +30,8 @@ class relation {
     this->num_tuples = num_tuples;
     this->tuples = tuples;
   }
-
+  tuple &operator[](int64_t index) { return tuples[index]; }
   uint64_t getAmount() { return num_tuples; }
-  const tuple &getTuple(uint64_t index) { return tuples[index]; }
 };
 
 /*

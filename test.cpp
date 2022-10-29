@@ -2,7 +2,7 @@
 #include "dataForm.h"
 #include "hashTable.h"
 #include "histogram.h"
-#include "node.h"
+#include "list.h"
 #include "partition.h"
 #include "partitioner.h"
 

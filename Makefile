@@ -150,6 +150,33 @@ histogram.cpp.s:
 	$(MAKE) -f CMakeFiles/Project_JJ_Part1.dir/build.make CMakeFiles/Project_JJ_Part1.dir/histogram.cpp.s
 .PHONY : histogram.cpp.s
 
+list.o: list.cpp.o
+
+.PHONY : list.o
+
+# target to build an object file
+list.cpp.o:
+	$(MAKE) -f CMakeFiles/Project_JJ_Part1.dir/build.make CMakeFiles/Project_JJ_Part1.dir/list.cpp.o
+.PHONY : list.cpp.o
+
+list.i: list.cpp.i
+
+.PHONY : list.i
+
+# target to preprocess a source file
+list.cpp.i:
+	$(MAKE) -f CMakeFiles/Project_JJ_Part1.dir/build.make CMakeFiles/Project_JJ_Part1.dir/list.cpp.i
+.PHONY : list.cpp.i
+
+list.s: list.cpp.s
+
+.PHONY : list.s
+
+# target to generate assembly for a file
+list.cpp.s:
+	$(MAKE) -f CMakeFiles/Project_JJ_Part1.dir/build.make CMakeFiles/Project_JJ_Part1.dir/list.cpp.s
+.PHONY : list.cpp.s
+
 partition.o: partition.cpp.o
 
 .PHONY : partition.o
@@ -243,6 +270,9 @@ help:
 	@echo "... histogram.o"
 	@echo "... histogram.i"
 	@echo "... histogram.s"
+	@echo "... list.o"
+	@echo "... list.i"
+	@echo "... list.s"
 	@echo "... partition.o"
 	@echo "... partition.i"
 	@echo "... partition.s"

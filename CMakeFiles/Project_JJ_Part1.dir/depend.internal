@@ -5,18 +5,22 @@ CMakeFiles/Project_JJ_Part1.dir/histogram.cpp.o
  /mnt/c/Users/polta/Downloads/project/histogram.cpp
  include/dataForm.h
  include/histogram.h
- include/node.h
+ include/list.h
  include/partition.h
+CMakeFiles/Project_JJ_Part1.dir/list.cpp.o
+ /mnt/c/Users/polta/Downloads/project/list.cpp
+ include/dataForm.h
+ include/list.h
 CMakeFiles/Project_JJ_Part1.dir/partition.cpp.o
  /mnt/c/Users/polta/Downloads/project/partition.cpp
  include/dataForm.h
- include/node.h
+ include/list.h
  include/partition.h
 CMakeFiles/Project_JJ_Part1.dir/partitioner.cpp.o
  /mnt/c/Users/polta/Downloads/project/partitioner.cpp
  include/dataForm.h
  include/histogram.h
- include/node.h
+ include/list.h
  include/partition.h
  include/partitioner.h
 CMakeFiles/Project_JJ_Part1.dir/test.cpp.o
@@ -25,6 +29,6 @@ CMakeFiles/Project_JJ_Part1.dir/test.cpp.o
  include/dataForm.h
  include/hashTable.h
  include/histogram.h
- include/node.h
+ include/list.h
  include/partition.h
  include/partitioner.h
