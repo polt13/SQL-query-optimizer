@@ -63,10 +63,12 @@ void hashTable::insert(tuple *t) {
         flag = false;  // Neighbourhood NOT full - Empty slot FOUND
       else {
         // Check if exact same key (R.a) exists
-        if (this->buckets[hashVal + i].getTuple()->getKey() == t->getKey())
+        if (this->buckets[hashVal + i].getTuple()->getKey() == t->getKey()) {
           // Add argument's rowID into the List payload
           this->buckets[hashVal + i].getTuple()->getPayload().append(
               t->getPayload().getRoot()->rowID);
+          return;
+        }
       }
     }
     // Step 1. FULL Neighbourhood
