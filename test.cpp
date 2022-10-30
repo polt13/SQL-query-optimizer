@@ -2,7 +2,7 @@
 #include "dataForm.h"
 #include "hashTable.h"
 #include "histogram.h"
-#include "node.h"
+#include "list.h"
 #include "partition.h"
 #include "partitioner.h"
 
@@ -29,7 +29,7 @@ void test_partitions_1() {
   relation r(tuples, 6);
   Partitioner p;
   p.partition(r);
-  p.printPartitions();
+  p.printEntries();
 
   delete[] tuples;
 }
@@ -43,7 +43,7 @@ void test_partitions_2() {
   relation r(tuples, 4);
   Partitioner p;
   p.partition(r);
-  p.printPartitions();
+  p.printEntries();
 
   delete[] tuples;
 }

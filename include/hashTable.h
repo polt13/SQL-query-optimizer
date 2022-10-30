@@ -1,7 +1,6 @@
 #ifndef HT_H
 #define HT_H
 #include "dataForm.h"
-#include "partition.h"
 
 #define NBHD_SIZE 32  // Neigbourhood size
 
@@ -28,23 +27,23 @@ class bucket {
 class hashTable {
  private:
   bucket *buckets;
-  uint64_t num_buckets;  // Basically HT Size
+  int64_t num_buckets;  // Basically HT Size
 
  public:
   // Getters
-  uint64_t getBucketCount() const;
+  int64_t getBucketCount() const;
 
-  uint64_t hash2(int64_t);
+  int64_t hash2(int64_t);
 
   void insert(tuple *);
 
   void rehash();
 
-  void fillHT(const Partition &);
+  void fillHT(const HistEntry &);
 
   void findEntry(int64_t);
 
-  hashTable(uint64_t);
+  hashTable(int64_t);
   ~hashTable();
 };
 #endif

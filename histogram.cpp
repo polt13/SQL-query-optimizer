@@ -1,24 +1,32 @@
 #include "histogram.h"
 
-Histogram::Histogram(uint64_t size) {
-  // create histogram with 2^n entries -- zero initialize all
-  // each row  is basically a partition
-  h = new Partition[size];
-  partitions = size;
+// create histogram with 2^n entries -- zero initialize all}
+Histogram::Histogram(int64_t size)
+    : entries{new int64_t[size]{}}, psum{new int64_t[size]{}}, size{size} {}
+
+// increase value for a hashvalue
+int64_t& Histogram::operator[](int64_t index) { entries[index]++; }
+
+int64_t* Histogram::generatePsum() {
+  int64_t start = 0;
+  psum[0] = 0;
+  for (int64_t p = 1; p < size; p++) {
+    psum[p] = start + entries[p - 1];
+    start += psum[p];
+  }
+
+  return psum;
 }
 
-const Partition& Histogram::getPartition(int64_t partitionNumber) const {
-  return h[partitionNumber];
+int64_t Histogram::getPartitionEntries(int64_t index) const {
+  return entries[index];
 }
 
-// partition size in BYTES
-uint64_t Histogram::getPartitionSize(int64_t partitionIndex) const {
-  return h[partitionIndex].getSize();
+int64_t Histogram::getPartitionPsum(int64_t index) const { return psum[index]; }
+
+int64_t Histogram::getSize() const { return size; }
+
+Histogram::~Histogram() {
+  delete[] entries;
+  delete[] psum;
 }
-
-uint64_t Histogram::getPartitionCount() const { return partitions; }
-
-// insert a tuple to the right partition (index are the final n bits)
-void Histogram::insert(int64_t index, tuple t) { h[index].append(t); }
-
-Histogram::~Histogram() { delete[] h; }

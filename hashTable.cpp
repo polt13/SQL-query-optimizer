@@ -1,6 +1,8 @@
 #include "hashTable.h"
+#include "list.h"
 
 #include <cmath>
+#include <cstdio>
 
 tuple *bucket::getTuple() const { return this->mytuple; }
 
@@ -24,9 +26,9 @@ bucket::~bucket() {}
 
 // ------------------------------------------------------------------
 
-uint64_t hashTable::getBucketCount() const { return num_buckets; }
+int64_t hashTable::getBucketCount() const { return num_buckets; }
 
-uint64_t hashTable::hash2(int64_t key) {
+int64_t hashTable::hash2(int64_t key) {
   // todo
   return key % this->num_buckets;
 }
@@ -126,8 +128,8 @@ void hashTable::insert(tuple *t) {
   }
 }
 
-void hashTable::fillHT(const Partition &part) {
-  Node *traverse = part.getPartitionList();
+void hashTable::fillHT(const HistEntry &entry) {
+  Node *traverse = entry.getHistEntries();
   while (traverse) {
     insert(&(traverse->t));
     traverse = traverse->next;
@@ -152,7 +154,7 @@ void hashTable::findEntry(int64_t key) {
   }
 }
 
-hashTable::hashTable(uint64_t num_tuples) : num_buckets{num_tuples} {
+hashTable::hashTable(int64_t num_tuples) : num_buckets{num_tuples} {
   if (num_tuples > 0) {
     /*
     this->num_buckets = 1;
