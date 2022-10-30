@@ -10,9 +10,6 @@ bool bucket::getBitmapIndex(uint64_t index) const {
   return this->Bitmap[index];
 }
 
-// bucket *bucket::getBitmapBucket(uint64_t index) { return this->Bitmap[index];
-// }
-
 void bucket::setTuple(tuple *t) { this->mytuple = t; }
 
 void bucket::setOccupied(bool flag) { this->occupied = flag; }
@@ -20,10 +17,6 @@ void bucket::setOccupied(bool flag) { this->occupied = flag; }
 void bucket::setBitmapIndex(uint64_t index, bool flag) {
   this->Bitmap[index] = flag;
 }
-
-/* void bucket::setBitmapBucket(uint64_t index, bucket *mybucket) {
-  this->Bitmap[index] = mybucket;
-} */
 
 bucket::bucket() : mytuple{nullptr}, occupied{false}, Bitmap{} {}
 
@@ -100,7 +93,7 @@ void hashTable::insert(tuple *t) {
       int64_t k = j - NBHD_SIZE + 1;
       // in case where the index turns out negative, cycle back to the end
       if (k < 0) k = num_buckets + k;
-      // Search NBHD_SIZE - 1 
+      // Search NBHD_SIZE - 1
       for (uint64_t x = 0; x < NBHD_SIZE - 1; x++) {
         if (this->buckets[k].getBitmapIndex(x) == true) {
           flag = true;  // Element found
@@ -174,16 +167,6 @@ hashTable::hashTable(uint64_t num_tuples) : num_buckets{num_tuples} {
     }
     */
     this->buckets = new bucket[this->num_buckets];
-
-    /* for (uint64_t i = 0; i < this->num_buckets; i++) {
-      uint64_t index = i;
-      for (uint64_t y = 0; y < NBHD_SIZE; y++)
-        // e.g. last bucket's bitmap points to nullptr(s)
-        if (index < this->num_buckets) {
-          this->buckets[i].setBitmapBucket(y, &buckets[index]);
-          index++;
-        }
-    } */
   }
   // HashTable is Empty
   else
