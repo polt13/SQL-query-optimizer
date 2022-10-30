@@ -1,8 +1,9 @@
 #include "hashTable.h"
-#include "list.h"
 
 #include <cmath>
 #include <cstdio>
+
+#include "list.h"
 
 tuple *bucket::getTuple() const { return this->mytuple; }
 
@@ -28,10 +29,7 @@ bucket::~bucket() {}
 
 int64_t hashTable::getBucketCount() const { return num_buckets; }
 
-int64_t hashTable::hash2(int64_t key) {
-  // todo
-  return key % this->num_buckets;
-}
+int64_t hashTable::hash2(int64_t key) { return key % this->num_buckets; }
 
 void hashTable::rehash() {
   std::printf("Rehashing");
@@ -49,7 +47,7 @@ void hashTable::rehash() {
 
 // Insert all tuples of a partition into the hashTable
 void hashTable::insert(tuple *t) {
-  uint64_t hashVal = hash2(t->getPayload());  // not sure if Key
+  uint64_t hashVal = hash2(t->getKey());
   bool flag;
 
   // ----- Implement Hopscotch Hashing -----
@@ -58,12 +56,17 @@ void hashTable::insert(tuple *t) {
     this->buckets[hashVal].setOccupied(true);
     this->buckets[hashVal].setBitmapIndex(0, true);
   } else {
-    // Check if Neighbourhood is FULL
+    // Check if Neighbourhood is FULL and Check for Duplicates
     flag = true;  // Assume it's full
     for (uint64_t i = 0; i < NBHD_SIZE; i++) {
-      if (this->buckets[hashVal].getBitmapIndex(i) == false) {
-        flag = false;  // Neighbourhood NOT full
-        break;
+      if (this->buckets[hashVal].getBitmapIndex(i) == false)
+        flag = false;  // Neighbourhood NOT full - Empty slot FOUND
+      else {
+        // Check if exact same key (R.a) exists
+        if (this->buckets[hashVal + i].getTuple()->getKey() == t->getKey())
+          // Add argument's rowID into the List payload
+          this->buckets[hashVal + i].getTuple()->getPayload().append(
+              t->getPayload().getRoot()->rowID);
       }
     }
     // Step 1. FULL Neighbourhood

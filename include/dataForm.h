@@ -1,17 +1,19 @@
 #ifndef DF_H
 #define DF_H
 #include <cstdint>
+#include "list.h"
 /* Type definition for a tuple */
 class tuple {
-  int64_t key;      // row_id
-  int64_t payload;  // value
+  int64_t key;      // value (R.a)
+  List payload;  // rowIDs
 
  public:
   int64_t getKey() { return key; }
-  int64_t getPayload() { return payload; }
+  List getPayload() { return payload; }
+
   tuple(int64_t key, int64_t payload) {
     this->key = key;
-    this->payload = payload;
+    this->payload.append(payload);
   }
 
   tuple() = default;
