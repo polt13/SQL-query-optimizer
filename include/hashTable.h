@@ -33,7 +33,7 @@ class hashTable {
   int64_t hash2(int64_t);
   void insert(tuple *);
   void rehash();
-  // void fillHT(const HistEntry &);
+
   void findEntry(int64_t);
 
   hashTable(int64_t);

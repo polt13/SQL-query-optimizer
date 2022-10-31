@@ -161,6 +161,6 @@ void hashTable::findEntry(int64_t key) {
 }
 
 hashTable::hashTable(int64_t num_tuples)
-    : num_buckets{num_tuples}, buckets{new bucket[num_tuples]} {}
+    : buckets{new bucket[num_tuples]}, num_buckets{num_tuples} {}
 
 hashTable::~hashTable() { delete[] buckets; }
