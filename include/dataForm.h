@@ -4,19 +4,18 @@
 #include <cstdio>
 #include <cstring>
 
-#include "list.h"
 /* Type definition for a tuple */
 class tuple {
-  int64_t key;   // value (R.a)
-  List payload;  // rowIDs
+  int64_t key;      // value (R.a)
+  int64_t payload;  // rowID
 
  public:
   int64_t getKey() { return key; }
-  List getPayload() { return payload; }
+  int64_t getPayload() { return payload; }
 
   tuple(int64_t key, int64_t payload) {
     this->key = key;
-    this->payload.append(payload);
+    this->payload = payload;
   }
 
   tuple() = default;

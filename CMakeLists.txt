@@ -11,4 +11,4 @@ include_directories(include)
 
 add_executable(${PROJECT_NAME})
 
-target_sources(${PROJECT_NAME} PRIVATE histogram.cpp partitioner.cpp test.cpp list.cpp)
+target_sources(${PROJECT_NAME} PRIVATE hashtable.cpp histogram.cpp list.cpp partitioner.cpp test.cpp)

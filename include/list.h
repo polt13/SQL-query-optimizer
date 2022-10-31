@@ -2,15 +2,14 @@
 #define LIST_H
 #include <cstdint>
 
+#include "dataForm.h"
+
 struct Node {
-  int64_t rowID;
+  tuple* mytuple;
   Node* next;
 
  public:
-  Node(int64_t row, Node* next = nullptr) {
-    this->rowID = row;
-    this->next = next;
-  }
+  Node(tuple*, Node*);
 };
 
 class List {
@@ -20,12 +19,13 @@ class List {
 
  public:
   // Getters
-  const Node* getRoot() const;
+  Node* getRoot() const;
   int64_t getLen() const;
-  List();
-  void append(int64_t);
+
+  void append(tuple*);
   void print() const;
 
+  List();
   ~List();
 };
 
