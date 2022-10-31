@@ -1,7 +1,6 @@
 #ifndef HT_H
 #define HT_H
 #include "dataForm.h"
-
 #define NBHD_SIZE 32  // Neigbourhood size
 
 class bucket {
@@ -39,7 +38,7 @@ class hashTable {
 
   void rehash();
 
-  void fillHT(const HistEntry &);
+  // void fillHT(const HistEntry &);
 
   void findEntry(int64_t);
 

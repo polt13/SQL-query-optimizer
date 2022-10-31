@@ -5,21 +5,14 @@ Histogram::Histogram(int64_t size)
     : entries{new int64_t[size]{}}, psum{new int64_t[size]{}}, size{size} {}
 
 // increase value for a hashvalue
-int64_t& Histogram::operator[](int64_t index) { entries[index]++; }
+int64_t& Histogram::operator[](int64_t index) { return entries[index]; }
 
-int64_t* Histogram::generatePsum() {
-  int64_t start = 0;
+const int64_t* Histogram::generatePsum() {
   psum[0] = 0;
-  for (int64_t p = 1; p < size; p++) {
-    psum[p] = start + entries[p - 1];
-    start += psum[p];
-  }
+
+  for (int64_t p = 1; p < size; p++) psum[p] = psum[p - 1] + entries[p - 1];
 
   return psum;
-}
-
-int64_t Histogram::getPartitionEntries(int64_t index) const {
-  return entries[index];
 }
 
 int64_t Histogram::getPartitionPsum(int64_t index) const { return psum[index]; }
