@@ -58,8 +58,6 @@ int64_t ins = 0;
 
 // Insert all tuples of a partition into the hashTable
 void hashTable::insert(tuple *t) {
-  std::printf("ins %ld\n", ins++);
-
   int64_t hashVal = hash2(t->getKey());
 
   if (hashVal == -1) return;  // Cannot insert to an empty HT
@@ -112,7 +110,7 @@ void hashTable::insert(tuple *t) {
       // No empty slot - Rehash needed
       rehash();
       insert(t);
-      std::printf("XD\n");
+
       return;
     }
 
@@ -122,11 +120,10 @@ void hashTable::insert(tuple *t) {
       // Step 3.a.
 
       int64_t k = j - NBHD_SIZE + 1;
-      std::printf("j : %ld\n", j);
+
       // In case where the index turns out negative, cycle back to the end
-      if (k < 0) k = num_buckets + k;
-      std::printf("size: %ld", num_buckets);
-      std::printf("k: %ld\n", k);
+      if (k < 0) k = num_buckets + k - 1;
+
       // Search NBHD_SIZE - 1
       for (int64_t x = 0; x < NBHD_SIZE - 1; x++) {
         if (this->buckets[k].getBitmapIndex(x) == true) {
