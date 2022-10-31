@@ -36,7 +36,7 @@ int64_t hashTable::hash2(int64_t key) {
 }
 
 void hashTable::rehash() {
-  std::printf("Rehashing");
+  std::printf("Rehashing\n");
   int64_t old_bucket_count = num_buckets;
   bucket *old_buckets = buckets;
 
@@ -120,9 +120,13 @@ void hashTable::insert(tuple *t) {
     while ((std::abs((int64_t)(j - hashVal)) % this->num_buckets) >=
            NBHD_SIZE) {
       // Step 3.a.
+
       int64_t k = j - NBHD_SIZE + 1;
+      std::printf("j : %ld\n", j);
       // In case where the index turns out negative, cycle back to the end
       if (k < 0) k = num_buckets + k;
+      std::printf("size: %ld", num_buckets);
+      std::printf("k: %ld\n", k);
       // Search NBHD_SIZE - 1
       for (int64_t x = 0; x < NBHD_SIZE - 1; x++) {
         if (this->buckets[k].getBitmapIndex(x) == true) {
