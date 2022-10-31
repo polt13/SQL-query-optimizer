@@ -12,9 +12,9 @@ class Partitioner {
   Histogram* hist;
   int64_t partitioningLevel;
 
-  relation partition1(relation, int64_t);
+  relation partition1(relation&);
 
-  relation partition2(relation);
+  relation partition2(relation&);
 
  public:
   static int64_t hash1(uint64_t, uint64_t);
@@ -22,9 +22,7 @@ class Partitioner {
   // 2^n sized histogram
   Partitioner();
 
-  relation partition(relation);
-
-  void printEntries() const;
+  relation partition(relation&, int64_t);
 
   ~Partitioner();
 };
