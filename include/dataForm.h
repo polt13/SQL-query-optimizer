@@ -1,6 +1,8 @@
 #ifndef DF_H
 #define DF_H
 #include <cstdint>
+#include <cstdio>
+#include <cstring>
 /* Type definition for a tuple */
 class tuple {
   int64_t key;      // row_id
@@ -23,14 +25,30 @@ class tuple {
  */
 class relation {
   tuple *tuples;
-  uint64_t num_tuples;
+  int64_t num_tuples;
 
  public:
   relation(tuple *tuples, uint64_t num_tuples) {
     this->num_tuples = num_tuples;
     this->tuples = tuples;
   }
+  void print() const {
+    for (int64_t i = 0; i < num_tuples; i++) {
+      std::printf("t val : %ld\n", tuples[i].getKey());
+    }
+  }
+
+  relation(const relation &other) {
+    num_tuples = other.num_tuples;
+    tuples = new tuple[num_tuples];
+    // copy array
+    std::memmove(tuples, other.tuples, sizeof(tuple) * num_tuples);
+  }
+
+  ~relation() { delete[] tuples; }
+
   tuple &operator[](int64_t index) { return tuples[index]; }
+
   uint64_t getAmount() { return num_tuples; }
 };
 

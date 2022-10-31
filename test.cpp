@@ -3,7 +3,7 @@
 #include "hashTable.h"
 #include "histogram.h"
 #include "list.h"
-#include "partition.h"
+
 #include "partitioner.h"
 
 void test_partitioning_function() {
@@ -19,19 +19,21 @@ void test_partitioning_function() {
 }
 
 void test_partitions_1() {
-  tuple a{3, 6};
-  tuple b{5, 7};
-  tuple c{10, 16};
-  tuple d{12, 0};
-  tuple e{1, 2};
-  tuple f{11, 10};
+  tuple a{3, 6};    // 11
+  tuple b{5, 7};    // 101
+  tuple c{10, 16};  // 1010
+  tuple d{12, 0};   // 1100
+  tuple e{1, 2};    // 01
+  tuple f{11, 10};  // 1011
   tuple* tuples = new tuple[6]{a, b, c, d, e, f};
-  relation r(tuples, 6);
-  Partitioner p;
-  p.partition(r);
-  p.printEntries();
 
-  delete[] tuples;
+  relation r(tuples, 6);
+
+  Partitioner p;
+
+  relation r_ = p.partition(r);
+
+  r_.print();
 }
 
 void test_partitions_2() {
@@ -41,15 +43,10 @@ void test_partitions_2() {
   tuple d{4, 16};
   tuple* tuples = new tuple[4]{a, b, c, d};
   relation r(tuples, 4);
-  Partitioner p;
-  p.partition(r);
-  p.printEntries();
-
-  delete[] tuples;
 }
 
 TEST_LIST = {{"test_partinioning_fn", test_partitioning_function},
-             //{"test_part_pass1", test_partitions_1},
-             {"test_part_pass2", test_partitions_2},
+             {"test_part_pass1", test_partitions_1},
+             //{"test_part_pass2", test_partitions_2},
 
              {NULL, NULL}};

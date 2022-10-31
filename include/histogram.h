@@ -2,6 +2,7 @@
 #define HIST_H
 
 #include <cstdint>
+#include "dataForm.h"
 
 class Histogram {
   int64_t* entries;
@@ -11,7 +12,6 @@ class Histogram {
  public:
   Histogram(int64_t);
 
-  // insert a rowID to the right partition (index are the final n bits)
   int64_t& operator[](int64_t);
 
   int64_t getSize() const;
@@ -20,10 +20,8 @@ class Histogram {
 
   int64_t getPartitionPsum(int64_t) const;
 
-  relation generateSortedRelation();
-
   ~Histogram();
 
-  int64_t* generatePsum();
+  const int64_t* generatePsum();
 };
 #endif

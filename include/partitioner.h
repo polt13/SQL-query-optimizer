@@ -22,7 +22,7 @@ class Partitioner {
   // 2^n sized histogram
   Partitioner();
 
-  void partition(relation);
+  relation partition(relation);
 
   void printEntries() const;
 
