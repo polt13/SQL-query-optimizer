@@ -151,12 +151,21 @@ void test_HTinsert3() {
   TEST_CHECK(h.getBucket(0)->getBitmapIndex(0) == false);
 }
 
-/* Full NBHD HT Insert
+/* Full  HT Insert
  * -------------------
- * Index "hashVal" is occupied, as well as its NBHD
+ * The entirety of the HT is occupied
  * Rehash is needed
  */
-void test_HTinsert4() {}
+void test_HTinsert4() {
+  hashTable h(32);
+
+  tuple tuples[40];
+
+  for (int64_t i = 0; i < 40; i++) {
+    tuples[i] = {std::rand(), std::rand()};
+    h.insert(&tuples[i]);
+  }
+}
 
 TEST_LIST = {{"test_partinioning_fn", test_partitioning_function},
              {"test_part_pass1", test_partitions_1},
@@ -165,5 +174,6 @@ TEST_LIST = {{"test_partinioning_fn", test_partitioning_function},
              {"Normal HT Insert", test_HTinsert1},
              {"Same Key HT Insert", test_HTinsert2},
              {"Empty NBHD Slot HT Insert", test_HTinsert3},
-             //{"Full NBHD HT Insert", test_HTinsert4},
+             {"Full NBHD HT Insert", test_HTinsert4},
+
              {NULL, NULL}};
