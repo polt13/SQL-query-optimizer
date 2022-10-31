@@ -1,5 +1,6 @@
 #include "hashTable.h"
 
+// for abs
 #include <cmath>
 
 List &bucket::getTuples() { return this->tuples; }
@@ -21,8 +22,6 @@ void bucket::setBitmapIndex(uint64_t index, bool flag) {
 }
 
 bucket::bucket() : occupied{false}, Bitmap{} {}
-
-bucket::~bucket() {}
 
 // ------------------------------------------------------------------
 
@@ -142,14 +141,6 @@ void hashTable::insert(tuple *t) {
   }
 }
 
-/* void hashTable::fillHT(const HistEntry &part) {
-  Node *traverse = part.getHistEntries();
-  while (traverse) {
-    insert(&(traverse->t));
-    traverse = traverse->next;
-  }
-} */
-
 void hashTable::findEntry(int64_t key) {
   int64_t hashVal = hash2(key);  // not sure if Key
 
@@ -169,35 +160,7 @@ void hashTable::findEntry(int64_t key) {
   }
 }
 
-hashTable::hashTable(int64_t num_tuples) : num_buckets{num_tuples} {
-  if (num_tuples > 0) {
-    /*
-    this->num_buckets = 1;
-    // Calculate number of buckets needed based on number of tuples
-    // Must be power of 2 | e.g 1,2,4,8,...
-    if (num_tuples > 1) {
-      uint64_t exponent =
-          (num_tuples / 2) - 1;  // -1 because num_buckets = 1 = 2^0
-      this->num_buckets <<= exponent;
-      // Buckets must be more than or equal to tuples, NOT LESS
-      while (this->num_buckets < num_tuples) this->num_buckets <<= 1;
-    }
-    */
-    this->buckets = new bucket[this->num_buckets];
-
-    /* for (uint64_t i = 0; i < this->num_buckets; i++) {
-      uint64_t index = i;
-      for (uint64_t y = 0; y < NBHD_SIZE; y++)
-        // e.g. last bucket's bitmap points to nullptr(s)
-        if (index < this->num_buckets) {
-          this->buckets[i].setBitmapBucket(y, &buckets[index]);
-          index++;
-        }
-    } */
-  }
-  // HashTable is Empty
-  else
-    this->buckets = nullptr;
-}
+hashTable::hashTable(int64_t num_tuples)
+    : num_buckets{num_tuples}, buckets{new bucket[num_tuples]} {}
 
 hashTable::~hashTable() { delete[] buckets; }

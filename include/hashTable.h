@@ -20,7 +20,6 @@ class bucket {
   void setBitmapIndex(uint64_t, bool);
 
   bucket();
-  ~bucket();
 };
 
 class hashTable {
