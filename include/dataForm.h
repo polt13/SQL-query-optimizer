@@ -52,7 +52,7 @@ class relation {
 
   tuple &operator[](int64_t index) { return tuples[index]; }
 
-  uint64_t getAmount() { return num_tuples; }
+  int64_t getAmount() { return num_tuples; }
 };
 
 /*

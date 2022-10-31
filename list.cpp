@@ -26,6 +26,8 @@ void List::print() const {
   }
 }
 
+List::List() : start{nullptr}, end{nullptr}, len{} {}
+
 List::~List() {
   Node* traverse = start;
   for (int i = 0; i < len; i++) {

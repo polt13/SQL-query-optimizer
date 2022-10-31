@@ -12,7 +12,7 @@ void test_partitioning_function() {
   tuple c{16, 16};
   TEST_CHECK(Partitioner::hash1(a.getKey(), 2) == 3);
   TEST_CHECK(Partitioner::hash1(b.getKey(), 1) == 1);
-  TEST_CHECK(Partitioner::hash1(c.getPayload(), 4) == 0);
+  TEST_CHECK(Partitioner::hash1(c.getKey(), 4) == 0);
 }
 
 void test_partitions_1() {

@@ -2,8 +2,6 @@
 #define LIST_H
 #include <cstdint>
 
-#include "dataForm.h"
-
 struct Node {
   int64_t rowID;
   Node* next;
@@ -24,7 +22,7 @@ class List {
   // Getters
   const Node* getRoot() const;
   int64_t getLen() const;
-
+  List();
   void append(int64_t);
   void print() const;
 
