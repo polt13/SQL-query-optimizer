@@ -133,13 +133,13 @@ void hashTable::insert(tuple *t) {
   }
 }
 
-void hashTable::fillHT(const HistEntry &entry) {
+/* void hashTable::fillHT(const HistEntry &entry) {
   Node *traverse = entry.getHistEntries();
   while (traverse) {
     insert(&(traverse->t));
     traverse = traverse->next;
   }
-}
+} */
 
 void hashTable::findEntry(int64_t key) {
   uint64_t hashVal = hash2(key);  // not sure if Key
