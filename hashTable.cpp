@@ -25,9 +25,17 @@ bucket::bucket() : occupied{false}, Bitmap{} {}
 
 // ------------------------------------------------------------------
 
+bucket *hashTable::getBucket(uint64_t index) const {
+  if ((int64_t)index >= this->num_buckets) return nullptr;
+  return &(this->buckets[index]);
+}
+
 int64_t hashTable::getBucketCount() const { return num_buckets; }
 
-int64_t hashTable::hash2(int64_t key) { return key % this->num_buckets; }
+int64_t hashTable::hash2(int64_t key) {
+  if (this->num_buckets == 0) return -1;  // a mod 0 is undefined
+  return key % this->num_buckets;
+}
 
 void hashTable::rehash() {
   std::printf("Rehashing");
@@ -51,6 +59,7 @@ void hashTable::rehash() {
 // Insert all tuples of a partition into the hashTable
 void hashTable::insert(tuple *t) {
   int64_t hashVal = hash2(t->getKey());
+  if (hashVal == -1) return;  // Cannot insert to an empty HT
   bool flag;
 
   // ----- Implement Hopscotch Hashing -----
@@ -141,22 +150,25 @@ void hashTable::insert(tuple *t) {
   }
 }
 
-void hashTable::findEntry(int64_t key) {
+bool hashTable::findEntry(int64_t key) {
   int64_t hashVal = hash2(key);  // not sure if Key
 
-  if (this->buckets[hashVal].getTuples().getRoot()->mytuple->getKey() == key)
-    std::printf("Found item with key %ld\n", key);
+  if (this->buckets[hashVal].getTuples().getRoot()->mytuple->getKey() == key) {
+    // std::printf("Found item with key %ld\n", key);
+    return true;
+  }
 
   else {
     // Search inside neighbourhood
     for (uint64_t i = 0; i < NBHD_SIZE; i++) {
       if (this->buckets[hashVal + i].getTuples().getRoot()->mytuple->getKey() ==
           key) {
-        std::printf("Found item with key %ld\n", key);
-        return;
+        // std::printf("Found item with key %ld\n", key);
+        return true;
       }
     }
-    std::printf("Item with key %ld NOT FOUND\n", key);
+    // std::printf("Item with key %ld NOT FOUND\n", key);
+    return false;
   }
 }
 

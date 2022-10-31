@@ -28,13 +28,13 @@ class hashTable {
 
  public:
   // Getters
+  bucket *getBucket(uint64_t) const;
   int64_t getBucketCount() const;
 
   int64_t hash2(int64_t);
   void insert(tuple *);
   void rehash();
-
-  void findEntry(int64_t);
+  bool findEntry(int64_t);
 
   hashTable(int64_t);
   ~hashTable();

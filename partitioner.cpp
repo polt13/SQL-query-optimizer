@@ -5,7 +5,7 @@
 relation Partitioner::partition1(relation& r) {
   int64_t r_entries = r.getAmount();
   // if partitioning is needed at least once
-  std::printf("\nOne pass needed\n");
+  //std::printf("\nOne pass needed\n");
   partitioningLevel = 1;
 
   // partition based on payload
@@ -44,7 +44,7 @@ relation Partitioner::partition1(relation& r) {
 }
 
 relation Partitioner::partition2(relation& r2) {
-  std::printf("Second pass needed\n");
+  //std::printf("Second pass needed\n");
   partitioningLevel = 2;
 
   int64_t r2_entries = r2.getAmount();
@@ -85,7 +85,7 @@ relation Partitioner::partition2(relation& r2) {
 relation Partitioner::partition(relation& r, int64_t force_partition_depth) {
   if (((r.getAmount() * sizeof(tuple)) < L2_SIZE) &&
       force_partition_depth == 0) {
-    std::printf("Doesn't need partitioning\n");
+    //std::printf("Doesn't need partitioning\n");
     return r;
   }
 
@@ -97,7 +97,7 @@ relation Partitioner::partition(relation& r, int64_t force_partition_depth) {
   for (int64_t i = 0; i < hist->getSize(); i++) {
     if ((*hist)[i] * sizeof(tuple) > L2_SIZE) {
       partitionsFit = false;
-      std::printf("\nPartition %ld doesn't fit in L2\n", i);
+      //std::printf("\nPartition %ld doesn't fit in L2\n", i);
       break;
     }
   }

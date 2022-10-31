@@ -23,6 +23,7 @@ class List {
   int64_t getLen() const;
 
   void append(tuple*);
+  bool find(tuple&);
   void print() const;
 
   List();

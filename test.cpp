@@ -3,7 +3,6 @@
 #include "hashTable.h"
 #include "histogram.h"
 #include "list.h"
-
 #include "partitioner.h"
 
 void test_partitioning_function() {
@@ -61,7 +60,110 @@ void test_partitions_2() {
   TEST_CHECK(r_[3].getKey() == 31);
 }
 
+/* HT's Hash Function
+ * ------------------
+ */
+void test_HThash2() {
+  tuple a{3, 6};
+  tuple b{5, 7};
+  tuple c{10, 16};
+  tuple d{125, 0};
+  tuple e{1, 2};
+  tuple f{1531, 10};
+
+  hashTable h1(0);
+  hashTable h2(1);
+  hashTable h3(4);
+  hashTable h4(8);
+  hashTable h5(6);
+  hashTable h6(62);
+
+  TEST_CHECK(h1.hash2(a.getKey()) == -1);  // 3 % 0
+  TEST_CHECK(h2.hash2(b.getKey()) == 0);   // 5 % 1
+  TEST_CHECK(h3.hash2(c.getKey()) == 2);   // 10 % 4
+  TEST_CHECK(h4.hash2(d.getKey()) == 5);   // 125 % 8
+  TEST_CHECK(h5.hash2(e.getKey()) == 1);   // 1 % 6
+  TEST_CHECK(h6.hash2(f.getKey()) == 43);  // 1531 % 62
+}
+
+/* Normal Hash Table Insert
+ * ------------------------
+ * Index "hashVal" is empty
+ */
+void test_HTinsert1() {
+  tuple a{10, 1};  // 10 % 4 = 2
+  hashTable h(4);
+
+  h.insert(&a);
+  TEST_CHECK(h.getBucket(2)->getTuples().getRoot()->mytuple == &a);
+  TEST_CHECK(h.getBucket(2)->getOccupied() == true);
+  TEST_CHECK(h.getBucket(2)->getBitmapIndex(0) == true);
+}
+
+/* Same Key HT Insert
+ * ------------------
+ * Two tuples with same Key but different Payload (rowID)
+ * Second tuple has to be inserted (append) into first tuple's List
+ */
+void test_HTinsert2() {
+  tuple a{10, 1};  // 10 % 4 = 2
+  tuple b{10, 2};  // Same key but different row
+
+  hashTable h(4);
+
+  h.insert(&a);
+  h.insert(&b);
+  TEST_CHECK(h.getBucket(2)->getTuples().getRoot()->mytuple == &a);
+  TEST_CHECK(h.getBucket(2)->getOccupied() == true);
+  TEST_CHECK(h.getBucket(2)->getBitmapIndex(0) == true);
+  TEST_CHECK(h.getBucket(2)->getTuples().find(b) == true);
+}
+
+/* Empty NBHD Slot HT Insert
+ * -------------------------
+ * Index "hashVal" already Occupied, find empty slot
+ * Empty slot already in NBHD_Size range, no need to swap
+ * with anything. Just insert in index j instead.
+ * Includes the case when exceeding HT's Size (start from 0)
+ */
+void test_HTinsert3() {
+  tuple a{10, 1};  // 10 % 4 = 2
+  tuple b{14, 3};  // 10 % 4 = 2
+  tuple c{18, 6};  // 10 % 4 = 2
+
+  hashTable h(4);
+
+  h.insert(&a);
+  h.insert(&b);
+  h.insert(&c);
+  TEST_CHECK(h.getBucket(2)->getTuples().getRoot()->mytuple == &a);
+  TEST_CHECK(h.getBucket(2)->getOccupied() == true);
+  TEST_CHECK(h.getBucket(2)->getBitmapIndex(0) == true);
+  TEST_CHECK(h.getBucket(2)->getBitmapIndex(1) == true);
+  TEST_CHECK(h.getBucket(2)->getBitmapIndex(2) == true);
+
+  TEST_CHECK(h.getBucket(3)->getTuples().getRoot()->mytuple == &b);
+  TEST_CHECK(h.getBucket(3)->getOccupied() == true);
+  TEST_CHECK(h.getBucket(3)->getBitmapIndex(0) == false);
+
+  TEST_CHECK(h.getBucket(0)->getTuples().getRoot()->mytuple == &c);
+  TEST_CHECK(h.getBucket(0)->getOccupied() == true);
+  TEST_CHECK(h.getBucket(0)->getBitmapIndex(0) == false);
+}
+
+/* Full NBHD HT Insert
+ * -------------------
+ * Index "hashVal" is occupied, as well as its NBHD
+ * Rehash is needed
+ */
+void test_HTinsert4() {}
+
 TEST_LIST = {{"test_partinioning_fn", test_partitioning_function},
              {"test_part_pass1", test_partitions_1},
              {"test_part_pass2", test_partitions_2},
+             {"HT's Hash Function", test_HThash2},
+             {"Normal HT Insert", test_HTinsert1},
+             {"Same Key HT Insert", test_HTinsert2},
+             {"Empty NBHD Slot HT Insert", test_HTinsert3},
+             //{"Full NBHD HT Insert", test_HTinsert4},
              {NULL, NULL}};

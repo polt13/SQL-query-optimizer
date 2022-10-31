@@ -22,6 +22,15 @@ void List::append(tuple* t) {
   len++;
 }
 
+bool List::find(tuple& t) {
+  Node* traverse = start;
+  while (traverse) {
+    if (traverse->mytuple == &t) return true;
+    traverse = traverse->next;
+  }
+  return false;
+}
+
 void List::print() const {
   Node* traverse = start;
   for (int64_t i = 0; i < len; i++) {
