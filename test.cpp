@@ -128,8 +128,8 @@ void test_HTinsert2() {
  */
 void test_HTinsert3() {
   tuple a{10, 1};  // 10 % 4 = 2
-  tuple b{14, 3};  // 10 % 4 = 2
-  tuple c{18, 6};  // 10 % 4 = 2
+  tuple b{14, 3};  // 14 % 4 = 2
+  tuple c{18, 6};  // 18 % 4 = 2
 
   hashTable h(4);
 
