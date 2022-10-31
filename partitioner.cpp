@@ -2,12 +2,12 @@
 #include <cstdio>
 #include <cstring>
 
-relation Partitioner::partition1(relation r) {
+relation Partitioner::partition1(relation r, int64_t cacheSize = L2_SIZE) {
   int64_t r_entries = r.getAmount();
 
   // change maybe? (sizeof(relation) = 8, if it only holds a pointer it always
   // fits)
-  if (r.getAmount() * sizeof(tuple) < L2_SIZE) {
+  if (r.getAmount() * sizeof(tuple) < cacheSize) {
     std::printf("Doesn't need partitioning\n");
     return r;
   }

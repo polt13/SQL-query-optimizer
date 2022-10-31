@@ -9,13 +9,10 @@
 void test_partitioning_function() {
   tuple a{3, 6};
   tuple b{5, 7};
-  tuple c{10, 16};
-  tuple d{12, 49};
-  TEST_CHECK(Partitioner::hash1(a.getPayload(), 2) == 2);
-  TEST_CHECK(Partitioner::hash1(b.getPayload(), 4) == 7);
+  tuple c{16, 16};
+  TEST_CHECK(Partitioner::hash1(a.getKey(), 2) == 3);
+  TEST_CHECK(Partitioner::hash1(b.getKey(), 1) == 1);
   TEST_CHECK(Partitioner::hash1(c.getPayload(), 4) == 0);
-  // fails
-  // TEST_CHECK(Partitioner::hash1(d.getPayload(), 64) == 49);
 }
 
 void test_partitions_1() {

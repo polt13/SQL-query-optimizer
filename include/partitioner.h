@@ -6,13 +6,13 @@
 
 #define USE_BITS 2       // first partitioning
 #define USE_BITS_NEXT 4  // 2nd partitioning
-#define L2_SIZE 20
+#define L2_SIZE 600
 
 class Partitioner {
   Histogram* hist;
   int64_t partitioningLevel;
 
-  relation partition1(relation);
+  relation partition1(relation, int64_t);
 
   relation partition2(relation);
 
