@@ -12,12 +12,12 @@ class bucket {
   // Getters
   List &getTuples();
   bool getOccupied() const;
-  bool getBitmapIndex(uint64_t) const;
+  bool getBitmapIndex(int64_t) const;
   //  Setters
   void setTuple(tuple *);
   void setTuple(List &);
   void setOccupied(bool);
-  void setBitmapIndex(uint64_t, bool);
+  void setBitmapIndex(int64_t, bool);
 
   bucket();
 };
@@ -28,7 +28,7 @@ class hashTable {
 
  public:
   // Getters
-  bucket *getBucket(uint64_t) const;
+  bucket *getBucket(int64_t) const;
   int64_t getBucketCount() const;
 
   int64_t hash2(int64_t);
