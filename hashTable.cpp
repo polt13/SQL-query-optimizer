@@ -1,5 +1,9 @@
 #include "hashTable.h"
+
 #include <cmath>
+#include <cstdio>
+
+#include "list.h"
 
 tuple *bucket::getTuple() const { return this->mytuple; }
 
@@ -9,9 +13,6 @@ bool bucket::getBitmapIndex(uint64_t index) const {
   return this->Bitmap[index];
 }
 
-// bucket *bucket::getBitmapBucket(uint64_t index) { return this->Bitmap[index];
-// }
-
 void bucket::setTuple(tuple *t) { this->mytuple = t; }
 
 void bucket::setOccupied(bool flag) { this->occupied = flag; }
@@ -20,22 +21,15 @@ void bucket::setBitmapIndex(uint64_t index, bool flag) {
   this->Bitmap[index] = flag;
 }
 
-/* void bucket::setBitmapBucket(uint64_t index, bucket *mybucket) {
-  this->Bitmap[index] = mybucket;
-} */
-
 bucket::bucket() : mytuple{nullptr}, occupied{false}, Bitmap{} {}
 
 bucket::~bucket() {}
 
 // ------------------------------------------------------------------
 
-uint64_t hashTable::getBucketCount() const { return num_buckets; }
+int64_t hashTable::getBucketCount() const { return num_buckets; }
 
-uint64_t hashTable::hash2(int64_t key) {
-  // todo
-  return key % this->num_buckets;
-}
+int64_t hashTable::hash2(int64_t key) { return key % this->num_buckets; }
 
 void hashTable::rehash() {
   std::printf("Rehashing");
@@ -53,7 +47,7 @@ void hashTable::rehash() {
 
 // Insert all tuples of a partition into the hashTable
 void hashTable::insert(tuple *t) {
-  uint64_t hashVal = hash2(t->getPayload());  // not sure if Key
+  uint64_t hashVal = hash2(t->getKey());
   bool flag;
 
   // ----- Implement Hopscotch Hashing -----
@@ -62,12 +56,19 @@ void hashTable::insert(tuple *t) {
     this->buckets[hashVal].setOccupied(true);
     this->buckets[hashVal].setBitmapIndex(0, true);
   } else {
-    // Check if Neighbourhood is FULL
+    // Check if Neighbourhood is FULL and Check for Duplicates
     flag = true;  // Assume it's full
     for (uint64_t i = 0; i < NBHD_SIZE; i++) {
-      if (this->buckets[hashVal].getBitmapIndex(i) == false) {
-        flag = false;  // Neighbourhood NOT full
-        break;
+      if (this->buckets[hashVal].getBitmapIndex(i) == false)
+        flag = false;  // Neighbourhood NOT full - Empty slot FOUND
+      else {
+        // Check if exact same key (R.a) exists
+        if (this->buckets[hashVal + i].getTuple()->getKey() == t->getKey()) {
+          // Add argument's rowID into the List payload
+          this->buckets[hashVal + i].getTuple()->getPayload().append(
+              t->getPayload().getRoot()->rowID);
+          return;
+        }
       }
     }
     // Step 1. FULL Neighbourhood
@@ -96,51 +97,49 @@ void hashTable::insert(tuple *t) {
     while ((std::abs((int64_t)(j - hashVal)) % this->num_buckets) >=
            NBHD_SIZE) {
       // Step 3.a.
-      for (int64_t k = j - NBHD_SIZE + 1; k < j; k++) {
-        // in case where the index turns out negative,  cycle back to the end
-        if (k < 0) k = num_buckets - k;
-
-        flag = false;
-        // Search for an element in Neighbourhood
-        for (uint64_t x = 0; x < NBHD_SIZE; x++) {
-          if (this->buckets[k].getBitmapIndex(x) == true) {
-            flag = true;  // Element found
-            // Step 3.c
-            this->buckets[j].setTuple(this->buckets[k + x].getTuple());
-            this->buckets[j].setOccupied(true);
-            this->buckets[k].setBitmapIndex((j - k), true);
-
-            this->buckets[k].setBitmapIndex(x, false);
-            this->buckets[(k + x) % num_buckets].setTuple(nullptr);
-            this->buckets[(k + x) % num_buckets].setOccupied(false);
-            // Step 3.d.
-            j = k + x;
-            break;
-          }
+      int64_t k = j - NBHD_SIZE + 1;
+      // in case where the index turns out negative, cycle back to the end
+      if (k < 0) k = num_buckets + k;
+      // Search NBHD_SIZE - 1
+      for (uint64_t x = 0; x < NBHD_SIZE - 1; x++) {
+        if (this->buckets[k].getBitmapIndex(x) == true) {
+          flag = true;  // Element found
+          this->buckets[j].setTuple(
+              this->buckets[(k + x) % num_buckets].getTuple());
+          this->buckets[j].setOccupied(true);
+          this->buckets[k].setBitmapIndex((NBHD_SIZE - 1), true);
+          // Step 3.c
+          this->buckets[(k + x) % num_buckets].setTuple(nullptr);
+          this->buckets[(k + x) % num_buckets].setOccupied(false);
+          this->buckets[k].setBitmapIndex(x, false);
+          // Step 3.d.
+          j = (k + x) % this->num_buckets;
+          break;
         }
-        // Step 3.b. | No element found
-        if (flag == false) {
-          // Rehash needed
-          rehash();
-          insert(t);
-          return;
-        }
+      }
+      // Step 3.b. | No element found
+      if (flag == false) {
+        // Rehash needed
+        rehash();
+        insert(t);
+        return;
       }
     }
     // Step 4 | Save tuple here
     this->buckets[j].setTuple(t);
     this->buckets[j].setOccupied(true);
-    this->buckets[hashVal].setBitmapIndex((j - hashVal), true);
+    this->buckets[hashVal].setBitmapIndex(std::abs((int64_t)(j - hashVal)),
+                                          true);
   }
 }
 
-void hashTable::fillHT(const HistEntry &part) {
-  Node *traverse = part.getHistEntries();
+/* void hashTable::fillHT(const HistEntry &entry) {
+  Node *traverse = entry.getHistEntries();
   while (traverse) {
     insert(&(traverse->t));
     traverse = traverse->next;
   }
-}
+} */
 
 void hashTable::findEntry(int64_t key) {
   uint64_t hashVal = hash2(key);  // not sure if Key
@@ -160,7 +159,7 @@ void hashTable::findEntry(int64_t key) {
   }
 }
 
-hashTable::hashTable(uint64_t num_tuples) : num_buckets{num_tuples} {
+hashTable::hashTable(int64_t num_tuples) : num_buckets{num_tuples} {
   if (num_tuples > 0) {
     /*
     this->num_buckets = 1;
@@ -175,16 +174,6 @@ hashTable::hashTable(uint64_t num_tuples) : num_buckets{num_tuples} {
     }
     */
     this->buckets = new bucket[this->num_buckets];
-
-    /* for (uint64_t i = 0; i < this->num_buckets; i++) {
-      uint64_t index = i;
-      for (uint64_t y = 0; y < NBHD_SIZE; y++)
-        // e.g. last bucket's bitmap points to nullptr(s)
-        if (index < this->num_buckets) {
-          this->buckets[i].setBitmapBucket(y, &buckets[index]);
-          index++;
-        }
-    } */
   }
   // HashTable is Empty
   else

@@ -1,14 +1,16 @@
 #ifndef LIST_H
 #define LIST_H
-#include "dataForm.h"
 #include <cstdint>
 
+#include "dataForm.h"
+
 struct Node {
-  tuple t;
+  int64_t rowID;
   Node* next;
 
-  Node(tuple t, Node* next = nullptr) {
-    this->t = t;
+ public:
+  Node(int64_t row, Node* next = nullptr) {
+    this->rowID = row;
     this->next = next;
   }
 };
@@ -19,10 +21,13 @@ class List {
   int64_t len;
 
  public:
-  int64_t getLen() const;
-  void append(tuple);
-  void print() const;
+  // Getters
   const Node* getRoot() const;
+  int64_t getLen() const;
+
+  void append(int64_t);
+  void print() const;
+
   ~List();
 };
 

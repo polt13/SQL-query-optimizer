@@ -8,19 +8,16 @@ class bucket {
   tuple *mytuple;
   bool occupied;
   bool Bitmap[NBHD_SIZE];
-  // bucket *Bitmap[HBHD_SIZE];
 
  public:
   // Getters
   tuple *getTuple() const;
   bool getOccupied() const;
-  bool getBitmapIndex(int64_t) const;
-  // bucket *getBitmapBucket(int64_t);
+  bool getBitmapIndex(uint64_t) const;
   //  Setters
   void setTuple(tuple *);
   void setOccupied(bool);
-  void setBitmapIndex(int64_t, bool);
-  // void setBitmapBucket(int64_t, bucket *);
+  void setBitmapIndex(uint64_t, bool);
 
   bucket();
   ~bucket();
