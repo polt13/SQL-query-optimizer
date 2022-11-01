@@ -122,7 +122,7 @@ void test_HTinsert2() {
 /* Empty NBHD Slot HT Insert
  * -------------------------
  * Index "hashVal" already Occupied, find empty slot
- * Empty slot already in NBHD_Size range, no need to swap
+ * Empty slot already in NBHD_SIZE range, no need to swap
  * with anything. Just insert in index j instead.
  * Includes the case when exceeding HT's Size (start from 0)
  */
@@ -151,20 +151,100 @@ void test_HTinsert3() {
   TEST_CHECK(h.getBucket(0)->getBitmapIndex(0) == false);
 }
 
-/* Full  HT Insert
- * -------------------
+/* Full HT Insert
+ * --------------
  * The entirety of the HT is occupied
  * Rehash is needed
  */
 void test_HTinsert4() {
-  hashTable h(32);
+  int keys[] = {636,   1088,  1381,  1634,  1755,  2063,  2394,  2456,  2932,
+                3359,  3384,  3772,  3852,  4015,  4961,  5459,  6445,  6780,
+                7071,  7318,  8552,  9469,  10216, 10515, 11359, 11460, 11574,
+                11714, 12033, 13043, 13203, 13214, 13232, 13705, 13957, 14808,
+                15476, 15931, 16025, 16363, 16951, 17133, 17419, 18089, 18143,
+                18234, 18248, 18933, 19039, 20237};
 
   tuple tuples[40];
 
+  hashTable h(34);
+
+  int64_t key_index = 0;
+
   for (int64_t i = 0; i < 40; i++) {
-    tuples[i] = {std::rand(), std::rand()};
+    tuples[i] = {keys[key_index++], std::rand()};
     h.insert(&tuples[i]);
   }
+}
+
+/* Full NBHD HT Insert
+ * -------------------
+ * The entirety of a specific Bucket's Neighbourhood is occupied
+ * Rehash is needed
+ */
+void test_HTinsert5() {
+  int key = 636;  // 636 % 50 = 36
+
+  tuple tuples[40];
+
+  hashTable h(50);
+
+  for (int64_t i = 0; i < 40; i++) {
+    tuples[i] = {key, std::rand()};  // hash in same bucket
+    h.insert(&tuples[i]);
+    key += 50;
+  }
+}
+
+/* Swap HT Insert
+ * --------------
+ * Index "hashVal" already Occupied, find empty slot
+ * Empty slot NOT in NBHD_SIZE range, need to swap elements
+ * in order to "create" empty slot (by swapping)
+ * which is in NBHD_SIZE range
+ * Includes the case when exceeding HT's Size (start from 0)
+ */
+void test_HTinsert6() {
+  int key = 26;  // 26 % 40 = 26
+
+  tuple tuples[35];
+
+  hashTable h(40);
+
+  for (int64_t i = 0; i < 35; i++) {
+    if (i == 32) key = 66;  // 66 % 40 = 26
+    tuples[i] = {key, std::rand()};
+    h.insert(&tuples[i]);
+    key++;
+  }
+
+  TEST_CHECK(h.getBucket(26)->getTuples().getRoot()->mytuple == &tuples[0]);
+  TEST_CHECK(h.getBucket(26)->getOccupied() == true);
+  TEST_CHECK(h.getBucket(26)->getBitmapIndex(0) == true);
+  TEST_CHECK(h.getBucket(26)->getBitmapIndex(1) == true);
+  TEST_CHECK(h.getBucket(27)->getTuples().getRoot()->mytuple == &tuples[32]);
+  TEST_CHECK(h.getBucket(27)->getOccupied() == true);
+  TEST_CHECK(h.getBucket(27)->getBitmapIndex(0) == false);
+  TEST_CHECK(h.getBucket(27)->getBitmapIndex(1) == true);
+  TEST_CHECK(h.getBucket(27)->getBitmapIndex(31) == true);
+  TEST_CHECK(h.getBucket(28)->getTuples().getRoot()->mytuple == &tuples[33]);
+  TEST_CHECK(h.getBucket(28)->getOccupied() == true);
+  TEST_CHECK(h.getBucket(28)->getBitmapIndex(0) == false);
+  TEST_CHECK(h.getBucket(28)->getBitmapIndex(1) == true);
+  TEST_CHECK(h.getBucket(28)->getBitmapIndex(31) == true);
+  TEST_CHECK(h.getBucket(29)->getTuples().getRoot()->mytuple == &tuples[34]);
+  TEST_CHECK(h.getBucket(29)->getOccupied() == true);
+  TEST_CHECK(h.getBucket(29)->getBitmapIndex(0) == false);
+  TEST_CHECK(h.getBucket(29)->getBitmapIndex(31) == true);
+}
+
+/* None for Swap HT Insert
+ * -----------------------
+ *
+ * Rehash is needed
+ */
+void test_HTinsert7() {
+  hashTable h(40);
+  // todo
 }
 
 TEST_LIST = {{"test_partinioning_fn", test_partitioning_function},
@@ -174,6 +254,8 @@ TEST_LIST = {{"test_partinioning_fn", test_partitioning_function},
              {"Normal HT Insert", test_HTinsert1},
              {"Same Key HT Insert", test_HTinsert2},
              {"Empty NBHD Slot HT Insert", test_HTinsert3},
-             {"Full NBHD HT Insert", test_HTinsert4},
-
+             {"Full HT Insert", test_HTinsert4},
+             {"Full NBHD HT Insert", test_HTinsert5},
+             {"Swap HT Insert", test_HTinsert6},
+             {"None for Swap HT Insert", test_HTinsert7},
              {NULL, NULL}};

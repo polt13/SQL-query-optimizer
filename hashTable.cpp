@@ -125,7 +125,7 @@ void hashTable::insert(tuple *t) {
       int64_t k = j - NBHD_SIZE + 1;
 
       // In case where the index turns out negative, cycle back to the end
-      if (k < 0) k = -1 + num_buckets + k;
+      if (k < 0) k = num_buckets + k;
 
       // Search NBHD_SIZE - 1
       for (int64_t x = 0; x < NBHD_SIZE - 1; x++) {
@@ -149,6 +149,7 @@ void hashTable::insert(tuple *t) {
             dist = (j - hashVal) + this->num_buckets;
           else
             dist = (j - hashVal) % this->num_buckets;
+          // std::printf("swap done\n");
           break;
         }
       }
