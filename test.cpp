@@ -91,13 +91,13 @@ void test_HThash2() {
  * Index "hashVal" is empty
  */
 void test_HTinsert1() {
-  tuple a{10, 1};  // 10 % 4 = 2
-  hashTable h(4);
+  tuple a{10, 1};  // 10 % 40 = 10
+  hashTable h(40);
 
   h.insert(&a);
-  TEST_CHECK(h.getBucket(2)->getTuples().getRoot()->mytuple == &a);
-  TEST_CHECK(h.getBucket(2)->getOccupied() == true);
-  TEST_CHECK(h.getBucket(2)->getBitmapIndex(0) == true);
+  TEST_CHECK(h.getBucket(10)->getTuples().getRoot()->mytuple == &a);
+  TEST_CHECK(h.getBucket(10)->getOccupied() == true);
+  TEST_CHECK(h.getBucket(10)->getBitmapIndex(0) == true);
 }
 
 /* Same Key HT Insert
@@ -106,17 +106,17 @@ void test_HTinsert1() {
  * Second tuple has to be inserted (append) into first tuple's List
  */
 void test_HTinsert2() {
-  tuple a{10, 1};  // 10 % 4 = 2
+  tuple a{10, 1};  // 10 % 40 = 10
   tuple b{10, 2};  // Same key but different row
 
-  hashTable h(4);
+  hashTable h(40);
 
   h.insert(&a);
   h.insert(&b);
-  TEST_CHECK(h.getBucket(2)->getTuples().getRoot()->mytuple == &a);
-  TEST_CHECK(h.getBucket(2)->getOccupied() == true);
-  TEST_CHECK(h.getBucket(2)->getBitmapIndex(0) == true);
-  TEST_CHECK(h.getBucket(2)->getTuples().find(b) == true);
+  TEST_CHECK(h.getBucket(10)->getTuples().getRoot()->mytuple == &a);
+  TEST_CHECK(h.getBucket(10)->getOccupied() == true);
+  TEST_CHECK(h.getBucket(10)->getBitmapIndex(0) == true);
+  TEST_CHECK(h.getBucket(10)->getTuples().find(b) == true);
 }
 
 /* Empty NBHD Slot HT Insert
@@ -127,24 +127,24 @@ void test_HTinsert2() {
  * Includes the case when exceeding HT's Size (start from 0)
  */
 void test_HTinsert3() {
-  tuple a{10, 1};  // 10 % 4 = 2
-  tuple b{14, 3};  // 14 % 4 = 2
-  tuple c{18, 6};  // 18 % 4 = 2
+  tuple a{38, 1};   // 38 % 40 = 38
+  tuple b{78, 3};   // 78 % 40 = 38
+  tuple c{118, 6};  // 118 % 40 = 38
 
-  hashTable h(4);
+  hashTable h(40);
 
   h.insert(&a);
   h.insert(&b);
   h.insert(&c);
-  TEST_CHECK(h.getBucket(2)->getTuples().getRoot()->mytuple == &a);
-  TEST_CHECK(h.getBucket(2)->getOccupied() == true);
-  TEST_CHECK(h.getBucket(2)->getBitmapIndex(0) == true);
-  TEST_CHECK(h.getBucket(2)->getBitmapIndex(1) == true);
-  TEST_CHECK(h.getBucket(2)->getBitmapIndex(2) == true);
+  TEST_CHECK(h.getBucket(38)->getTuples().getRoot()->mytuple == &a);
+  TEST_CHECK(h.getBucket(38)->getOccupied() == true);
+  TEST_CHECK(h.getBucket(38)->getBitmapIndex(0) == true);
+  TEST_CHECK(h.getBucket(38)->getBitmapIndex(1) == true);
+  TEST_CHECK(h.getBucket(38)->getBitmapIndex(2) == true);
 
-  TEST_CHECK(h.getBucket(3)->getTuples().getRoot()->mytuple == &b);
-  TEST_CHECK(h.getBucket(3)->getOccupied() == true);
-  TEST_CHECK(h.getBucket(3)->getBitmapIndex(0) == false);
+  TEST_CHECK(h.getBucket(39)->getTuples().getRoot()->mytuple == &b);
+  TEST_CHECK(h.getBucket(39)->getOccupied() == true);
+  TEST_CHECK(h.getBucket(39)->getBitmapIndex(0) == false);
 
   TEST_CHECK(h.getBucket(0)->getTuples().getRoot()->mytuple == &c);
   TEST_CHECK(h.getBucket(0)->getOccupied() == true);

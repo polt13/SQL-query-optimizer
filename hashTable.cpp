@@ -1,8 +1,5 @@
 #include "hashTable.h"
 
-// for abs
-#include <cmath>
-
 List &bucket::getTuples() { return this->tuples; }
 
 bool bucket::getOccupied() const { return this->occupied; }
@@ -36,7 +33,7 @@ int64_t hashTable::hash2(int64_t key) {
 }
 
 void hashTable::rehash() {
-  std::printf("Rehashing\n");
+  // std::printf("Rehashing\n");
   int64_t old_bucket_count = num_buckets;
   bucket *old_buckets = buckets;
 
@@ -89,7 +86,7 @@ void hashTable::insert(tuple *t) {
     }
     // Step 1. FULL Neighbourhood
     if (flag == true) {
-      std::printf("full neighb\n");
+      // std::printf("full neighb\n");
       rehash();
       insert(t);
       return;
@@ -105,18 +102,24 @@ void hashTable::insert(tuple *t) {
       j = (j + 1) % this->num_buckets;
     }
 
+    // FULL HashTable
     if (flag == false) {
-      std::printf("HT is full\n");
-      // No empty slot - Rehash needed
+      // std::printf("HT is full\n");
+      //  No empty slot - Rehash needed
       rehash();
       insert(t);
 
       return;
     }
 
+    int64_t dist;
+    if (j < hashVal)
+      dist = (j - hashVal) + this->num_buckets;
+    else
+      dist = (j - hashVal) % this->num_buckets;
+
     // Step 3.
-    while ((std::abs((int64_t)(j - hashVal)) % this->num_buckets) >=
-           NBHD_SIZE) {
+    while (dist >= NBHD_SIZE) {
       // Step 3.a.
 
       int64_t k = j - NBHD_SIZE + 1;
@@ -141,6 +144,11 @@ void hashTable::insert(tuple *t) {
           this->buckets[k].setBitmapIndex(x, false);
           // Step 3.d.
           j = (k + x) % this->num_buckets;
+
+          if (j < hashVal)
+            dist = (j - hashVal) + this->num_buckets;
+          else
+            dist = (j - hashVal) % this->num_buckets;
           break;
         }
       }
@@ -155,8 +163,7 @@ void hashTable::insert(tuple *t) {
     // Step 4 | Save tuple here
     this->buckets[j].setTuple(t);
     this->buckets[j].setOccupied(true);
-    this->buckets[hashVal].setBitmapIndex(std::abs((int64_t)(j - hashVal)),
-                                          true);
+    this->buckets[hashVal].setBitmapIndex(dist, true);
   }
 }
 
