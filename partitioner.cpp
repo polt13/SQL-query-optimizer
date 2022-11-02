@@ -5,7 +5,6 @@
 /*
  * Hash Function for partitioning
  * Get the n Least Significant Bits (LSB)
- *
  */
 int64_t Partitioner::hash1(uint64_t key, uint64_t n) {
   uint64_t num = 1;
@@ -24,12 +23,10 @@ relation Partitioner::partition1(relation& r) {
 
   hist = new Histogram(1 << USE_BITS);
 
-  // partition based on payload
   for (int64_t t = 0; t < r_entries; t++) {
-    // index indicates which partition the tuple goes to
-    // t is the value = row_id
     tuple record = r[t];
-    // partition based on the payload
+    // partition based on the key
+    // index indicates which partition the tuple goes to
     int64_t index = hash1(record.getKey(), USE_BITS);
     (*hist)[index]++;
   }
@@ -113,7 +110,6 @@ relation Partitioner::partition(relation& r, int64_t force_partition_depth) {
   }
 
   relation r2 = partition1(r);
-  return r2;
 
   bool partitionsFit = true;
 
