@@ -361,12 +361,17 @@ void test_build_1() {
 
   relation s_ = sp.partition(s, forcePartitioning);
 
-  Histogram* histr = rp.getHistogram();
-  Histogram* hists = sp.getHistogram();
+  // if no partitioning done - no histogram generated...
+  // this depends on L2_SIZE
+  if (forcePartitioning != 0) {
+    Histogram* histr = rp.getHistogram();
+    Histogram* hists = sp.getHistogram();
 
-  // check if both relations have the same number of partitions
-  // the two test_checks are equivalent
-  TEST_CHECK(histr->getSize() == hists->getSize());
+    // check if both relations have the same number of partitions
+    // the two test_checks are equivalent
+    TEST_CHECK(histr->getSize() == hists->getSize());
+  }
+
   TEST_CHECK(rp.getPartitioningLevel() == sp.getPartitioningLevel());
 
   Partitioner rp2, sp2;
