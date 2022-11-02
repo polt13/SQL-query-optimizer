@@ -120,6 +120,7 @@ void hashTable::insert(tuple *t) {
 
     // Step 3.
     while (dist >= NBHD_SIZE) {
+      flag = false;  // Indicates if element for swap is found
       // Step 3.a.
 
       int64_t k = j - NBHD_SIZE + 1;
@@ -155,7 +156,8 @@ void hashTable::insert(tuple *t) {
       }
       // Step 3.b. | No element found
       if (flag == false) {
-        // Rehash needed
+        // std::printf("no element found\n");
+        //  Rehash needed
         rehash();
         insert(t);
         return;

@@ -239,12 +239,68 @@ void test_HTinsert6() {
 
 /* None for Swap HT Insert
  * -----------------------
- *
+ * Index "hashVal" already Occupied, find empty slot
+ * Empty slot NOT in NBHD_SIZE range, need to swap elements
+ * BUT no element to fullfil the requirements is found
  * Rehash is needed
+ * Includes the case when exceeding HT's Size (start from 0)
  */
 void test_HTinsert7() {
+  int key = 26;  // 26 % 40 = 26
+
+  tuple tuples[34];
+
   hashTable h(40);
-  // todo
+
+  for (int64_t i = 0; i < 34; i++) {
+    if (i == 32) key = 27;  // 27 % 40 = 27
+    tuples[i] = {key, std::rand()};
+    h.insert(&tuples[i]);
+    key += 40;
+  }
+
+  // key = 26 | hashVal = 26 % 81 = 26
+  TEST_CHECK(h.getBucket(26)->getTuples().getRoot()->mytuple == &tuples[0]);
+  TEST_CHECK(h.getBucket(26)->getOccupied() == true);
+  TEST_CHECK(h.getBucket(26)->getBitmapIndex(0) == true);
+
+  // key = 66 | hashVal = 66 % 81 = 66
+  TEST_CHECK(h.getBucket(66)->getTuples().getRoot()->mytuple == &tuples[1]);
+  TEST_CHECK(h.getBucket(66)->getOccupied() == true);
+  TEST_CHECK(h.getBucket(66)->getBitmapIndex(0) == true);
+
+  // key = 106 | hashVal = 106 % 81 = 25
+  TEST_CHECK(h.getBucket(25)->getTuples().getRoot()->mytuple == &tuples[2]);
+  TEST_CHECK(h.getBucket(25)->getOccupied() == true);
+  TEST_CHECK(h.getBucket(25)->getBitmapIndex(0) == true);
+
+  // key = 146 | hashVal = 146 % 81 = 66
+  TEST_CHECK(h.getBucket(65)->getTuples().getRoot()->mytuple == &tuples[3]);
+  TEST_CHECK(h.getBucket(65)->getOccupied() == true);
+  TEST_CHECK(h.getBucket(65)->getBitmapIndex(0) == true);
+
+  // Pattern...
+  // ................. and so on ...........
+
+  // key = 1226 | hashVal = 1226 % 81 = 11
+  TEST_CHECK(h.getBucket(11)->getTuples().getRoot()->mytuple == &tuples[30]);
+  TEST_CHECK(h.getBucket(11)->getOccupied() == true);
+  TEST_CHECK(h.getBucket(11)->getBitmapIndex(0) == true);
+
+  // key = 1266 | hashVal = 1266 % 81 = 51
+  TEST_CHECK(h.getBucket(51)->getTuples().getRoot()->mytuple == &tuples[31]);
+  TEST_CHECK(h.getBucket(51)->getOccupied() == true);
+  TEST_CHECK(h.getBucket(51)->getBitmapIndex(0) == true);
+
+  // key = 27 | hashVal = 27 % 81 = 27
+  TEST_CHECK(h.getBucket(27)->getTuples().getRoot()->mytuple == &tuples[32]);
+  TEST_CHECK(h.getBucket(27)->getOccupied() == true);
+  TEST_CHECK(h.getBucket(27)->getBitmapIndex(0) == true);
+
+  // key = 67 | hashVal = 67 % 81 = 67
+  TEST_CHECK(h.getBucket(67)->getTuples().getRoot()->mytuple == &tuples[33]);
+  TEST_CHECK(h.getBucket(67)->getOccupied() == true);
+  TEST_CHECK(h.getBucket(67)->getBitmapIndex(0) == true);
 }
 
 TEST_LIST = {{"test_partinioning_fn", test_partitioning_function},
