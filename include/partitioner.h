@@ -10,6 +10,7 @@
 
 class Partitioner {
   Histogram* hist;
+  // how many partition phases the R relation went through
   int64_t partitioningLevel;
 
   relation partition1(relation&);
@@ -19,10 +20,14 @@ class Partitioner {
  public:
   static int64_t hash1(uint64_t, uint64_t);
 
+  int64_t getPartitioningLevel() const;
+
   // 2^n sized histogram
   Partitioner();
 
-  relation partition(relation&, int64_t);
+  relation partition(relation&, int64_t = -1);
+
+  Histogram* getHistogram() const;
 
   ~Partitioner();
 };

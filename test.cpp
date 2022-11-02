@@ -188,11 +188,37 @@ void test_HTinsert5() {
 
   hashTable h(50);
 
+  bool allOccupied = true;
+  bool rightOrder = true;
+
   for (int64_t i = 0; i < 40; i++) {
     tuples[i] = {key, std::rand()};  // hash in same bucket
+
     h.insert(&tuples[i]);
+
+    // check if after the 32 all neighborhood is full
+    if (i == 31) {
+      int b_index = 36;
+      int t_index = 0;
+      bucket* b = h.getBucket(b_index);
+      for (int j = 0; j < NBHD_SIZE; j++) {
+        if (b->getBitmapIndex(j) == false) allOccupied = false;
+        if (h.getBucket(b_index % h.getBucketCount())
+                ->getTuples()
+                .getRoot()
+                ->mytuple != &tuples[t_index++])
+          rightOrder = false;
+        b_index++;
+      }
+    }
+
     key += 50;
   }
+
+  // check that all the bitmap indexes show as occupied after the 32nd
+  // insertion, and that the tuples have been inserted in the right order
+  TEST_CHECK(allOccupied == true);
+  TEST_CHECK(rightOrder == true);
 }
 
 /* Swap HT Insert
@@ -245,11 +271,11 @@ void test_HTinsert6() {
 void test_HTinsert7() {
   hashTable h(40);
   // todo
-}
+} 
 
-TEST_LIST = {{"test_partinioning_fn", test_partitioning_function},
-             {"test_part_pass1", test_partitions_1},
-             {"test_part_pass2", test_partitions_2},
+TEST_LIST = {{"Partitioning function", test_partitioning_function},
+             {"Partitioning - pass 1", test_partitions_1},
+             {"Partitioning - pass 2", test_partitions_2},
              {"HT's Hash Function", test_HThash2},
              {"Normal HT Insert", test_HTinsert1},
              {"Same Key HT Insert", test_HTinsert2},

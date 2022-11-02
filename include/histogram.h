@@ -16,12 +16,13 @@ class Histogram {
 
   int64_t getSize() const;
 
-  int64_t getPartitionEntries(int64_t) const;
-
   int64_t getPartitionPsum(int64_t) const;
 
   ~Histogram();
 
   const int64_t* generatePsum();
+
+  // for later use in the hashtable insertion and traversing
+  const int64_t* getPsum() const { return psum; }
 };
 #endif

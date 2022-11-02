@@ -2,11 +2,27 @@
 #include <cstdio>
 #include <cstring>
 
+/*
+ * Hash Function for partitioning
+ * Get the n Least Significant Bits (LSB)
+ *
+ */
+int64_t Partitioner::hash1(uint64_t key, uint64_t n) {
+  uint64_t num = 1;
+  num <<= n;
+  // e.g. n = 3
+  // 1000 - 1 = 111
+  // val = key & (2^n - 1); // bitwise AND
+  return key & (num - 1);
+}
+
 relation Partitioner::partition1(relation& r) {
   int64_t r_entries = r.getAmount();
   // if partitioning is needed at least once
-  //std::printf("\nOne pass needed\n");
+  // std::printf("\nOne pass needed\n");
   partitioningLevel = 1;
+
+  hist = new Histogram(1 << USE_BITS);
 
   // partition based on payload
   for (int64_t t = 0; t < r_entries; t++) {
@@ -44,7 +60,7 @@ relation Partitioner::partition1(relation& r) {
 }
 
 relation Partitioner::partition2(relation& r2) {
-  //std::printf("Second pass needed\n");
+  // std::printf("Second pass needed\n");
   partitioningLevel = 2;
 
   int64_t r2_entries = r2.getAmount();
@@ -83,46 +99,42 @@ relation Partitioner::partition2(relation& r2) {
 }
 
 relation Partitioner::partition(relation& r, int64_t force_partition_depth) {
-  if (((r.getAmount() * sizeof(tuple)) < L2_SIZE) &&
-      force_partition_depth == 0) {
-    //std::printf("Doesn't need partitioning\n");
+  if (force_partition_depth == 0) {
+    return r;
+  } else if (force_partition_depth == 1) {
+    return partition1(r);
+  } else if (force_partition_depth == 2) {
+    return partition2(r);
+  }
+
+  if (((r.getAmount() * sizeof(tuple)) < L2_SIZE)) {
+    // std::printf("Doesn't need partitioning\n");
     return r;
   }
 
   relation r2 = partition1(r);
-  if (force_partition_depth == 1) return r2;
+  return r2;
 
   bool partitionsFit = true;
 
   for (int64_t i = 0; i < hist->getSize(); i++) {
     if ((*hist)[i] * sizeof(tuple) > L2_SIZE) {
       partitionsFit = false;
-      //std::printf("\nPartition %ld doesn't fit in L2\n", i);
+      // std::printf("\nPartition %ld doesn't fit in L2\n", i);
       break;
     }
   }
 
-  if (force_partition_depth != 2 && partitionsFit == true) return r2;
+  if (partitionsFit == true) return r2;
 
   return partition2(r2);
 }
 
-/*
- * Hash Function for partitioning
- * Get the n Least Significant Bits (LSB)
- *
- */
-int64_t Partitioner::hash1(uint64_t key, uint64_t n) {
-  uint64_t num = 1;
-  num <<= n;
-  // e.g. n = 3
-  // 1000 - 1 = 111
-  // val = key & (2^n - 1); // bitwise AND
-  return key & (num - 1);
-}
-
 // 2^n sized histogram
-Partitioner::Partitioner()
-    : hist{new Histogram(1 << USE_BITS)}, partitioningLevel{} {}
+Partitioner::Partitioner() : hist{nullptr}, partitioningLevel{} {}
 
 Partitioner::~Partitioner() { delete hist; }
+
+int64_t Partitioner::getPartitioningLevel() const { return partitioningLevel; }
+
+Histogram* Partitioner::getHistogram() const { return hist; }
