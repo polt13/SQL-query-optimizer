@@ -170,28 +170,30 @@ void hashTable::insert(tuple *t) {
   }
 }
 
-bool hashTable::findEntry(int64_t key) {
-  int64_t hashVal = hash2(key);  // not sure if Key
+List *hashTable::findEntry(int64_t key) {
+  int64_t hashVal = hash2(key);
 
-  if (this->buckets[hashVal].getTuples().getRoot()->mytuple->getKey() == key) {
-    // std::printf("Found item with key %ld\n", key);
-    return true;
-  }
+  if (this->buckets[hashVal].getTuples().getLen() >
+      0)  // so that we won't try to access mytuple if root is nullptr
+    if (this->buckets[hashVal].getTuples().getRoot()->mytuple->getKey() ==
+        key) {
+      // std::printf("Found item with key %ld\n", key);
+      return &(this->buckets[hashVal].getTuples());
+    }
 
-  else {
-    // Search inside neighbourhood
-    for (int64_t i = 0; i < NBHD_SIZE; i++) {
+  // Search inside neighbourhood
+  for (int64_t i = 0; i < NBHD_SIZE; i++)
+    if (this->buckets[(hashVal + i) % num_buckets].getTuples().getLen() >
+        0)  // so that we won't try to access mytuple if root is nullptr
       if (this->buckets[(hashVal + i) % num_buckets]
               .getTuples()
               .getRoot()
               ->mytuple->getKey() == key) {
         // std::printf("Found item with key %ld\n", key);
-        return true;
+        return &(this->buckets[(hashVal + i) % num_buckets].getTuples());
       }
-    }
-    // std::printf("Item with key %ld NOT FOUND\n", key);
-    return false;
-  }
+  // std::printf("Item with key %ld NOT FOUND\n", key);
+  return nullptr;
 }
 
 hashTable::hashTable(int64_t num_tuples)

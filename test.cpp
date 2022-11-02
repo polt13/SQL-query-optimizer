@@ -170,10 +170,34 @@ void test_HTinsert4() {
 
   int64_t key_index = 0;
 
+  bool allOccupiedBefore = true;
+  bool allOccupiedAfter = true;
+
   for (int64_t i = 0; i < 40; i++) {
     tuples[i] = {keys[key_index++], std::rand()};
     h.insert(&tuples[i]);
+
+    // Check if after the 34 the HT is full
+    if (i == 33)
+      for (int64_t j = 0; j < 34; j++)
+        if (h.getBucket(j)->getOccupied() == false) {
+          allOccupiedBefore = false;
+          break;
+        }
+
+    // Check if after the 35 the HT is NOT full
+    if (i == 34)
+      for (int64_t j = 0; j < 69; j++)
+        if (h.getBucket(j)->getOccupied() == false) {
+          allOccupiedAfter = false;
+          break;
+        }
   }
+
+  // check that all buckets show as occupied after the 34th insertion
+  // but after the 35th insertion (rehash) they do not
+  TEST_CHECK(allOccupiedBefore == true);
+  TEST_CHECK(allOccupiedAfter == false);
 }
 
 /* Full NBHD HT Insert
@@ -415,8 +439,12 @@ void test_build_2() {
   for (int64_t i = 0; i < 100; i++)
     tuples[i] = {keys[std::rand() % 50], std::rand()};
 
-  for (int64_t i = 0; i < 200; i++)
-    tuples2[i] = {keys[std::rand() % 50], std::rand()};
+  for (int64_t i = 0; i < 200; i++) {
+    if (i == 2 || i == 55 || i == 91 || i == 98) {
+      tuples2[i] = tuples[i];
+    } else
+      tuples2[i] = {0, std::rand()};
+  }
 
   relation r(tuples, 100);
   relation s(tuples2, 200);
@@ -451,13 +479,28 @@ void test_build_2() {
 
   for (int64_t i = 0; i < 100; i++) {
     int64_t index = Partitioner::hash1(r[i].getKey(), USE_BITS_NEXT);
-    TEST_CHECK(pht[index]->findEntry(r[i].getKey()));
+    // check if the element is properly inserted
+    TEST_CHECK(pht[index]->findEntry(r[i].getKey()) != nullptr);
   }
+
+  int64_t matchedTuples = 0;
+  for (int64_t i = 0; i < 200; i++) {
+    int64_t index = Partitioner::hash1(s[i].getKey(), USE_BITS_NEXT);
+    List* item_exists = pht[index]->findEntry(s[i].getKey());
+    if (item_exists) matchedTuples++;
+  }
+
+  // only 4 of S keys exist in R
+  TEST_CHECK(matchedTuples == 4);
 
   for (int64_t i = 0; i < partitions; i++) delete pht[i];
 
   delete[] pht;
 }
+
+// no partitioning
+// this test will FAIL if the L2_SIZE is extremely small
+void test_build_3() {}
 
 TEST_LIST = {{"Partitioning function", test_partitioning_function},
              {"Partitioning - pass 1", test_partitions_1},
@@ -472,4 +515,5 @@ TEST_LIST = {{"Partitioning function", test_partitioning_function},
              {"None for Swap HT Insert", test_HTinsert7},
              {"Relations have equal amount of partitions", test_build_1},
              {"Partition's HT has entry", test_build_2},
+             {"No partitioning", test_build_3},
              {NULL, NULL}};
