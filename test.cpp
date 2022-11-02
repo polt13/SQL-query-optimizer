@@ -221,16 +221,19 @@ void test_HTinsert6() {
   TEST_CHECK(h.getBucket(26)->getOccupied() == true);
   TEST_CHECK(h.getBucket(26)->getBitmapIndex(0) == true);
   TEST_CHECK(h.getBucket(26)->getBitmapIndex(1) == true);
+
   TEST_CHECK(h.getBucket(27)->getTuples().getRoot()->mytuple == &tuples[32]);
   TEST_CHECK(h.getBucket(27)->getOccupied() == true);
   TEST_CHECK(h.getBucket(27)->getBitmapIndex(0) == false);
   TEST_CHECK(h.getBucket(27)->getBitmapIndex(1) == true);
   TEST_CHECK(h.getBucket(27)->getBitmapIndex(31) == true);
+
   TEST_CHECK(h.getBucket(28)->getTuples().getRoot()->mytuple == &tuples[33]);
   TEST_CHECK(h.getBucket(28)->getOccupied() == true);
   TEST_CHECK(h.getBucket(28)->getBitmapIndex(0) == false);
   TEST_CHECK(h.getBucket(28)->getBitmapIndex(1) == true);
   TEST_CHECK(h.getBucket(28)->getBitmapIndex(31) == true);
+
   TEST_CHECK(h.getBucket(29)->getTuples().getRoot()->mytuple == &tuples[34]);
   TEST_CHECK(h.getBucket(29)->getOccupied() == true);
   TEST_CHECK(h.getBucket(29)->getBitmapIndex(0) == false);
