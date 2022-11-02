@@ -181,22 +181,17 @@ List *hashTable::findEntry(int64_t key) {
       return &(this->buckets[hashVal].getTuples());
     }
 
-    else {
-      // Search inside neighbourhood
-      for (int64_t i = 0; i < NBHD_SIZE; i++) {
-        if (this->buckets[hashVal + i].getTuples().getLen() >
-            0)  // so that we won't try to access mytuple if root is nullptr
-          if (this->buckets[hashVal + i]
-                  .getTuples()
-                  .getRoot()
-                  ->mytuple->getKey() == key) {
-            // std::printf("Found item with key %ld\n", key);
-            return &(this->buckets[hashVal + i].getTuples());
-          }
+  // Search inside neighbourhood
+  for (int64_t i = 0; i < NBHD_SIZE; i++)
+    if (this->buckets[hashVal + i].getTuples().getLen() >
+        0)  // so that we won't try to access mytuple if root is nullptr
+      if (this->buckets[hashVal + i].getTuples().getRoot()->mytuple->getKey() ==
+          key) {
+        // std::printf("Found item with key %ld\n", key);
+        return &(this->buckets[hashVal + i].getTuples());
       }
-      // std::printf("Item with key %ld NOT FOUND\n", key);
-      return nullptr;
-    }
+  // std::printf("Item with key %ld NOT FOUND\n", key);
+  return nullptr;
 }
 
 hashTable::hashTable(int64_t num_tuples)
