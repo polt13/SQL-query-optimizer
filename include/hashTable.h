@@ -34,7 +34,7 @@ class hashTable {
   int64_t hash2(int64_t);
   void insert(tuple *);
   void rehash();
-  bool findEntry(int64_t);
+  List *findEntry(int64_t);
 
   hashTable(int64_t);
   ~hashTable();

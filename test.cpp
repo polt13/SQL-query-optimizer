@@ -170,10 +170,34 @@ void test_HTinsert4() {
 
   int64_t key_index = 0;
 
+  bool allOccupiedBefore = true;
+  bool allOccupiedAfter = true;
+
   for (int64_t i = 0; i < 40; i++) {
     tuples[i] = {keys[key_index++], std::rand()};
     h.insert(&tuples[i]);
+
+    // Check if after the 34 the HT is full
+    if (i == 33)
+      for (int64_t j = 0; j < 34; j++)
+        if (h.getBucket(j)->getOccupied() == false) {
+          allOccupiedBefore = false;
+          break;
+        }
+
+    // Check if after the 35 the HT is NOT full
+    if (i == 34)
+      for (int64_t j = 0; j < 69; j++)
+        if (h.getBucket(j)->getOccupied() == false) {
+          allOccupiedAfter = false;
+          break;
+        }
   }
+
+  // check that all buckets show as occupied after the 34th insertion
+  // but after the 35th insertion (rehash) they do not
+  TEST_CHECK(allOccupiedBefore == true);
+  TEST_CHECK(allOccupiedAfter == false);
 }
 
 /* Full NBHD HT Insert

@@ -1,4 +1,5 @@
 #include "partitioner.h"
+
 #include <cstdio>
 #include <cstring>
 
@@ -105,11 +106,12 @@ relation Partitioner::partition(relation& r, int64_t force_partition_depth) {
   }
 
   if (((r.getAmount() * sizeof(tuple)) < L2_SIZE)) {
-    // std::printf("Doesn't need partitioning\n");
+    std::printf("Doesn't need partitioning\n");
     return r;
   }
 
   relation r2 = partition1(r);
+  return r2;
 
   bool partitionsFit = true;
 
