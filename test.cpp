@@ -332,6 +332,128 @@ void test_HTinsert7() {
   TEST_CHECK(h.getBucket(67)->getBitmapIndex(0) == true);
 }
 
+void test_build_1() {
+  int keys[] = {636,   1088,  1381,  1634,  1755,  2063,  2394,  2456,  2932,
+                3359,  3384,  3772,  3852,  4015,  4961,  5459,  6445,  6780,
+                7071,  7318,  8552,  9469,  10216, 10515, 11359, 11460, 11574,
+                11714, 12033, 13043, 13203, 13214, 13232, 13705, 13957, 14808,
+                15476, 15931, 16025, 16363, 16951, 17133, 17419, 18089, 18143,
+                18234, 18248, 18933, 19039, 20237};
+
+  tuple* tuples = new tuple[100];
+  tuple* tuples2 = new tuple[200];
+
+  for (int64_t i = 0; i < 100; i++)
+    tuples[i] = {keys[std::rand() % 50], std::rand()};
+
+  for (int64_t i = 0; i < 200; i++)
+    tuples2[i] = {keys[std::rand() % 50], std::rand()};
+
+  relation r(tuples, 100);
+  relation s(tuples2, 200);
+
+  // partitioner maintains internal state - histogram, psum.. create a diff. one
+  // for each relation
+  Partitioner rp, sp;
+
+  relation r_ = rp.partition(r);
+  int64_t forcePartitioning = rp.getPartitioningLevel();
+
+  relation s_ = sp.partition(s, forcePartitioning);
+
+  Histogram* histr = rp.getHistogram();
+  Histogram* hists = sp.getHistogram();
+
+  // check if both relations have the same number of partitions
+  // the two test_checks are equivalent
+  TEST_CHECK(histr->getSize() == hists->getSize());
+  TEST_CHECK(rp.getPartitioningLevel() == sp.getPartitioningLevel());
+
+  Partitioner rp2, sp2;
+  relation r_2 = rp2.partition(r, 1);
+  forcePartitioning = rp2.getPartitioningLevel();
+
+  relation s_2 = sp2.partition(s, 1);
+
+  Histogram* histr2 = rp2.getHistogram();
+  Histogram* hists2 = sp2.getHistogram();
+
+  TEST_CHECK(histr2->getSize() == hists2->getSize());
+  TEST_CHECK(
+      (rp2.getPartitioningLevel() == 1L && 1L == sp2.getPartitioningLevel()));
+
+  Partitioner rp3, sp3;
+  relation r_3 = rp3.partition(r, 2);
+  forcePartitioning = rp3.getPartitioningLevel();
+
+  relation s_3 = sp3.partition(s, 2);
+
+  Histogram* histr3 = rp3.getHistogram();
+  Histogram* hists3 = sp3.getHistogram();
+
+  TEST_CHECK(histr3->getSize() == hists3->getSize());
+  TEST_CHECK((rp3.getPartitioningLevel() == 2L) &&
+             (2L == sp3.getPartitioningLevel()));
+}
+
+void test_build_2() {
+  int keys[] = {636,   1088,  1381,  1634,  1755,  2063,  2394,  2456,  2932,
+                3359,  3384,  3772,  3852,  4015,  4961,  5459,  6445,  6780,
+                7071,  7318,  8552,  9469,  10216, 10515, 11359, 11460, 11574,
+                11714, 12033, 13043, 13203, 13214, 13232, 13705, 13957, 14808,
+                15476, 15931, 16025, 16363, 16951, 17133, 17419, 18089, 18143,
+                18234, 18248, 18933, 19039, 20237};
+
+  tuple* tuples = new tuple[100];
+  tuple* tuples2 = new tuple[200];
+
+  for (int64_t i = 0; i < 100; i++)
+    tuples[i] = {keys[std::rand() % 50], std::rand()};
+
+  for (int64_t i = 0; i < 200; i++)
+    tuples2[i] = {keys[std::rand() % 50], std::rand()};
+
+  relation r(tuples, 100);
+  relation s(tuples2, 200);
+
+  // partitioner maintains internal state - histogram, psum.. create a diff. one
+  // for each relation
+  Partitioner rp, sp;
+
+  relation r_ = rp.partition(r, 2);
+
+  relation s_ = sp.partition(s, 2);
+
+  Histogram* histr = rp.getHistogram();
+  Histogram* hists = sp.getHistogram();
+  int64_t partitions = histr->getSize();
+
+  const int64_t* rpsum = histr->getPsum();
+
+  hashTable** pht = new hashTable* [partitions] {};
+
+  for (int64_t i = 0; i < partitions; i++) {
+    int64_t entries = (*histr)[i];
+    pht[i] = new hashTable(entries);
+
+    int64_t start = rpsum[i];
+    std::printf("Partition starts at %ld\n", start);
+    int64_t end =
+        (i < (partitions - 1)) ? (rpsum[i + 1]) : (r_.getAmount() - 1);
+
+    for (int64_t j = start; j < end; j++) pht[i]->insert(&r_[j]);
+  }
+
+  for (int64_t i = 0; i < 100; i++) {
+    int64_t index = Partitioner::hash1(r[i].getKey(), USE_BITS_NEXT);
+    TEST_CHECK(pht[index]->findEntry(r[i].getKey()));
+  }
+
+  for (int64_t i = 0; i < partitions; i++) delete pht[i];
+
+  delete[] pht;
+}
+
 TEST_LIST = {{"Partitioning function", test_partitioning_function},
              {"Partitioning - pass 1", test_partitions_1},
              {"Partitioning - pass 2", test_partitions_2},
@@ -343,4 +465,6 @@ TEST_LIST = {{"Partitioning function", test_partitioning_function},
              {"Full NBHD HT Insert", test_HTinsert5},
              {"Swap HT Insert", test_HTinsert6},
              {"None for Swap HT Insert", test_HTinsert7},
+             {"Relations have equal amount of partitions", test_build_1},
+             {"Partition's HT has entry", test_build_2},
              {NULL, NULL}};

@@ -181,8 +181,10 @@ bool hashTable::findEntry(int64_t key) {
   else {
     // Search inside neighbourhood
     for (int64_t i = 0; i < NBHD_SIZE; i++) {
-      if (this->buckets[hashVal + i].getTuples().getRoot()->mytuple->getKey() ==
-          key) {
+      if (this->buckets[(hashVal + i) % num_buckets]
+              .getTuples()
+              .getRoot()
+              ->mytuple->getKey() == key) {
         // std::printf("Found item with key %ld\n", key);
         return true;
       }

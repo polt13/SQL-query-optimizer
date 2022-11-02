@@ -22,7 +22,7 @@ relation PartitionedHashJoin(relation& r, relation& s) {
   // build phase
   for (int64_t i = 0; i < partitions; i++) {
     int64_t entries = (*rHist)[i];
-    // create hashtable with size =  as many as the partitions in the tuble
+    // create hashtable with size =  as many as the partitions in the tuple
 
     partitionsHT[i] = new hashTable(entries);
 
@@ -33,6 +33,12 @@ relation PartitionedHashJoin(relation& r, relation& s) {
 
     for (int64_t j = start; j < end; j++) partitionsHT[i]->insert(&r_[j]);
   }
+
+  for (int64_t i = 0; i < partitions; i++) {
+    delete partitionsHT[i];
+  }
+
+  delete[] partitionsHT;
 
   // placeholder
   return s_;
