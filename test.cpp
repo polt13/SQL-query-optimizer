@@ -60,6 +60,138 @@ void test_partitions_2() {
   TEST_CHECK(r_[3].getKey() == 31);
 }
 
+// WORKS WITH USE_BITS=2
+void test_partitions_3() {
+  int64_t keys[] = {418,  690,  1536, 160,  1552, 1312, 1538, 320, 1537,
+                    1281, 1282, 1602, 1138, 274,  978,  561,  99,  1008,
+                    480,  144,  1264, 83,   130,  385,  1424, 674};
+
+  int64_t expectedOrder[] = {1536, 160,  1552, 1312, 320, 1008, 480, 144,  1264,
+                             1424, 1537, 1281, 561,  385, 418,  690, 1538, 1282,
+                             1602, 1138, 274,  978,  130, 674,  99,  83};
+
+  tuple* tuples = new tuple[26];
+  for (int64_t i = 0; i < 26; i++) tuples[i] = {keys[i], std::rand()};
+
+  relation r(tuples, 26);
+
+  Partitioner rp;
+  relation r_ = rp.partition(r, 1);
+  Histogram* hist = rp.getHistogram();
+  const int64_t* psum = hist->getPsum();
+
+  TEST_CHECK((*hist)[0] == 10);
+  TEST_CHECK(psum[0] == 0);
+
+  TEST_CHECK((*hist)[1] == 4);
+  TEST_CHECK(psum[1] == 10);
+
+  TEST_CHECK((*hist)[2] == 10);
+  TEST_CHECK(psum[2] == 14);
+
+  TEST_CHECK((*hist)[3] == 2);
+  TEST_CHECK(psum[3] == 24);
+}
+
+// works only with USE_BITS_NEXT == 4
+void test_partitions_4() {
+  int64_t keys[] = {657,  1237, 1060, 1154, 832,  1417, 456,  449,  112,  728,
+                    1140, 1402, 583,  1366, 1599, 1447, 1185, 1466, 1097, 101,
+                    941,  888,  1090, 1147, 865,  1333, 1354, 1264, 1415, 681,
+                    1058, 1169, 1531, 782,  1386, 1033, 1185, 1254, 1555, 256,
+                    775,  484,  1394, 987,  1197, 377,  1011, 644,  27,   317,
+                    182,  1083, 427,  1244, 202,  835,  195,  698,  55,   742,
+                    1105, 329,  524,  1270, 1136, 598,  244,  1035, 1015, 838,
+                    420,  283,  1511, 1262, 695,  610,  1417, 1525, 1349, 1429,
+                    901,  582,  955,  802,  924,  1586, 254,  1094, 601,  949,
+                    1441, 715,  900,  1022, 1237, 162,  1575, 790,  740};
+
+  int64_t expectedOrder[] = {
+      832,  112,  1264, 256,  1136, 657,  449,  1185, 865,  1169, 1185,
+      1105, 1441, 1154, 1090, 1058, 1394, 610,  802,  1586, 162,  1555,
+      1011, 835,  195,  1060, 1140, 484,  644,  244,  420,  900,  740,
+      1237, 101,  1333, 1525, 1349, 1429, 901,  949,  1237, 1366, 1254,
+      182,  742,  1270, 598,  838,  582,  1094, 790,  583,  1447, 1415,
+      775,  55,   1015, 1511, 695,  1575, 456,  728,  888,  1417, 1097,
+      681,  1033, 377,  329,  1417, 601,  1402, 1466, 1354, 1386, 202,
+      698,  1147, 1531, 987,  27,   1083, 427,  1035, 283,  955,  715,
+      1244, 524,  924,  941,  1197, 317,  782,  1262, 254,  1022, 1599};
+
+  tuple* tuples = new tuple[99];
+  for (int64_t i = 0; i < 99; i++) tuples[i] = {keys[i], std::rand()};
+
+  relation r(tuples, 99);
+
+  Partitioner rp;
+  relation r_ = rp.partition(r, 2);
+  Histogram* hist = rp.getHistogram();
+  const int64_t* psum = hist->getPsum();
+
+  TEST_CHECK((*hist)[0] == 5);
+  TEST_CHECK(psum[0] == 0);
+
+  TEST_CHECK((*hist)[1] == 8);
+  TEST_CHECK(psum[1] == 5);
+
+  TEST_CHECK((*hist)[2] == 8);
+  TEST_CHECK(psum[2] == 13);
+
+  TEST_CHECK((*hist)[3] == 4);
+  TEST_CHECK(psum[3] == 21);
+
+  TEST_CHECK((*hist)[4] == 8);
+  TEST_CHECK(psum[4] == 25);
+
+  TEST_CHECK((*hist)[5] == 9);
+  TEST_CHECK(psum[5] == 33);
+
+  TEST_CHECK((*hist)[6] == 10);
+  TEST_CHECK(psum[6] == 42);
+
+  TEST_CHECK((*hist)[7] == 9);
+  TEST_CHECK(psum[7] == 52);
+
+  TEST_CHECK((*hist)[8] == 3);
+  TEST_CHECK(psum[8] == 61);
+
+  TEST_CHECK((*hist)[9] == 8);
+  TEST_CHECK(psum[9] == 64);
+
+  TEST_CHECK((*hist)[10] == 6);
+  TEST_CHECK(psum[10] == 72);
+
+  TEST_CHECK((*hist)[11] == 10);
+  TEST_CHECK(psum[11] == 78);
+
+  TEST_CHECK((*hist)[12] == 3);
+  TEST_CHECK(psum[12] == 88);
+
+  TEST_CHECK((*hist)[13] == 3);
+  TEST_CHECK(psum[13] == 91);
+
+  TEST_CHECK((*hist)[14] == 4);
+  TEST_CHECK(psum[14] == 94);
+
+  TEST_CHECK((*hist)[15] == 1);
+  TEST_CHECK(psum[15] == 98);
+
+  for (int64_t i = 0; i < 99; i++) {
+    TEST_CHECK(r_[i].getKey() == expectedOrder[i]);
+  }
+}
+
+// Test will fail if CACHE is set to an EXTREMELY small size
+void test_no_partition() {
+  tuple a{0, 5};
+  tuple b{3, 2};
+  tuple c{4, 5};
+  tuple* tuples = new tuple[3]{a, b, c};
+  relation r(tuples, 3);
+  Partitioner rp;
+  relation r_ = rp.partition(r);
+  TEST_CHECK(rp.getPartitioningLevel() == 0);
+}
+
 /* HT's Hash Function
  * ------------------
  */
@@ -356,7 +488,7 @@ void test_HTinsert7() {
   TEST_CHECK(h.getBucket(67)->getBitmapIndex(0) == true);
 }
 
-void test_build_1() {
+void test_eq_partitions() {
   int keys[] = {636,   1088,  1381,  1634,  1755,  2063,  2394,  2456,  2932,
                 3359,  3384,  3772,  3852,  4015,  4961,  5459,  6445,  6780,
                 7071,  7318,  8552,  9469,  10216, 10515, 11359, 11460, 11574,
@@ -378,30 +510,8 @@ void test_build_1() {
 
   // partitioner maintains internal state - histogram, psum.. create a diff. one
   // for each relation
-  Partitioner rp, sp;
-
-  relation r_ = rp.partition(r);
-  int64_t forcePartitioning = rp.getPartitioningLevel();
-
-  relation s_ = sp.partition(s, forcePartitioning);
-
-  // if no partitioning done - no histogram generated...
-  // this depends on L2_SIZE
-  if (forcePartitioning != 0) {
-    Histogram* histr = rp.getHistogram();
-    Histogram* hists = sp.getHistogram();
-
-    // check if both relations have the same number of partitions
-    // the two test_checks are equivalent
-    TEST_CHECK(histr->getSize() == hists->getSize());
-  }
-
-  TEST_CHECK(rp.getPartitioningLevel() == sp.getPartitioningLevel());
-
   Partitioner rp2, sp2;
   relation r_2 = rp2.partition(r, 1);
-  forcePartitioning = rp2.getPartitioningLevel();
-
   relation s_2 = sp2.partition(s, 1);
 
   Histogram* histr2 = rp2.getHistogram();
@@ -413,7 +523,6 @@ void test_build_1() {
 
   Partitioner rp3, sp3;
   relation r_3 = rp3.partition(r, 2);
-  forcePartitioning = rp3.getPartitioningLevel();
 
   relation s_3 = sp3.partition(s, 2);
 
@@ -425,7 +534,7 @@ void test_build_1() {
              (2L == sp3.getPartitioningLevel()));
 }
 
-void test_build_2() {
+void test_build_1() {
   int keys[] = {636,   1088,  1381,  1634,  1755,  2063,  2394,  2456,  2932,
                 3359,  3384,  3772,  3852,  4015,  4961,  5459,  6445,  6780,
                 7071,  7318,  8552,  9469,  10216, 10515, 11359, 11460, 11574,
@@ -470,7 +579,7 @@ void test_build_2() {
     pht[i] = new hashTable(entries);
 
     int64_t start = rpsum[i];
-    std::printf("Partition starts at %ld\n", start);
+    // std::printf("Partition starts at %ld\n", start);
     int64_t end =
         (i < (partitions - 1)) ? (rpsum[i + 1]) : (r_.getAmount() - 1);
 
@@ -498,22 +607,24 @@ void test_build_2() {
   delete[] pht;
 }
 
-// no partitioning
-// this test will FAIL if the L2_SIZE is extremely small
-void test_build_3() {}
+void test_build_2() {}
 
-TEST_LIST = {{"Partitioning function", test_partitioning_function},
-             {"Partitioning - pass 1", test_partitions_1},
-             {"Partitioning - pass 2", test_partitions_2},
-             {"HT's Hash Function", test_HThash2},
-             {"Normal HT Insert", test_HTinsert1},
-             {"Same Key HT Insert", test_HTinsert2},
-             {"Empty NBHD Slot HT Insert", test_HTinsert3},
-             {"Full HT Insert", test_HTinsert4},
-             {"Full NBHD HT Insert", test_HTinsert5},
-             {"Swap HT Insert", test_HTinsert6},
-             {"None for Swap HT Insert", test_HTinsert7},
-             {"Relations have equal amount of partitions", test_build_1},
-             {"Partition's HT has entry", test_build_2},
-             {"No partitioning", test_build_3},
-             {NULL, NULL}};
+TEST_LIST = {
+    {"Partitioning function", test_partitioning_function},
+    {"Partitioning - small test   (partitioning level 1)", test_partitions_1},
+    {"Partitioning - small test 2 (partition level 2)", test_partitions_2},
+    {"Partitioning - big test (partitioning level 1)", test_partitions_3},
+    {"Partitioning - big test (partitioning level 2)", test_partitions_4},
+    {"Test No Partitioning", test_no_partition},
+    {"HT's Hash Function", test_HThash2},
+    {"Normal HT Insert", test_HTinsert1},
+    {"Same Key HT Insert", test_HTinsert2},
+    {"Empty NBHD Slot HT Insert", test_HTinsert3},
+    {"Full HT Insert", test_HTinsert4},
+    {"Full NBHD HT Insert", test_HTinsert5},
+    {"Swap HT Insert", test_HTinsert6},
+    {"None for Swap HT Insert", test_HTinsert7},
+    {"Relations have equal amount of partitions", test_eq_partitions},
+    {"Partition's HT has entry", test_build_1},
+
+    {NULL, NULL}};
