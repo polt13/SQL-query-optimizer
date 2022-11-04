@@ -91,6 +91,10 @@ void test_partitions_3() {
 
   TEST_CHECK((*hist)[3] == 2);
   TEST_CHECK(psum[3] == 24);
+
+  for (int64_t i = 0; i < 26; i++) {
+    TEST_CHECK(r_[i].getKey() == expectedOrder[i]);
+  }
 }
 
 // works only with USE_BITS_NEXT == 4
@@ -567,7 +571,7 @@ void test_build_1() {
   relation s_ = sp.partition(s, 2);
 
   Histogram* histr = rp.getHistogram();
-  Histogram* hists = sp.getHistogram();
+  // Histogram* hists = sp.getHistogram();
   int64_t partitions = histr->getSize();
 
   const int64_t* rpsum = histr->getPsum();
@@ -580,8 +584,7 @@ void test_build_1() {
 
     int64_t start = rpsum[i];
     // std::printf("Partition starts at %ld\n", start);
-    int64_t end =
-        (i < (partitions - 1)) ? (rpsum[i + 1]) : (r_.getAmount() - 1);
+    int64_t end = (i < (partitions - 1)) ? (rpsum[i + 1]) : (r_.getAmount());
 
     for (int64_t j = start; j < end; j++) pht[i]->insert(&r_[j]);
   }

@@ -54,13 +54,24 @@ class relation {
   int64_t getAmount() { return num_tuples; }
 };
 
-/*
- * Type definition for result.
- * It consists of an array of tuples and a size of the relation.
- */
-class result {
-  tuple *tuples;
-  uint64_t num_tuples;
+struct result_item {
+  tuple a;
+  tuple b;
+};
+
+struct result {
+  result_item *r;
+  int64_t result_size;
+
+  result(result_item *r, int64_t result_size)
+      : r{r}, result_size{result_size} {}
+
+  result(const result &other) {
+    result_size = other.result_size;
+    r = new result_item[result_size];
+    std::memmove(r, other.r, sizeof(result_item) * result_size);
+  }
+  ~result() { delete[] r; }
 };
 
 /* Partitioned Hash Join */
