@@ -610,7 +610,22 @@ void test_build_1() {
   delete[] pht;
 }
 
-void test_build_2() {}
+void test_join_1() {
+  tuple* tuples1 = new tuple[5]{{5, std::rand()},
+                                {3, std::rand()},
+                                {3, std::rand()},
+                                {2, std::rand()},
+                                {6, std::rand()}};
+  tuple* tuples2 =
+      new tuple[3]{{3, std::rand()}, {3, std::rand()}, {1, std::rand()}};
+
+  relation r(tuples1, 5);
+  relation s(tuples2, 3);
+  result t = PartitionedHashJoin(r, s);
+  for (int64_t i = 0; i < t.result_size; i++) {
+    std::printf("r_id: %ld, s_id: %ld\n", t[i].a.getKey(), t[i].b.getKey());
+  }
+}
 
 TEST_LIST = {
     {"Partitioning function", test_partitioning_function},
@@ -629,5 +644,6 @@ TEST_LIST = {
     {"None for Swap HT Insert", test_HTinsert7},
     {"Relations have equal amount of partitions", test_eq_partitions},
     {"Partition's HT has entry", test_build_1},
+    {"Test join 1", test_join_1},
 
     {NULL, NULL}};

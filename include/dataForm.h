@@ -71,9 +71,12 @@ struct result {
     r = new result_item[result_size];
     std::memmove(r, other.r, sizeof(result_item) * result_size);
   }
+
+  result_item &operator[](int64_t index) { return r[index]; }
+
   ~result() { delete[] r; }
 };
 
 /* Partitioned Hash Join */
-result *PartitionedHashJoin(relation *relR, relation *relS);
+result PartitionedHashJoin(relation &, relation &);
 #endif

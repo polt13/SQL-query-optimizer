@@ -49,11 +49,13 @@ result PartitionedHashJoin(relation& r, relation& s) {
 
       for (int64_t k = start; k < end; k++) {
         List* tuple_list = partitionsHT[j]->findEntry(s_[k].getKey());
-        Node* traverse = tuple_list->getRoot();
-        while (traverse) {
-          // result is [rowid_r,rowid_s]
-          result_join[result_size++] = {*(traverse->mytuple), s_[k]};
-          traverse = traverse->next;
+        if (tuple_list) {
+          Node* traverse = tuple_list->getRoot();
+          while (traverse) {
+            // result is [tuple_r,tuple_s]
+            result_join[result_size++] = {*(traverse->mytuple), s_[k]};
+            traverse = traverse->next;
+          }
         }
       }
     }
@@ -72,10 +74,12 @@ result PartitionedHashJoin(relation& r, relation& s) {
     for (int64_t i = 0; i < r_entries; i++) h.insert(&r[i]);
     for (int64_t j = 0; j < s_entries; j++) {
       List* tuple_list = h.findEntry(s[j].getKey());
-      Node* traverse = tuple_list->getRoot();
-      while (traverse) {
-        result_join[result_size++] = {*(traverse->mytuple), s[j]};
-        traverse = traverse->next;
+      if (tuple_list) {
+        Node* traverse = tuple_list->getRoot();
+        while (traverse) {
+          result_join[result_size++] = {*(traverse->mytuple), s[j]};
+          traverse = traverse->next;
+        }
       }
     }
   }
