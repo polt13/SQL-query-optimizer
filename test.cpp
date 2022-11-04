@@ -611,19 +611,14 @@ void test_build_1() {
 }
 
 void test_join_1() {
-  tuple* tuples1 = new tuple[5]{{5, std::rand()},
-                                {3, std::rand()},
-                                {3, std::rand()},
-                                {2, std::rand()},
-                                {6, std::rand()}};
-  tuple* tuples2 =
-      new tuple[3]{{3, std::rand()}, {3, std::rand()}, {1, std::rand()}};
+  tuple* tuples1 = new tuple[6]{{5, 1}, {3, 2}, {3, 3}, {2, 4}, {6, 5}, {1, 5}};
+  tuple* tuples2 = new tuple[3]{{3, 10}, {3, 11}, {1, 12}};
 
-  relation r(tuples1, 5);
+  relation r(tuples1, 6);
   relation s(tuples2, 3);
-  result t = PartitionedHashJoin(r, s);
+  result t = PartitionedHashJoin(r, s, 2, 4, 8);
   for (int64_t i = 0; i < t.result_size; i++) {
-    std::printf("r_id: %ld, s_id: %ld\n", t[i].a.getKey(), t[i].b.getKey());
+    std::printf("\nr_id: %ld, s_id: %ld\n", t[i].a.getKey(), t[i].b.getKey());
   }
 }
 

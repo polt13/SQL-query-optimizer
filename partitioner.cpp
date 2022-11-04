@@ -16,19 +16,19 @@ int64_t Partitioner::hash1(uint64_t key, uint64_t n) {
   return key & (num - 1);
 }
 
-relation Partitioner::partition1(relation& r) {
+relation Partitioner::partition1(relation& r, int64_t bits_pass1) {
   int64_t r_entries = r.getAmount();
   // if partitioning is needed at least once
   // std::printf("\nOne pass needed\n");
   partitioningLevel = 1;
 
-  hist = new Histogram(1 << USE_BITS);
+  hist = new Histogram(1 << bits_pass1);
 
   for (int64_t t = 0; t < r_entries; t++) {
     tuple record = r[t];
     // partition based on the key
     // index indicates which partition the tuple goes to
-    int64_t index = hash1(record.getKey(), USE_BITS);
+    int64_t index = hash1(record.getKey(), bits_pass1);
     (*hist)[index]++;
   }
 
@@ -43,7 +43,7 @@ relation Partitioner::partition1(relation& r) {
   relation r2(new tuple[r_entries], r_entries);
 
   for (int64_t t = 0; t < r_entries; t++) {
-    int64_t index = hash1(r[t].getKey(), USE_BITS);
+    int64_t index = hash1(r[t].getKey(), bits_pass1);
     int64_t insertTo = psum_copy[index];
 
     r2[insertTo] = r[t];
@@ -57,7 +57,7 @@ relation Partitioner::partition1(relation& r) {
   return r2;
 }
 
-relation Partitioner::partition2(relation& r2) {
+relation Partitioner::partition2(relation& r2, int64_t bits_pass2) {
   // std::printf("Second pass needed\n");
   partitioningLevel = 2;
 
@@ -65,11 +65,11 @@ relation Partitioner::partition2(relation& r2) {
 
   // discard old histogram, create a new using n2
   Histogram* oldHist = hist;
-  hist = new Histogram(1 << USE_BITS_NEXT);
+  hist = new Histogram(1 << bits_pass2);
   // do the same thing, using r2
   for (int64_t t = 0; t < r2_entries; t++) {
     tuple record = r2[t];
-    int64_t index = hash1(record.getKey(), USE_BITS_NEXT);
+    int64_t index = hash1(record.getKey(), bits_pass2);
     (*hist)[index]++;
   }
 
@@ -81,7 +81,7 @@ relation Partitioner::partition2(relation& r2) {
   relation r3(new tuple[r2_entries], r2_entries);
 
   for (int64_t t = 0; t < r2_entries; t++) {
-    int64_t index = hash1(r2[t].getKey(), USE_BITS_NEXT);
+    int64_t index = hash1(r2[t].getKey(), bits_pass2);
     int64_t insertTo = psum_copy[index];
     r3[insertTo] = r2[t];
     psum_copy[index]++;
@@ -96,13 +96,14 @@ relation Partitioner::partition2(relation& r2) {
   return r3;
 }
 
-relation Partitioner::partition(relation& r, int64_t force_partition_depth) {
+relation Partitioner::partition(relation& r, int64_t force_partition_depth,
+                                int64_t bits_pass1, int64_t bits_pass2) {
   if (force_partition_depth == 0) {
     return r;
   } else if (force_partition_depth == 1) {
-    return partition1(r);
+    return partition1(r, bits_pass1);
   } else if (force_partition_depth == 2) {
-    return partition2(r);
+    return partition2(r, bits_pass2);
   }
 
   if (((r.getAmount() * sizeof(tuple)) < L2_SIZE)) {
@@ -110,22 +111,19 @@ relation Partitioner::partition(relation& r, int64_t force_partition_depth) {
     return r;
   }
 
-  relation r2 = partition1(r);
+  relation r2 = partition1(r, bits_pass1);
 
-  bool partitionsFit = true;
   int64_t partitions = hist->getSize();
 
   for (int64_t i = 0; i < partitions; i++) {
     if (((*hist)[i] * sizeof(tuple)) > L2_SIZE) {
-      partitionsFit = false;
+      return partition2(r2, bits_pass2);
       // std::printf("\nPartition %ld doesn't fit in L2\n", i);
       break;
     }
   }
-
-  if (partitionsFit == true) return r2;
-
-  return partition2(r2);
+  // if partitions fit
+  return r2;
 }
 
 // 2^n sized histogram

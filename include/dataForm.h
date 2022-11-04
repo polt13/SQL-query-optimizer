@@ -77,6 +77,4 @@ struct result {
   ~result() { delete[] r; }
 };
 
-/* Partitioned Hash Join */
-result PartitionedHashJoin(relation &, relation &);
 #endif

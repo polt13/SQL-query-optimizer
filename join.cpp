@@ -2,19 +2,22 @@
 #include "partitioner.h"
 #include "hashTable.h"
 
-result PartitionedHashJoin(relation& r, relation& s) {
+result PartitionedHashJoin(relation& r, relation& s, int64_t forceDepth,
+                           int64_t bits_pass1, int64_t bits_pass2) {
   // partitioning phase
   Partitioner rpartitioner, spartitioner;
 
-  relation r_ = rpartitioner.partition(r);
+  relation r_ = rpartitioner.partition(r, forceDepth, bits_pass1, bits_pass2);
 
   // force S relationship to be partitioned as many times as R was
   int64_t forcePartitioning = rpartitioner.getPartitioningLevel();
-  relation s_ = spartitioner.partition(s, forcePartitioning);
+  relation s_ =
+      spartitioner.partition(s, forcePartitioning, bits_pass1, bits_pass2);
 
   // the result is at most as big as the largest relation
   int64_t maxResult =
       (r_.getAmount() > s_.getAmount()) ? (r_.getAmount()) : (s_.getAmount());
+
   result_item* result_join = new result_item[maxResult];
   int64_t result_size = 0;
 
@@ -25,6 +28,7 @@ result PartitionedHashJoin(relation& r, relation& s) {
     const int64_t* rpsum = rHist->getPsum();
     int64_t partitions = rHist->getSize();
 
+    // initialize all to nullptr
     hashTable** partitionsHT = new hashTable* [partitions] {};
 
     // build phase
@@ -34,7 +38,6 @@ result PartitionedHashJoin(relation& r, relation& s) {
       partitionsHT[i] = new hashTable(entries);
 
       int64_t start = rpsum[i];
-      std::printf("Partition starts at %ld\n", start);
       int64_t end = (i < (partitions - 1)) ? (rpsum[i + 1]) : (r_.getAmount());
 
       for (int64_t j = start; j < end; j++) partitionsHT[i]->insert(&r_[j]);
