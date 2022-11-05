@@ -1,11 +1,11 @@
-** Requirements **
+**Requirements**
 
 * CMake
 * Makefile
 * g++ (with support for C++14 and newer preferrably, although it should work on C++11 as well)
 * asan, gdb if compiled with debug flags
 
-** How To Run **
+**How To Run**
 
 - cmake -B build 
 - cd build
@@ -31,7 +31,7 @@ handled by the destructor of the `relation`.</ins>
 
 `test.cpp` contains a few examples on how to create a relation.
 
-** Partitioning **
+**Partitioning**
 
 When it comes to partitioning, you can configure the methods the way you see fit. 
 
