@@ -14,11 +14,10 @@ result PartitionedHashJoin(relation& r, relation& s, int64_t forceDepth,
   relation s_ =
       spartitioner.partition(s, forcePartitioning, bits_pass1, bits_pass2);
 
-  // the result is at most as big as the largest relation
-  int64_t maxResult =
-      (r_.getAmount() > s_.getAmount()) ? (r_.getAmount()) : (s_.getAmount());
+  // grow result array dynamically
+  int64_t capacity = 100;
 
-  result_item* result_join = new result_item[maxResult];
+  result_item* result_join = new result_item[capacity];
   int64_t result_size = 0;
 
   // if partitioning has occured
@@ -57,6 +56,13 @@ result PartitionedHashJoin(relation& r, relation& s, int64_t forceDepth,
           while (traverse) {
             // result is [tuple_r,tuple_s]
             result_join[result_size++] = {*(traverse->mytuple), s_[k]};
+            if (result_size == capacity) {
+              capacity *= 2;
+              result_item* old = result_join;
+              result_join = new result_item[capacity];
+              std::memmove(result_join, old, result_size * sizeof(result_item));
+              delete[] old;
+            }
             traverse = traverse->next;
           }
         }
@@ -71,6 +77,7 @@ result PartitionedHashJoin(relation& r, relation& s, int64_t forceDepth,
   }
   // no partitioning case
   else {
+    std::printf("XD\n");
     int64_t r_entries = r.getAmount();
     int64_t s_entries = s.getAmount();
     hashTable h{r_entries};
@@ -81,6 +88,13 @@ result PartitionedHashJoin(relation& r, relation& s, int64_t forceDepth,
         Node* traverse = tuple_list->getRoot();
         while (traverse) {
           result_join[result_size++] = {*(traverse->mytuple), s[j]};
+          if (result_size == capacity) {
+            capacity *= 2;
+            result_item* old = result_join;
+            result_join = new result_item[capacity];
+            std::memmove(result_join, old, result_size * sizeof(result_item));
+            delete[] old;
+          }
           traverse = traverse->next;
         }
       }
