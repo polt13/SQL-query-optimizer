@@ -1,6 +1,6 @@
 #include "dataForm.h"
-#include "partitioner.h"
 #include "hashTable.h"
+#include "partitioner.h"
 
 result PartitionedHashJoin(relation& r, relation& s, int64_t forceDepth,
                            int64_t bits_pass1, int64_t bits_pass2) {
@@ -47,6 +47,7 @@ result PartitionedHashJoin(relation& r, relation& s, int64_t forceDepth,
     const int64_t* spsum = sHist->getPsum();
 
     for (int64_t j = 0; j < partitions; j++) {
+      std::printf("bla\n");
       int64_t start = spsum[j];
       int64_t end = (j < (partitions - 1)) ? (spsum[j + 1]) : (s_.getAmount());
 
@@ -55,7 +56,7 @@ result PartitionedHashJoin(relation& r, relation& s, int64_t forceDepth,
         if (tuple_list) {
           Node* traverse = tuple_list->getRoot();
           while (traverse) {
-            // result is [tuple_r,tuple_s]
+            // result is [tuple_r, tuple_s]
             result_join[result_size++] = {*(traverse->mytuple), s_[k]};
             traverse = traverse->next;
           }

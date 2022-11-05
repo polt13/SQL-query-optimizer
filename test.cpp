@@ -492,6 +492,9 @@ void test_HTinsert7() {
   TEST_CHECK(h.getBucket(67)->getBitmapIndex(0) == true);
 }
 
+/* Relations have equal amount of partitions
+ * -----------------------------------------
+ */
 void test_eq_partitions() {
   int keys[] = {636,   1088,  1381,  1634,  1755,  2063,  2394,  2456,  2932,
                 3359,  3384,  3772,  3852,  4015,  4961,  5459,  6445,  6780,
@@ -538,6 +541,9 @@ void test_eq_partitions() {
              (2L == sp3.getPartitioningLevel()));
 }
 
+/* Partition's HT has entry
+ * ------------------------
+ */
 void test_build_1() {
   int keys[] = {636,   1088,  1381,  1634,  1755,  2063,  2394,  2456,  2932,
                 3359,  3384,  3772,  3852,  4015,  4961,  5459,  6445,  6780,
@@ -610,7 +616,88 @@ void test_build_1() {
   delete[] pht;
 }
 
+/* Test Join with Partitioning (Pass 1)
+ * ------------------------------------
+ */
 void test_join_1() {
+  tuple* tuples1 = new tuple[6]{{5, 1}, {3, 2}, {3, 3}, {2, 4}, {6, 5}, {1, 5}};
+  tuple* tuples2 = new tuple[3]{{3, 10}, {3, 11}, {1, 12}};
+
+  relation r(tuples1, 6);
+  relation s(tuples2, 3);
+  result t = PartitionedHashJoin(r, s, 1, 4, 8);
+  /* for (int64_t i = 0; i < t.result_size; i++) {
+    std::printf("\nr_id: %ld, r_row: %ld\ns_id: %ld, s_row: %ld\n",
+                t[i].a.getKey(), t[i].a.getPayload(), t[i].b.getKey(),
+                t[i].b.getPayload());
+  } */
+  TEST_CHECK(t.result_size == 5);
+
+  // a = {1, 5} | b = {1, 12}
+  TEST_CHECK(t[0].a.getKey() == r[5].getKey());
+  TEST_CHECK(t[0].a.getPayload() == 5);
+  TEST_CHECK(t[0].b.getKey() == s[2].getKey());
+  TEST_CHECK(t[0].b.getPayload() == 12);
+
+  // a = {3, 2} | b = {3, 10}
+  TEST_CHECK(t[1].a.getKey() == r[1].getKey());
+  TEST_CHECK(t[1].a.getPayload() == 2);
+  TEST_CHECK(t[1].b.getKey() == s[0].getKey());
+  TEST_CHECK(t[1].b.getPayload() == 10);
+
+  // a = {3, 3} | b = {3, 10}
+  TEST_CHECK(t[2].a.getKey() == r[2].getKey());
+  TEST_CHECK(t[2].a.getPayload() == 3);
+  TEST_CHECK(t[2].b.getKey() == s[0].getKey());
+  TEST_CHECK(t[2].b.getPayload() == 10);
+
+  // a = {3, 2} | b = {3, 11}
+  TEST_CHECK(t[3].a.getKey() == r[1].getKey());
+  TEST_CHECK(t[3].a.getPayload() == 2);
+  TEST_CHECK(t[3].b.getKey() == s[1].getKey());
+  TEST_CHECK(t[3].b.getPayload() == 11);
+
+  // a = {3, 3} | b = {3, 11}
+  TEST_CHECK(t[4].a.getKey() == r[2].getKey());
+  TEST_CHECK(t[4].a.getPayload() == 3);
+  TEST_CHECK(t[4].b.getKey() == s[1].getKey());
+  TEST_CHECK(t[4].b.getPayload() == 11);
+}
+
+/* Test Join with Partitioning (Pass 2)
+ * ------------------------------------
+ */
+void test_join_2() {
+  tuple* tuples1 = new tuple[6]{{5, 1}, {5, 2}, {3, 3}, {2, 4}, {6, 5}, {1, 5}};
+  tuple* tuples2 = new tuple[3]{{3, 10}, {4, 11}, {1, 12}};
+
+  relation r(tuples1, 6);
+  relation s(tuples2, 3);
+  result t = PartitionedHashJoin(r, s, 2, 4, 8);
+  /* for (int64_t i = 0; i < t.result_size; i++) {
+    std::printf("\nr_id: %ld, r_row: %ld\ns_id: %ld, s_row: %ld\n",
+                t[i].a.getKey(), t[i].a.getPayload(), t[i].b.getKey(),
+                t[i].b.getPayload());
+  } */
+  //TEST_CHECK(t.result_size == 2);
+/* 
+  // a = {1, 5} | b = {1, 12}
+  TEST_CHECK(t[0].a.getKey() == r[5].getKey());
+  TEST_CHECK(t[0].a.getPayload() == 5);
+  TEST_CHECK(t[0].b.getKey() == s[2].getKey());
+  TEST_CHECK(t[0].b.getPayload() == 12);
+
+  // a = {3, 3} | b = {3, 10}
+  TEST_CHECK(t[1].a.getKey() == r[0].getKey());
+  TEST_CHECK(t[1].a.getPayload() == 3);
+  TEST_CHECK(t[1].b.getKey() == s[0].getKey());
+  TEST_CHECK(t[1].b.getPayload() == 10); */
+}
+
+/* Test Join without Partitioning
+ * ------------------------------
+ */
+void test_join_3() {
   tuple* tuples1 = new tuple[6]{{5, 1}, {3, 2}, {3, 3}, {2, 4}, {6, 5}, {1, 5}};
   tuple* tuples2 = new tuple[3]{{3, 10}, {3, 11}, {1, 12}};
 
@@ -639,6 +726,8 @@ TEST_LIST = {
     {"None for Swap HT Insert", test_HTinsert7},
     {"Relations have equal amount of partitions", test_eq_partitions},
     {"Partition's HT has entry", test_build_1},
-    {"Test join 1", test_join_1},
+    {"Join with Partitioning (Pass 1)", test_join_1},
+    {"Join with Partitioning (Pass 2)", test_join_2},
+    //{"Test Join without Partitioning", test_join_3},
 
     {NULL, NULL}};
