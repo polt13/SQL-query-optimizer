@@ -1,9 +1,7 @@
 **/build/
-
 **/.vscode/
-
-**/*.ini
-
 **/submission/
-
 **/CMakeFiles/
+**/*.ini
+**/*.py
+**/*.txt

@@ -107,7 +107,7 @@ relation Partitioner::partition(relation& r, int64_t force_partition_depth,
   }
 
   if (((r.getAmount() * sizeof(tuple)) < L2_SIZE)) {
-    std::printf("Doesn't need partitioning\n");
+    // std::printf("Doesn't need partitioning\n");
     return r;
   }
 

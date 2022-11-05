@@ -173,7 +173,7 @@ void hashTable::insert(tuple *t) {
 List *hashTable::findEntry(int64_t key) {
   int64_t hashVal = hash2(key);
 
-  // if the bucket has 0 entries return no entries
+  // Empty HT, does not exist
   if (hashVal == -1) return nullptr;
 
   if (this->buckets[hashVal].getTuples().getLen() >
