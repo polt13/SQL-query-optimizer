@@ -118,7 +118,6 @@ relation Partitioner::partition(relation& r, int64_t force_partition_depth,
   for (int64_t i = 0; i < partitions; i++) {
     if (((*hist)[i] * sizeof(tuple)) > L2_SIZE) {
       return partition2(r2, bits_pass2);
-      // std::printf("\nPartition %ld doesn't fit in L2\n", i);
       break;
     }
   }

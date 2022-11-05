@@ -173,6 +173,9 @@ void hashTable::insert(tuple *t) {
 List *hashTable::findEntry(int64_t key) {
   int64_t hashVal = hash2(key);
 
+  // if the bucket has 0 entries return no entries
+  if (hashVal == -1) return nullptr;
+
   if (this->buckets[hashVal].getTuples().getLen() >
       0)  // so that we won't try to access mytuple if root is nullptr
     if (this->buckets[hashVal].getTuples().getRoot()->mytuple->getKey() ==

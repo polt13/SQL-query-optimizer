@@ -46,7 +46,6 @@ result PartitionedHashJoin(relation& r, relation& s, int64_t forceDepth,
     const int64_t* spsum = sHist->getPsum();
 
     for (int64_t j = 0; j < partitions; j++) {
-      std::printf("bla\n");
       int64_t start = spsum[j];
       int64_t end = (j < (partitions - 1)) ? (spsum[j + 1]) : (s_.getAmount());
 
@@ -78,7 +77,6 @@ result PartitionedHashJoin(relation& r, relation& s, int64_t forceDepth,
   }
   // no partitioning case
   else {
-    std::printf("XD\n");
     int64_t r_entries = r.getAmount();
     int64_t s_entries = s.getAmount();
     hashTable h{r_entries};

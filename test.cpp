@@ -679,19 +679,19 @@ void test_join_2() {
                 t[i].a.getKey(), t[i].a.getPayload(), t[i].b.getKey(),
                 t[i].b.getPayload());
   } */
-  //TEST_CHECK(t.result_size == 2);
-/* 
-  // a = {1, 5} | b = {1, 12}
-  TEST_CHECK(t[0].a.getKey() == r[5].getKey());
-  TEST_CHECK(t[0].a.getPayload() == 5);
-  TEST_CHECK(t[0].b.getKey() == s[2].getKey());
-  TEST_CHECK(t[0].b.getPayload() == 12);
+  // TEST_CHECK(t.result_size == 2);
+  /*
+    // a = {1, 5} | b = {1, 12}
+    TEST_CHECK(t[0].a.getKey() == r[5].getKey());
+    TEST_CHECK(t[0].a.getPayload() == 5);
+    TEST_CHECK(t[0].b.getKey() == s[2].getKey());
+    TEST_CHECK(t[0].b.getPayload() == 12);
 
-  // a = {3, 3} | b = {3, 10}
-  TEST_CHECK(t[1].a.getKey() == r[0].getKey());
-  TEST_CHECK(t[1].a.getPayload() == 3);
-  TEST_CHECK(t[1].b.getKey() == s[0].getKey());
-  TEST_CHECK(t[1].b.getPayload() == 10); */
+    // a = {3, 3} | b = {3, 10}
+    TEST_CHECK(t[1].a.getKey() == r[0].getKey());
+    TEST_CHECK(t[1].a.getPayload() == 3);
+    TEST_CHECK(t[1].b.getKey() == s[0].getKey());
+    TEST_CHECK(t[1].b.getPayload() == 10); */
 }
 
 /* Test Join without Partitioning
@@ -704,9 +704,10 @@ void test_join_3() {
   relation r(tuples1, 6);
   relation s(tuples2, 3);
   result t = PartitionedHashJoin(r, s, 2, 4, 8);
-  for (int64_t i = 0; i < t.result_size; i++) {
-    std::printf("\nr_id: %ld, s_id: %ld\n", t[i].a.getKey(), t[i].b.getKey());
-  }
+  // for (int64_t i = 0; i < t.result_size; i++) {
+  //   std::printf("\nr_id: %ld, s_id: %ld\n", t[i].a.getKey(),
+  //   t[i].b.getKey());
+  // }
 }
 
 void test_join_4() {
@@ -766,7 +767,7 @@ TEST_LIST = {
     {"Partition's HT has entry", test_build_1},
     {"Join with Partitioning (Pass 1)", test_join_1},
     {"Join with Partitioning (Pass 2)", test_join_2},
-    //{"Test Join without Partitioning", test_join_3},
-    {"Join 4", test_join_4},
+    {"Join without Partitioning", test_join_3},
+    {"Join Big", test_join_4},
 
     {NULL, NULL}};
