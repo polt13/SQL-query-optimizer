@@ -9,6 +9,4 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -fsanitize=address -Wall"
 
 include_directories(include)
 
-add_executable(${PROJECT_NAME})
-
-target_sources(${PROJECT_NAME} PRIVATE hashtable.cpp histogram.cpp list.cpp partitioner.cpp test.cpp join.cpp)
+add_executable(${PROJECT_NAME} hashTable.cpp histogram.cpp list.cpp partitioner.cpp test.cpp join.cpp)
