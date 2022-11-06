@@ -1,26 +1,47 @@
-**Requirements**
+## Contributors
+[Polydoros Tamtamis](https://github.com/polt13) - sdi1900184
+
+[Christos Ioannou](https://github.com/chrisioan) - sdi1900222
+<br/><br/>
+
+## Table of contents
+* [Requirements](#requirements)
+* [How To Run](#how-to-run)
+* [Type Description](#type-description)
+* [Creating Relations](#creating-relations)
+* [Partitioning](#partitioning)
+* [Hash Table](#hash-table)
+<br/><br/>
+
+## Requirements
 
 * CMake
 * Makefile
 * g++ (with support for C++14 and newer preferrably, although it should work on C++11 as well)
 * asan, gdb if compiled with debug flags
+<br/><br/>
 
-**How To Run**
+## How To Run
 
-- cmake -B build 
-- cd build
-- make
-- ./Project_JJ_Part1
+    $ cmake -B build
+<!-- tsk -->
+    $ cd build
+<!-- tsk -->
+    $ make
+<!-- tsk -->   
+    $ ./Project_JJ_Part1
 
-**NOTE**: To comply with best C++ practices, we're using the C++ version of the headers for all the C libraries we use. Namely, we opted for 'cstdio` over `stdio.h`
+**NOTE**: To comply with best C++ practices, we're using the C++ version of the headers for all the C libraries we use. Namely, we opted for `cstdio` over `stdio.h`
 and `cstring` over `string.h` (the latter is useful because of `memmove`). Every method is also wrapped in the `std` namespace, which helps avoid conflicts.
+<br/><br/>
 
-**Type Description**
+## Type Description
 
 `dataForm.h` contains the definitions for all of the important types. Since the majority of these classes contain methods that are very basic, we chose to include
 their implementations directly in the header files for the sake of simplicity.
+<br/><br/>
 
-**Creating relations**
+## Creating Relations
 
 To create a relation, which is what `PartitionedHashJoin` operates on, you first need to create a `tuple` array. Each tuple consists of a key value (on which the Join operation
 is performed) and a value (the rowID of the tuple). 
@@ -30,8 +51,9 @@ the pointer to the allocated array as an argument to the constructor of a `relat
 handled by the destructor of the `relation`.</ins>
 
 `test.cpp` contains a few examples on how to create a relation.
+<br/><br/>
 
-**Partitioning**
+## Partitioning
 
 When it comes to partitioning, you can configure the methods the way you see fit. 
 
@@ -56,4 +78,19 @@ one did.
 of any use - therefore, it can be safely deleted.
 
 The size of the L2 Cache is defined in `partitioner.h`.
+<br/><br/>
 
+## Hash Table
+
+As it has been discussed in class' Piazza Forum, the ``Hash Table`` is implemented as a ``circle``, which means when we get to the "last" bucket, the next one is the very first one. To do that, we have to apply ``modulo (%) num_buckets`` to the index, where *num_buckets* indicates the *HT's size*.
+
+- For example, if **HT's size = 60** and **NBHD_SIZE = 32** then, **bucket[59] neighbourhood** consists of **bucket[59], bucket[0], ... bucket[30]**.
+
+Same goes when we're on the "first" bucket and want to go further back.
+
+- For example: If **HT's size = 60**, we are on **bucket[4]** and want to **go back 8 slots**, then we end up on **bucket[56]**.
+
+In case a ``rehash`` is needed, we simply ``increase the HT's size by doubling it and adding 1``.
+*All the tuples have to be re-inserted*.
+
+Furthermore, there is a chance that ``multiple tuples with same keys but different rowIDs`` are inserted into the Hash Table. If the amount of such tuples **exceeds** the ``NBHD_SIZE``, then rehashing does not help at all (Neighbourhood will remain full). For this reason, we have implemented a ``Linked List`` (chaining) where, if the exact same key is found, the whole tuple is appended to the list. This List is part of ``class bucket`` fields.
