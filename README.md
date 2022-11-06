@@ -124,3 +124,6 @@ In case a ``rehash`` is needed, we simply ``increase the HT's size by doubling i
 Furthermore, there is a chance that ``multiple tuples with same keys but different rowIDs`` are inserted into the Hash Table. If the amount of such tuples **exceeds** the ``NBHD_SIZE``, then rehashing does not help at all (Neighbourhood will remain full). For this reason, we have implemented a ``Linked List`` (chaining) where, if the exact same key is found, the whole tuple is appended to the list. This List is part of ``class bucket`` fields.
 
 The size of the Neighbourhood is defined in ``hashtable.h`` as ``NBHD_SIZE``.
+
+**NOTE:** Some of the unit tests (e.g Full HT Insert, Swap HT Insert) will fail if NBHD_SIZE is changed because they are based on that specific size.
+*Nevertheless, the whole implementation works just fine*.
