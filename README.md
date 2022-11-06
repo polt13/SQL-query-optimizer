@@ -44,11 +44,7 @@
 ## How To Run
 
   ```sh
-  cmake -B build
-  ```
-<!-- tsk -->
-  ```sh
-  cd build/
+  cmake .
   ```
 <!-- tsk -->
   ```sh
