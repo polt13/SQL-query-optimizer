@@ -16,20 +16,43 @@
 ## Requirements
 
 * CMake
-* Makefile
-* g++ (with support for C++14 and newer preferrably, although it should work on C++11 as well)
-* asan, gdb if compiled with debug flags
+  ```sh
+  sudo apt install cmake
+  ```
+* Make
+  ```sh
+  sudo apt install make
+  ```
+* Compiler with support for C++11 or newer
+  ```sh
+  sudo apt install g++
+  ```
+* ASan, gdb if compiled with debug flags
+  ```sh
+  sudo apt install libasan4-dbg
+  ```
+  ```sh
+  sudo apt install gdb
+  ```
 <br/><br/>
 
 ## How To Run
 
-    $ cmake -B build
+  ```sh
+  cmake -B build
+  ```
 <!-- tsk -->
-    $ cd build
+  ```sh
+  cd build/
+  ```
 <!-- tsk -->
-    $ make
-<!-- tsk -->   
-    $ ./Project_JJ_Part1
+  ```sh
+  make
+  ```
+<!-- tsk -->
+  ```sh
+  ./Project_JJ_Part1
+  ```
 
 **NOTE**: To comply with best C++ practices, we're using the C++ version of the headers for all the C libraries we use. Namely, we opted for `cstdio` over `stdio.h`
 and `cstring` over `string.h` (the latter is useful because of `memmove`). Every method is also wrapped in the `std` namespace, which helps avoid conflicts.
