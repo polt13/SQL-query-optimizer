@@ -1,8 +1,13 @@
 ## Contributors
-[Polydoros Tamtamis](https://github.com/polt13) - sdi1900184
-
-[Christos Ioannou](https://github.com/chrisioan) - sdi1900222
-<br/><br/>
+<table>
+  <tbody>
+    <tr>
+      <td align="center"><a href="https://github.com/polt13"><img src="https://avatars.githubusercontent.com/u/59566389?v=4" width="100px;" alt="Polydoros Tamtamis"/><br /><sub><b>Polydoros Tamtamis</b></sub></a><br /><sub>sdi1900184</sub></td>
+      <td align="center"><a href="https://github.com/chrisioan"><img src="https://avatars.githubusercontent.com/u/75933777?v=4" width="100px;" alt="Christos Ioannou"/><br /><sub><b>Christos Ioannou</b></sub></a><br /><sub>sdi1900222</sub></td>
+    </tr>
+  </tbody>
+</table>
+<br></br>
 
 ## Table of contents
 * [Requirements](#requirements)
