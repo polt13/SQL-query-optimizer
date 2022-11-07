@@ -79,6 +79,9 @@ handled by the destructor of the `relation`.</ins>
 
 ## Partitioning
 
+The size of the L2 is defined in `partitioner.h`. It is set to a relatively small value by default, to showcase that partitioning works as intended. You can change
+the value as you see fit.
+
 When it comes to partitioning, you can configure the methods the way you see fit. 
 
 * By default, `partition` decides how many passes it needs to do based on the size of the relation. If you want to force `partition` to not perform partitioning, 1 pass,
