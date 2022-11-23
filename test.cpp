@@ -4,6 +4,7 @@
 #include "histogram.h"
 #include "list.h"
 #include "partitioner.h"
+#include "acutest.h"
 
 void test_partitioning_function() {
   tuple a{3, 6};
