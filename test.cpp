@@ -10,7 +10,6 @@ void test_partitioning_function() {
   tuple a{3, 6};
   tuple b{5, 7};
   tuple c{16, 16};
-  TEST_CHECK(1==2);
   TEST_CHECK(Partitioner::hash1(a.getKey(), 2) == 3);
   TEST_CHECK(Partitioner::hash1(b.getKey(), 1) == 1);
   TEST_CHECK(Partitioner::hash1(c.getKey(), 4) == 0);
