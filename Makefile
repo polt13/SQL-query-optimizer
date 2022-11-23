@@ -285,6 +285,33 @@ partitioner.cpp.s:
 	$(MAKE) -f CMakeFiles/Project_JJ_Part1.dir/build.make CMakeFiles/Project_JJ_Part1.dir/partitioner.cpp.s
 .PHONY : partitioner.cpp.s
 
+queryParser.o: queryParser.cpp.o
+
+.PHONY : queryParser.o
+
+# target to build an object file
+queryParser.cpp.o:
+	$(MAKE) -f CMakeFiles/Project_JJ_Part1.dir/build.make CMakeFiles/Project_JJ_Part1.dir/queryParser.cpp.o
+.PHONY : queryParser.cpp.o
+
+queryParser.i: queryParser.cpp.i
+
+.PHONY : queryParser.i
+
+# target to preprocess a source file
+queryParser.cpp.i:
+	$(MAKE) -f CMakeFiles/Project_JJ_Part1.dir/build.make CMakeFiles/Project_JJ_Part1.dir/queryParser.cpp.i
+.PHONY : queryParser.cpp.i
+
+queryParser.s: queryParser.cpp.s
+
+.PHONY : queryParser.s
+
+# target to generate assembly for a file
+queryParser.cpp.s:
+	$(MAKE) -f CMakeFiles/Project_JJ_Part1.dir/build.make CMakeFiles/Project_JJ_Part1.dir/queryParser.cpp.s
+.PHONY : queryParser.cpp.s
+
 test2.o: test2.cpp.o
 
 .PHONY : test2.o
@@ -339,6 +366,9 @@ help:
 	@echo "... partitioner.o"
 	@echo "... partitioner.i"
 	@echo "... partitioner.s"
+	@echo "... queryParser.o"
+	@echo "... queryParser.i"
+	@echo "... queryParser.s"
 	@echo "... test2.o"
 	@echo "... test2.i"
 	@echo "... test2.s"

@@ -32,6 +32,8 @@ memory_map parse_relation(const char* fileName) {
   // map using something an equivalent approach to the vector (since no STL)
   memory_map mapper;
 
+  mapper.addr = addr;
+
   mapper.rows = *(uint64_t*)(addr);
   addr += sizeof(mapper.rows);
   mapper.cols = *(size_t*)(addr);
