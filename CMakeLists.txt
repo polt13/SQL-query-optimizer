@@ -11,6 +11,6 @@ enable_testing()
 
 include_directories(include)
 
-add_executable(${PROJECT_NAME} hashTable.cpp histogram.cpp list.cpp partitioner.cpp join.cpp parse_relation.cpp)
+add_executable(${PROJECT_NAME} hashTable.cpp histogram.cpp list.cpp partitioner.cpp join.cpp parse_relation.cpp test.cpp)
 
 add_test(unit_tests ${PROJECT_NAME})
