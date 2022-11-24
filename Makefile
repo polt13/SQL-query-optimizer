@@ -323,32 +323,32 @@ queryParser.cpp.s:
 	$(MAKE) -f CMakeFiles/Project_JJ_Part1.dir/build.make CMakeFiles/Project_JJ_Part1.dir/queryParser.cpp.s
 .PHONY : queryParser.cpp.s
 
-test2.o: test2.cpp.o
+test.o: test.cpp.o
 
-.PHONY : test2.o
+.PHONY : test.o
 
 # target to build an object file
-test2.cpp.o:
-	$(MAKE) -f CMakeFiles/Project_JJ_Part1.dir/build.make CMakeFiles/Project_JJ_Part1.dir/test2.cpp.o
-.PHONY : test2.cpp.o
+test.cpp.o:
+	$(MAKE) -f CMakeFiles/Project_JJ_Part1.dir/build.make CMakeFiles/Project_JJ_Part1.dir/test.cpp.o
+.PHONY : test.cpp.o
 
-test2.i: test2.cpp.i
+test.i: test.cpp.i
 
-.PHONY : test2.i
+.PHONY : test.i
 
 # target to preprocess a source file
-test2.cpp.i:
-	$(MAKE) -f CMakeFiles/Project_JJ_Part1.dir/build.make CMakeFiles/Project_JJ_Part1.dir/test2.cpp.i
-.PHONY : test2.cpp.i
+test.cpp.i:
+	$(MAKE) -f CMakeFiles/Project_JJ_Part1.dir/build.make CMakeFiles/Project_JJ_Part1.dir/test.cpp.i
+.PHONY : test.cpp.i
 
-test2.s: test2.cpp.s
+test.s: test.cpp.s
 
-.PHONY : test2.s
+.PHONY : test.s
 
 # target to generate assembly for a file
-test2.cpp.s:
-	$(MAKE) -f CMakeFiles/Project_JJ_Part1.dir/build.make CMakeFiles/Project_JJ_Part1.dir/test2.cpp.s
-.PHONY : test2.cpp.s
+test.cpp.s:
+	$(MAKE) -f CMakeFiles/Project_JJ_Part1.dir/build.make CMakeFiles/Project_JJ_Part1.dir/test.cpp.s
+.PHONY : test.cpp.s
 
 # Help Target
 help:
@@ -381,9 +381,9 @@ help:
 	@echo "... queryParser.o"
 	@echo "... queryParser.i"
 	@echo "... queryParser.s"
-	@echo "... test2.o"
-	@echo "... test2.i"
-	@echo "... test2.s"
+	@echo "... test.o"
+	@echo "... test.i"
+	@echo "... test.s"
 .PHONY : help
 
 

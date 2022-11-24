@@ -39,6 +39,16 @@ class simple_vector {
 
   ~simple_vector() { delete[] objarr; }
 
-  T& operator=(const simple_vector& other) = delete;
+  simple_vector<T>& operator=(const simple_vector& other) {
+    // if the vector doesnt have enough memory allocated to fit the copied data
+    //  allocate new memory and delete the old one
+    if (capacity < other.size) {
+      delete[] objarr;
+      objarr = new T[other.size + 1];
+    }
+    for (size_t i = 0; i < size; i++) objarr[i] = other.objarr[i];
+
+    return *this;
+  }
 };
 #endif
