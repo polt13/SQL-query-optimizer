@@ -16,6 +16,6 @@ simple_vector<double> foo() {
 
 int main() {
   QueryParser qp;
-  char query[] = "3  |3.2=0.0&3.1=1.0&3.2>3499|1.2 0.1";
+  char query[] = " 3 | 3.2=0.0&3.1=1.0&3.2>3499 & 3 < 1.0 |1.2 0.1";
   qp.parse_query(query);
 }
