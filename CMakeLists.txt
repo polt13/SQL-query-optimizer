@@ -7,8 +7,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -fsanitize=address -Wall")
 
+enable_testing()
+
 include_directories(include)
 
 add_executable(Part1 hashTable.cpp histogram.cpp list.cpp partitioner.cpp test.cpp join.cpp)
 add_executable(harness harness.cpp)
 add_executable(Driver Driver.cpp parse_relation.cpp)
+add_executable(${PROJECT_NAME} hashTable.cpp histogram.cpp list.cpp partitioner.cpp test.cpp join.cpp parse_relation.cpp queryParser.cpp)
+
+add_test(unit_tests ${PROJECT_NAME})
