@@ -17,6 +17,14 @@ int main(int argc, char* argv[]) {
     // std::fprintf(stderr, "%s\n", line);
     rel_mmap[relations_count++] = parse_relation(line);
   }
+
+  /* for (size_t i = 0; i < rel_mmap[0].cols; i++) {
+    for (uint64_t j = 0; j < rel_mmap[0].rows; j++) {
+      std::fprintf(stderr, "%ld ", rel_mmap[0].colptr[i][j]);
+    }
+    std::fprintf(stderr, "\n");
+  } */
+
   // Preparation phase (not timed)
   // Build histograms, indexes,...
   //

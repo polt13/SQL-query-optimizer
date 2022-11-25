@@ -2,6 +2,7 @@
 #define QP
 #include <cstdio>
 
+#include "map_info.h"
 #include "simple_vector.h"
 
 constexpr size_t relation_count = 14;

@@ -1,10 +1,13 @@
 #include "queryParser.h"
 
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 
 #include "map_info.h"
 #include "simple_vector.h"
+
+//-----------------------------------------------------------------------------------------
 
 void QueryExec::execute(char* query) {
   parse_query(query);
@@ -16,6 +19,8 @@ void QueryExec::execute(char* query) {
   this->predicates.clear();
   this->projections.clear();
 }
+
+//-----------------------------------------------------------------------------------------
 
 void QueryExec::parse_query(char* query) {
   char* buffr;
@@ -96,14 +101,36 @@ void QueryExec::parse_selections(char* selections) {
     this->projections.add_back(selection);
 }
 
+//-----------------------------------------------------------------------------------------
+
 void QueryExec::do_query() {
-  /* Check whether there is a filter
-   * in order to execute it first
-   */
+  simple_vector<int64_t> intmd_results[this->rel_names.getSize()];
+  /* Check whether there are filters in order to execute them first */
   for (size_t i = 0; i < this->predicates.getSize(); i++) {
     operators curr_op = predicates[i].op;
     if (curr_op == operators::GREATER || curr_op == operators::LESS) {
       // execute filter predicate
+      //
+    } else if (curr_op == operators::EQ) {
+      char* curr_left = this->predicates[i].left;
+
+      if (std::strchr(curr_left, '.') == nullptr) {
+        // execute filter predicate
+        // left is literal
+        //
+      } else {
+        char* curr_right = this->predicates[i].right;
+        if (std::strchr(curr_right, '.') == nullptr) {
+          // execute filter predicate
+          // right is literal
+          //
+        }
+      }
+    } else {
+      std::perror("Unknown operator\n");
+      exit(EXIT_FAILURE);
     }
   }
 }
+
+//-----------------------------------------------------------------------------------------
