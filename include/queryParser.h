@@ -9,21 +9,35 @@ constexpr size_t relation_count = 14;
 
 enum operators { EQ, GREATER, LESS };
 
-struct operations {
-  // store literal value OR a.b (relation.column) in string form
-  char* left;
+struct filter {
+  int64_t left_rel;
+  int64_t left_col;
   operators op;
-  char* right;
+  int64_t literal;
 
-  operations() = default;
+  filter() = default;
 
-  operations(char* left, operators op, char* right)
-      : left{left}, op{op}, right{right} {}
+  filter(int64_t lr, int64_t lc, operators o, int64_t lit)
+      : left_rel{lr}, left_col{lc}, op{o}, literal{lit} {}
+};
+
+struct join {
+  int64_t left_rel;
+  int64_t left_col;
+  operators op;
+  int64_t right_rel;
+  int64_t right_col;
+
+  join() = default;
+
+  join(int64_t lr, int64_t lc, operators o, int64_t rr, int64_t rc)
+      : left_rel{lr}, left_col{lc}, op{o}, right_rel{rr}, right_col{rc} {}
 };
 
 class QueryExec {
-  simple_vector<char*> rel_names;
-  simple_vector<operations> predicates;
+  simple_vector<int64_t> rel_names;
+  simple_vector<join> joins;
+  simple_vector<filter> filters;
   simple_vector<char*> projections;
 
   void parse_query(char*);
@@ -32,6 +46,8 @@ class QueryExec {
   void parse_predicates(char*);
   void parse_selections(char*);
 
+  void clear();
+  
   // ignore return types & args
   void do_query();
   void checksum();
