@@ -1,4 +1,4 @@
-#include "queryParser.h"
+#include "query_exec.h"
 
 #include <cstdio>
 #include <cstdlib>
@@ -62,83 +62,31 @@ void QueryExec::parse_names(char* rel_string) {
 
 void QueryExec::parse_predicates(char* predicates) {
   char* ignore;
-  char *buffr, *buffr2, *buffr3;
-  char* predicate = strtok_r(predicates, "&", &buffr);
+  char *buffr, *buffr2, *buffr3, *op_val;
 
   // split based on the operator
-  char op_val[2];
+  static char op_values[][2] = {"=", ">", "<"};
 
   operators operation_type;
   // determine predicate type
-  if (std::strchr(predicate, '=')) {
-    operation_type = operators::EQ;
-    std::strcpy(op_val, "=");
-  } else if (std::strchr(predicate, '>')) {
-    operation_type = operators::GREATER;
-    std::strcpy(op_val, ">");
-  } else {
-    operation_type = operators::LESS;
-    std::strcpy(op_val, "<");
-  }
 
-  char* left = strtok_r(predicate, op_val, &buffr2);
-  if (std::strchr(left, '.') == nullptr) {
-    // left contains literal - 100% filter
-    int64_t literal = std::strtol(left, &ignore, 10);
-
-    if (operation_type == operators::GREATER)
-      operation_type = operators::LESS;
-    else if (operation_type == operators::LESS)
-      operation_type = operators::GREATER;
-    else
-      operation_type = operators::EQ;
-
-    char* right = buffr2;
-    int64_t right_rel = std::strtol(strtok_r(right, ".", &buffr3), &ignore, 10);
-    int64_t right_col =
-        std::strtol(strtok_r(nullptr, ".", &buffr3), &ignore, 10);
-
-    filter myfilter(right_rel, right_col, operation_type, literal);
-    this->filters.add_back(myfilter);
-  } else {
-    // e.g 0.2 (relation.column) - Could be filter OR join
-    int64_t left_rel = std::strtol(strtok_r(left, ".", &buffr3), &ignore, 10);
-    int64_t left_col =
-        std::strtol(strtok_r(nullptr, ".", &buffr3), &ignore, 10);
-
-    char* right = buffr2;
-    if (std::strchr(right, '.') == nullptr) {
-      // right contains literal - 100% filter
-      int64_t literal = std::strtol(right, &ignore, 10);
-
-      filter myfilter(left_rel, left_col, operation_type, literal);
-      this->filters.add_back(myfilter);
-    } else {
-      // e.g 1.4 (relation.column) - 100% join (but can be same relation!!!)
-      int64_t right_rel =
-          std::strtol(strtok_r(right, ".", &buffr3), &ignore, 10);
-      int64_t right_col =
-          std::strtol(strtok_r(nullptr, ".", &buffr3), &ignore, 10);
-
-      join myjoin(left_rel, left_col, operation_type, right_rel, right_col);
-      this->joins.add_back(myjoin);
-    }
-  }
-
-  while ((predicate = strtok_r(nullptr, "&", &buffr))) {
+  for (char* predicate = strtok_r(predicates, "&", &buffr);
+       predicate != nullptr; predicates = nullptr) {
     // determine predicate type
+
     if (std::strchr(predicate, '=')) {
       operation_type = operators::EQ;
-      std::strcpy(op_val, "=");
+      op_val = op_values[0];
     } else if (std::strchr(predicate, '>')) {
       operation_type = operators::GREATER;
-      std::strcpy(op_val, ">");
+      op_val = op_values[1];
     } else {
       operation_type = operators::LESS;
-      std::strcpy(op_val, "<");
+      op_val = op_values[2];
     }
 
     char* left = strtok_r(predicate, op_val, &buffr2);
+
     if (std::strchr(left, '.') == nullptr) {
       // left contains literal - 100% filter
       int64_t literal = std::strtol(left, &ignore, 10);
@@ -151,18 +99,19 @@ void QueryExec::parse_predicates(char* predicates) {
         operation_type = operators::EQ;
 
       char* right = buffr2;
+
       int64_t right_rel =
           std::strtol(strtok_r(right, ".", &buffr3), &ignore, 10);
-      int64_t right_col =
-          std::strtol(strtok_r(nullptr, ".", &buffr3), &ignore, 10);
+
+      int64_t right_col = std::strtol(buffr3, &ignore, 10);
 
       filter myfilter(right_rel, right_col, operation_type, literal);
       this->filters.add_back(myfilter);
+
     } else {
       // e.g 0.2 (relation.column) - Could be filter OR join
       int64_t left_rel = std::strtol(strtok_r(left, ".", &buffr3), &ignore, 10);
-      int64_t left_col =
-          std::strtol(strtok_r(nullptr, ".", &buffr3), &ignore, 10);
+      int64_t left_col = std::strtol(buffr3, &ignore, 10);
 
       char* right = buffr2;
       if (std::strchr(right, '.') == nullptr) {
@@ -175,8 +124,7 @@ void QueryExec::parse_predicates(char* predicates) {
         // e.g 1.4 (relation.column) - 100% join (but can be same relation!!!)
         int64_t right_rel =
             std::strtol(strtok_r(right, ".", &buffr3), &ignore, 10);
-        int64_t right_col =
-            std::strtol(strtok_r(nullptr, ".", &buffr3), &ignore, 10);
+        int64_t right_col = std::strtol(buffr3, &ignore, 10);
 
         join myjoin(left_rel, left_col, operation_type, right_rel, right_col);
         this->joins.add_back(myjoin);
