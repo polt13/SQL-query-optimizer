@@ -41,9 +41,9 @@ struct project_rel {
 
 class QueryExec {
   simple_vector<long int> rel_names;
-  simple_vector<project_rel> projections;
   simple_vector<join> joins;
   simple_vector<filter> filters;
+  simple_vector<project_rel> projections;
 
   void parse_query(char*);
 
