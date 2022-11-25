@@ -11,6 +11,8 @@ struct memory_map {
   uint64_t** colptr;
 };
 
+extern memory_map rel_mmap[14];
+
 memory_map parse_relation(const char*);
 
 #endif
