@@ -3,7 +3,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <cstdlib>
 
 #include "map_info.h"
 #include "simple_vector.h"
@@ -14,6 +13,7 @@ void QueryExec::execute(char* query) {
   parse_query(query);
   // do_query();
   //  checksum();
+  
   /* Clear all simple_vectors to prepare for next Query */
   clear();
 }
@@ -49,10 +49,11 @@ void QueryExec::parse_query(char* query) {
   // buffr now points to the last part of the query
   char* selections = buffr;
   parse_selections(selections);
-  for (size_t i = 0; i < projections.getSize(); i++) {
-    std::printf("projection rel %ld col %ld\n", projections[i].rel,
-                projections[i].col);
-  }
+
+  //   for (size_t i = 0; i < projections.getSize(); i++) {
+  //     std::printf("projection rel %ld col %ld\n", projections[i].rel,
+  //                 projections[i].col);
+  //   }
 }
 
 void QueryExec::parse_names(char* rel_string) {
