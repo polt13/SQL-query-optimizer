@@ -20,12 +20,15 @@ struct operations {
       : left{left}, op{op}, right{right} {}
 };
 
+struct project_rel {
+  long rel;
+  long col;
+};
+
 class QueryExec {
   simple_vector<long int> rel_names;
   simple_vector<operations> predicates;
-  simple_vector<char*> projections;
-
-  void parse_query(char*);
+  simple_vector<project_rel> projections;
 
   void parse_names(char*);
   void parse_predicates(char*);
@@ -36,6 +39,7 @@ class QueryExec {
   void checksum();
 
  public:
+  void parse_query(char*);
   void execute(char*);
 };
 

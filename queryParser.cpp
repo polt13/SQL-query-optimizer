@@ -23,6 +23,9 @@ void QueryExec::parse_query(char* query) {
 
   char* used_relations = strtok_r(query, "|", &buffr);
   parse_names(used_relations);
+  for (size_t i = 0; i < rel_names.getSize(); i++) {
+    std::printf("rel %ld\n", rel_names[i]);
+  }
 
   char* predicates = strtok_r(nullptr, "|", &buffr);
   parse_predicates(predicates);
@@ -30,6 +33,10 @@ void QueryExec::parse_query(char* query) {
   // buffr now points to the last part of the query
   char* selections = buffr;
   parse_selections(selections);
+  for (size_t i = 0; i < projections.getSize(); i++) {
+    std::printf(" rel_idx %ld rel_col %ld\n", projections[i].rel,
+                projections[i].col);
+  }
 }
 
 void QueryExec::parse_names(char* rel_string) {
@@ -91,13 +98,24 @@ void QueryExec::parse_predicates(char* predicates) {
 
 void QueryExec::parse_selections(char* selections) {
   char* buffr;
+  char* buffr2;
 
+  char* ignore;
   char* selection = strtok_r(selections, " ", &buffr);
 
-  this->projections.add_back(selection);
+  char* rel = strtok_r(selection, ".", &buffr2);
+  char* col = buffr2;
 
-  while ((selection = strtok_r(nullptr, " ", &buffr)))
-    this->projections.add_back(selection);
+  this->projections.add_back(project_rel{std::strtol(rel, &ignore, 10),
+                                         std::strtol(col, &ignore, 10)});
+
+  while ((selection = strtok_r(nullptr, " ", &buffr))) {
+    rel = strtok_r(selection, ".", &buffr2);
+    col = buffr2;
+
+    this->projections.add_back(project_rel{std::strtol(rel, &ignore, 10),
+                                           std::strtol(col, &ignore, 10)});
+  }
 }
 
 void QueryExec::do_query() {
