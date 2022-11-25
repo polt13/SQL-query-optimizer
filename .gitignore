@@ -1,9 +1,6 @@
-**/build/
 **/.vscode/
 **/submission/
 **/CMakeFiles/
 **/*.ini
 **/*.py
 **/*.txt
-r0
-r0.tbl
