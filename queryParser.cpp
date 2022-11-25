@@ -2,6 +2,7 @@
 
 #include <cstdio>
 #include <cstring>
+#include <cstdlib>
 
 #include "map_info.h"
 #include "simple_vector.h"
@@ -33,9 +34,12 @@ void QueryExec::parse_query(char* query) {
 
 void QueryExec::parse_names(char* rel_string) {
   char* buffr;
+  // ignored but used by strol..
+  char* ignore;
   char* rel = strtok_r(rel_string, " ", &buffr);
-  this->rel_names.add_back(rel);
-  while ((rel = strtok_r(nullptr, " ", &buffr))) this->rel_names.add_back(rel);
+  this->rel_names.add_back(std::strtol(rel, &ignore, 10));
+  while ((rel = strtok_r(nullptr, " ", &buffr)))
+    this->rel_names.add_back(std::strtol(rel, &ignore, 10));
 }
 
 void QueryExec::parse_predicates(char* predicates) {

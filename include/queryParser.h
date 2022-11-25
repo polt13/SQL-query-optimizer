@@ -21,7 +21,7 @@ struct operations {
 };
 
 class QueryExec {
-  simple_vector<char*> rel_names;
+  simple_vector<long int> rel_names;
   simple_vector<operations> predicates;
   simple_vector<char*> projections;
 
