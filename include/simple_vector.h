@@ -50,5 +50,7 @@ class simple_vector {
 
     return *this;
   }
+
+  void clear() { this->size = 0; }
 };
 #endif

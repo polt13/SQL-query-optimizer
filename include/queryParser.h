@@ -1,6 +1,7 @@
 #ifndef QP
 #define QP
 #include <cstdio>
+
 #include "simple_vector.h"
 
 constexpr size_t relation_count = 14;
@@ -19,14 +20,23 @@ struct operations {
       : left{left}, op{op}, right{right} {}
 };
 
-class QueryParser {
-  size_t relations_index[relation_count];
-  simple_vector<char*> parse_names(char*);
-  simple_vector<operations> parse_predicates(char*);
-  simple_vector<char*> parse_selections(char*);
+class QueryExec {
+  simple_vector<char*> rel_names;
+  simple_vector<operations> predicates;
+  simple_vector<char*> projections;
+
+  void parse_query(char*);
+
+  void parse_names(char*);
+  void parse_predicates(char*);
+  void parse_selections(char*);
+
+  // ignore return types & args
+  void do_query();
+  void checksum();
 
  public:
-  void parse_query(char*);
+  void execute(char*);
 };
 
 #endif

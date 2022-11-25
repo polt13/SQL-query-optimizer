@@ -11,9 +11,11 @@ enable_testing()
 
 include_directories(include)
 
-add_executable(Part1 hashTable.cpp histogram.cpp list.cpp partitioner.cpp test.cpp join.cpp)
+# For Part1
+add_executable(Part1 hashTable.cpp histogram.cpp list.cpp partitioner.cpp tests/test.cpp join.cpp)
+
+# For Part2
 add_executable(harness harness.cpp)
-add_executable(Driver Driver.cpp parse_relation.cpp)
-add_executable(${PROJECT_NAME} hashTable.cpp histogram.cpp list.cpp partitioner.cpp test.cpp join.cpp parse_relation.cpp queryParser.cpp)
+add_executable(Driver hashTable.cpp histogram.cpp list.cpp partitioner.cpp join.cpp parse_relation.cpp queryParser.cpp Driver.cpp)
 
 add_test(unit_tests ${PROJECT_NAME})
