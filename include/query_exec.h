@@ -3,6 +3,7 @@
 #include <cstdio>
 
 #include "map_info.h"
+#include "dataForm.h"
 #include "simple_vector.h"
 
 constexpr size_t relation_count = 14;
@@ -52,6 +53,8 @@ class QueryExec {
   void parse_selections(char*);
 
   void clear();
+
+  simple_vector<result_item> self_join(simple_vector<long int>&);
 
   // ignore return types & args
   void do_query();

@@ -6,6 +6,7 @@
 #include <cstdlib>
 
 #include "map_info.h"
+#include "dataForm.h"
 #include "simple_vector.h"
 
 //-----------------------------------------------------------------------------------------
@@ -183,6 +184,30 @@ void QueryExec::parse_selections(char* selections) {
 } */
 
 //-----------------------------------------------------------------------------------------
+
+// rowids = intermediate for relation
+simple_vector<result_item> self_join(simple_vector<long int>& rowids,
+                                     long int relation, long int col1,
+                                     long int col2) {
+  simple_vector<result_item> next;
+
+  uint64_t* relation_col1 = rel_mmap[relation].colptr[col1];
+  uint64_t* relation_col2 = rel_mmap[relation].colptr[col2];
+
+  const size_t row_count = rowids.getSize();
+
+  for (size_t i = 0; i < row_count; i++) {
+    int rowid_left = rowids[i];
+    for (size_t j = 0; j < row_count; j++) {
+      int rowid_right = rowids[j];
+      if (relation_col1[rowid_left] == relation_col2[rowid_right]) {
+        next.add_back(result_item{rowid_left, rowid_right});
+      }
+    }
+  }
+
+  return next;
+}
 
 void QueryExec::clear() {
   this->rel_names.clear();
