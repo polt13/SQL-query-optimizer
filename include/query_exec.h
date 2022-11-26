@@ -10,15 +10,15 @@ constexpr size_t relation_count = 14;
 enum operators { EQ, GREATER, LESS };
 
 struct filter {
-  int64_t left_rel;
-  int64_t left_col;
+  int64_t rel;
+  int64_t col;
   operators op;
   int64_t literal;
 
   filter() = default;
 
   filter(int64_t lr, int64_t lc, operators o, int64_t lit)
-      : left_rel{lr}, left_col{lc}, op{o}, literal{lit} {}
+      : rel{lr}, col{lc}, op{o}, literal{lit} {}
 };
 
 struct join {
@@ -35,8 +35,8 @@ struct join {
 };
 
 struct project_rel {
-  long rel;
-  long col;
+  int64_t rel;
+  int64_t col;
 };
 
 class QueryExec {
@@ -51,11 +51,12 @@ class QueryExec {
   void parse_predicates(char*);
   void parse_selections(char*);
 
-  void clear();
-
-  // ignore return types & args
   void do_query();
-  void checksum();
+
+  void filter_exec(size_t, simple_vector<int64_t>&);
+  void checksum(simple_vector<int64_t>[]);
+
+  void clear();
 
  public:
   void execute(char*);

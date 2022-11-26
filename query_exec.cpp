@@ -11,9 +11,9 @@
 
 void QueryExec::execute(char* query) {
   parse_query(query);
-  // do_query();
+  do_query();
   //  checksum();
-  
+
   /* Clear all simple_vectors to prepare for next Query */
   clear();
 }
@@ -153,35 +153,116 @@ void QueryExec::parse_selections(char* selections) {
 
 //-----------------------------------------------------------------------------------------
 
-/* void QueryExec::do_query() {
-  simple_vector<int64_t> intmd_results[this->rel_names.getSize()];
+void QueryExec::do_query() {
+  simple_vector<int64_t>* intmd_results =
+      new simple_vector<int64_t>[this->rel_names.getSize()];
   // Check whether there are filters in order to execute them first
-  for (size_t i = 0; i < this->predicates.getSize(); i++) {
-    operators curr_op = predicates[i].op;
-    if (curr_op == operators::GREATER || curr_op == operators::LESS) {
-      // execute filter predicate
-      //
-    } else if (curr_op == operators::EQ) {
-      char* curr_left = this->predicates[i].left;
+  for (size_t i = 0; i < this->filters.getSize(); i++) {
+    filter_exec(i, intmd_results[filters[i].rel]);
+  }
 
-      if (std::strchr(curr_left, '.') == nullptr) {
-        // execute filter predicate
-        // left is literal
-        //
-      } else {
-        char* curr_right = this->predicates[i].right;
-        if (std::strchr(curr_right, '.') == nullptr) {
-          // execute filter predicate
-          // right is literal
-          //
-        }
-      }
-    } else {
-      std::perror("Unknown operator\n");
-      exit(EXIT_FAILURE);
+  // Check for Self-joins
+  for (size_t i = 0; i < this->joins.getSize(); i++) {
+    if (joins[i].left_rel == joins[i].right_rel) {
+      // Self-join found - Execute it
     }
   }
-} */
+
+  // Execute the rest - Partitioned Hash Joins (PHJs)
+  for (size_t i = 0; i < this->joins.getSize(); i++) {
+    if (joins[i].left_rel != joins[i].right_rel) {
+      // Check if both relations exist in intermediate results
+      // if (...) { ... }
+      // else {
+      // PHJ found - Execute it
+      // ...
+      // }
+    }
+  }
+
+  // Done with all predicates
+  // Checksum on given projections
+  // Execute Checksum
+  checksum(intmd_results);
+
+  delete[] intmd_results;
+}
+
+void QueryExec::filter_exec(size_t index,
+                            simple_vector<int64_t>& intmd_result) {
+  int64_t rel = this->filters[index].rel;
+  int64_t col = this->filters[index].col;
+  int64_t lit = this->filters[index].literal;
+  operators operation_type = this->filters[index].op;
+
+  // Check if the relation has been through a predicate yet
+  if (intmd_result.getSize() == 0) {
+    // First time applying a predicate on this relation
+    // We have to traverse the initial relation
+    for (uint64_t row = 0; row < rel_mmap[rel].rows; row++) {
+      switch (operation_type) {
+        case operators::EQ:
+          if ((int64_t)rel_mmap[rel].colptr[col][row] == lit)
+            intmd_result.add_back(row);
+        case operators::GREATER:
+          if ((int64_t)rel_mmap[rel].colptr[col][row] > lit)
+            intmd_result.add_back(row);
+        case operators::LESS:
+          if ((int64_t)rel_mmap[rel].colptr[col][row] < lit)
+            intmd_result.add_back(row);
+        default:
+          std::perror("Unknown operator\n");
+          exit(EXIT_FAILURE);
+      }
+    }
+  } else {
+    // Relation has already been through a predicate before
+    // We have to traverse the intermediate results of the
+    // corresponding relation
+    simple_vector<int64_t> new_v;
+    for (size_t i = 0; i < intmd_result.getSize(); i++) {
+      int64_t curr_row = intmd_result[i];
+
+      switch (operation_type) {
+        case operators::EQ:
+          if ((int64_t)rel_mmap[rel].colptr[col][curr_row] == lit)
+            new_v.add_back(curr_row);
+        case operators::GREATER:
+          if ((int64_t)rel_mmap[rel].colptr[col][curr_row] > lit)
+            new_v.add_back(curr_row);
+        case operators::LESS:
+          if ((int64_t)rel_mmap[rel].colptr[col][curr_row] < lit)
+            new_v.add_back(curr_row);
+        default:
+          std::perror("Unknown operator\n");
+          exit(EXIT_FAILURE);
+      }
+    }
+    // Replace relation's intermediate results with the new simple_vector
+    intmd_result = new_v;
+  }
+}
+
+void QueryExec::checksum(simple_vector<int64_t> intmd_results[]) {
+  int64_t curr_rel;
+  int64_t curr_col;
+  int64_t curr_row;
+  int64_t sum;
+
+  for (size_t i = 0; this->projections.getSize(); i++) {
+    curr_rel = this->projections[i].rel;
+    curr_col = this->projections[i].col;
+    sum = 0;
+
+    for (size_t j = 0; j < intmd_results[curr_rel].getSize(); j++) {
+      curr_row = intmd_results[curr_rel][j];
+
+      sum += rel_mmap[curr_rel].colptr[curr_col][curr_row];
+    }
+
+    std::fprintf(stdin, "%ld ", sum);
+  }
+}
 
 //-----------------------------------------------------------------------------------------
 
