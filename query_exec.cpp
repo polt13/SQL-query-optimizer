@@ -4,7 +4,9 @@
 #include <cstdlib>
 #include <cstring>
 
+#include "dataForm.h"
 #include "map_info.h"
+#include "partitioner.h"
 #include "simple_vector.h"
 
 //-----------------------------------------------------------------------------------------
@@ -181,8 +183,8 @@ void QueryExec::do_query() {
     if (joins[i].left_rel != joins[i].right_rel) {
       // Check if ΝΟΤ both relations exist in intermediate results
       // if (...) {
-        // PHJ found - Execute it
-        // ...
+      // PHJ found - Execute it
+      // ...
       //}
     }
   }
@@ -272,6 +274,70 @@ void QueryExec::checksum(simple_vector<int64_t> intmd_results[]) {
 }
 
 //-----------------------------------------------------------------------------------------
+
+// rowids = intermediate for relation
+simple_vector<result_item> QueryExec::self_join(simple_vector<int64_t>& rowids,
+                                                int64_t selfjoin_index) {
+  // left_rel == right_rel
+  int64_t relation = joins[selfjoin_index].left_rel;
+  int64_t col1 = joins[selfjoin_index].left_col;
+  int64_t col2 = joins[selfjoin_index].right_col;
+
+  simple_vector<result_item> next;
+
+  uint64_t* relation_col1 = rel_mmap[relation].colptr[col1];
+  uint64_t* relation_col2 = rel_mmap[relation].colptr[col2];
+
+  const size_t row_count = rowids.getSize();
+
+  for (size_t i = 0; i < row_count; i++) {
+    int64_t rowid_left = rowids[i];
+    for (size_t j = 0; j < row_count; j++) {
+      int64_t rowid_right = rowids[j];
+      if (relation_col1[rowid_left] == relation_col2[rowid_right]) {
+        next.add_back(result_item{rowid_left, rowid_right});
+      }
+    }
+  }
+
+  return next;
+}
+
+result QueryExec::do_join(simple_vector<int64_t>& rowids_r,
+                          simple_vector<int64_t>& rowids_s,
+                          int64_t index_join) {
+  size_t tuples_count_r = rowids_r.getSize();
+  size_t tuples_count_s = rowids_s.getSize();
+
+  tuple* rtuples = new tuple[tuples_count_r];
+  tuple* stuples = new tuple[tuples_count_s];
+
+  int64_t relation_r = joins[index_join].left_rel;
+  int64_t relation_s = joins[index_join].right_rel;
+
+  int64_t join_colr = joins[index_join].left_col;
+  int64_t join_cols = joins[index_join].right_col;
+
+  uint64_t* relation_colr = rel_mmap[relation_r].colptr[join_colr];
+  uint64_t* relation_cols = rel_mmap[relation_s].colptr[join_cols];
+
+  for (size_t i = 0; i < tuples_count_r; i++) {
+    int64_t rowid = rowids_r[i];
+    int64_t val = relation_colr[rowid];
+    rtuples[i] = {val, rowid};
+  }
+
+  for (size_t i = 0; i < tuples_count_s; i++) {
+    int64_t rowid = rowids_s[i];
+    int64_t val = relation_cols[rowid];
+    stuples[i] = {val, rowid};
+  }
+
+  relation r(rtuples, tuples_count_r);
+  relation s(stuples, tuples_count_s);
+
+  return PartitionedHashJoin(r, s);
+}
 
 void QueryExec::clear() {
   this->rel_names.clear();

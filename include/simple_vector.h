@@ -20,7 +20,8 @@ class simple_vector {
       capacity = 2 * size;
       T* old = objarr;
       objarr = new T[capacity];
-      for (size_t i = 0; i < size; i++) objarr[i] = old[i];
+
+      std::memmove(objarr, old, sizeof(T) * size);
 
       delete[] old;
     }
@@ -34,7 +35,7 @@ class simple_vector {
     size = other.size;
     capacity = size * 2;
     objarr = new T[capacity];
-    for (size_t i = 0; i < size; i++) objarr[i] = other.objarr[i];
+    std::memmove(objarr, other.objarr, sizeof(T) * size);
   }
 
   ~simple_vector() { delete[] objarr; }
@@ -46,7 +47,10 @@ class simple_vector {
       delete[] objarr;
       objarr = new T[other.size + 1];
     }
-    for (size_t i = 0; i < size; i++) objarr[i] = other.objarr[i];
+
+    size = other.size;
+
+    std::memmove(objarr, other.objarr, sizeof(T) * size);
 
     return *this;
   }

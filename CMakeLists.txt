@@ -17,6 +17,7 @@ add_executable(Part1 hashTable.cpp histogram.cpp list.cpp partitioner.cpp tests/
 # For Part2
 add_executable(harness harness.cpp)
 add_executable(Driver hashTable.cpp histogram.cpp list.cpp partitioner.cpp join.cpp parse_relation.cpp query_exec.cpp Driver.cpp)
+add_executable(test2 hashTable.cpp histogram.cpp list.cpp partitioner.cpp join.cpp tests/test2.cpp parse_relation.cpp query_exec.cpp)
 #add_executable(test3 tests/test3.cpp query_exec.cpp)
 
 add_test(unit_tests ${PROJECT_NAME})

@@ -2,6 +2,7 @@
 #define QP
 #include <cstdio>
 
+#include "dataForm.h"
 #include "map_info.h"
 #include "simple_vector.h"
 
@@ -40,22 +41,21 @@ struct project_rel {
 };
 
 class QueryExec {
-  simple_vector<long int> rel_names;
+  simple_vector<int64_t> rel_names;
   simple_vector<join> joins;
   simple_vector<filter> filters;
   simple_vector<project_rel> projections;
 
   void parse_query(char*);
-
   void parse_names(char*);
   void parse_predicates(char*);
   void parse_selections(char*);
 
   void do_query();
-
   void filter_exec(size_t, simple_vector<int64_t>&);
+  simple_vector<result_item> self_join(simple_vector<int64_t>&, int64_t);
+  result do_join(simple_vector<int64_t>&, simple_vector<int64_t>&, int64_t);
   void checksum(simple_vector<int64_t>[]);
-
   void clear();
 
  public:
