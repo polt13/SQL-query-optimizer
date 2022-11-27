@@ -173,10 +173,17 @@ void QueryExec::do_query() {
     if (joins[i].left_rel != joins[i].right_rel) {
       // Check if both relations exist in intermediate results
       // if (...) { ... }
-      // else {
-      // PHJ found - Execute it
-      // ...
-      // }
+    }
+  }
+
+  // Execute Partitioned Hash Joins (PHJs)
+  for (size_t i = 0; i < this->joins.getSize(); i++) {
+    if (joins[i].left_rel != joins[i].right_rel) {
+      // Check if ΝΟΤ both relations exist in intermediate results
+      // if (...) {
+        // PHJ found - Execute it
+        // ...
+      //}
     }
   }
 
