@@ -4,7 +4,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <cstdlib>
-
+#include "partitioner.h"
 #include "map_info.h"
 #include "dataForm.h"
 #include "simple_vector.h"
@@ -186,9 +186,13 @@ void QueryExec::parse_selections(char* selections) {
 //-----------------------------------------------------------------------------------------
 
 // rowids = intermediate for relation
-simple_vector<result_item> self_join(simple_vector<long int>& rowids,
-                                     long int relation, long int col1,
-                                     long int col2) {
+simple_vector<result_item> QueryExec::self_join(simple_vector<long int>& rowids,
+                                                int64_t selfjoin_index) {
+  // left_rel == right_rel
+  int64_t relation = joins[selfjoin_index].left_rel;
+  int64_t col1 = joins[selfjoin_index].left_col;
+  int64_t col2 = joins[selfjoin_index].right_col;
+
   simple_vector<result_item> next;
 
   uint64_t* relation_col1 = rel_mmap[relation].colptr[col1];
@@ -207,6 +211,42 @@ simple_vector<result_item> self_join(simple_vector<long int>& rowids,
   }
 
   return next;
+}
+
+result QueryExec::do_join(simple_vector<long int>& rowids_r,
+                          simple_vector<long int>& rowids_s,
+                          int64_t index_join) {
+  size_t tuples_count_r = rowids_r.getSize();
+  size_t tuples_count_s = rowids_s.getSize();
+
+  tuple* rtuples = new tuple[tuples_count_r];
+  tuple* stuples = new tuple[tuples_count_s];
+
+  int64_t relation_r = joins[index_join].left_rel;
+  int64_t relation_s = joins[index_join].right_rel;
+
+  int64_t join_colr = joins[index_join].left_col;
+  int64_t join_cols = joins[index_join].right_col;
+
+  uint64_t* relation_colr = rel_mmap[relation_r].colptr[join_colr];
+  uint64_t* relation_cols = rel_mmap[relation_s].colptr[join_cols];
+
+  for (size_t i = 0; i < tuples_count_r; i++) {
+    int64_t rowid = rowids_r[i];
+    int64_t val = relation_colr[rowid];
+    rtuples[i] = {val, rowid};
+  }
+
+  for (size_t i = 0; i < tuples_count_s; i++) {
+    int64_t rowid = rowids_s[i];
+    int64_t val = relation_cols[rowid];
+    stuples[i] = {val, rowid};
+  }
+
+  relation r(rtuples, tuples_count_r);
+  relation s(stuples, tuples_count_s);
+
+  return PartitionedHashJoin(r, s);
 }
 
 void QueryExec::clear() {

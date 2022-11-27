@@ -54,7 +54,8 @@ class QueryExec {
 
   void clear();
 
-  simple_vector<result_item> self_join(simple_vector<long int>&);
+  simple_vector<result_item> self_join(simple_vector<long int>&, int64_t);
+  result do_join(simple_vector<long int>&, simple_vector<long int>&, int64_t);
 
   // ignore return types & args
   void do_query();
