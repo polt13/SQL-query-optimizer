@@ -391,8 +391,9 @@ void QueryExec::checksum(simple_vector<int64_t> intmd_results[]) {
       sum += rel_mmap[curr_rel].colptr[curr_col][curr_row];
     }
 
-    std::printf("%ld ", sum);
+    (sum) ? (std::printf("%ld ", sum)) : (std::printf("NULL "));
   }
+  std::printf("\n");
 }
 
 //-----------------------------------------------------------------------------------------
