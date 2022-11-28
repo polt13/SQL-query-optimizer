@@ -56,9 +56,5 @@ class simple_vector {
   }
 
   void clear() { this->size = 0; }
-
-  void fill(T val) {
-    for (size_t i = 0; i < size; i++) objarr[i] = val;
-  }
 };
 #endif
