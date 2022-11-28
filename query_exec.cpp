@@ -378,7 +378,7 @@ void QueryExec::checksum(simple_vector<int64_t> intmd_results[]) {
   int64_t curr_rel;
   int64_t curr_col;
   int64_t curr_row;
-  int64_t sum;
+  uint64_t sum;
 
   for (size_t i = 0; this->projections.getSize(); i++) {
     curr_rel = this->projections[i].rel;
@@ -391,7 +391,7 @@ void QueryExec::checksum(simple_vector<int64_t> intmd_results[]) {
       sum += rel_mmap[curr_rel].colptr[curr_col][curr_row];
     }
 
-    std::fprintf(stdin, "%ld ", sum);
+    std::printf("%ld ", sum);
   }
 }
 
