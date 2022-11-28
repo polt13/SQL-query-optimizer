@@ -14,8 +14,6 @@
 void QueryExec::execute(char* query) {
   parse_query(query);
   do_query();
-  //  checksum();
-
   /* Clear all simple_vectors to prepare for next Query */
   clear();
 }
@@ -227,6 +225,7 @@ void QueryExec::filter_exec(size_t index,
           exit(EXIT_FAILURE);
       }
     }
+    used_relations[rel] = true;
   } else {
     // Relation has already been through a predicate before
     // We have to traverse the intermediate results of the
@@ -300,6 +299,7 @@ simple_vector<result_item> QueryExec::do_self_join(
 simple_vector<result_item> QueryExec::do_simple_join(
     simple_vector<int64_t>& rowids_r, simple_vector<int64_t>& rowids_s,
     int64_t simplejoin_index) {
+  // mark relations as used.. do join etc
   return simple_vector<result_item>();
 }
 
