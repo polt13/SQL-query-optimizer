@@ -45,6 +45,7 @@ class QueryExec {
   simple_vector<join> joins;
   simple_vector<filter> filters;
   simple_vector<project_rel> projections;
+  simple_vector<bool> used_relations;
 
   void parse_query(char*);
   void parse_names(char*);
@@ -52,9 +53,14 @@ class QueryExec {
   void parse_selections(char*);
 
   void do_query();
+
   void filter_exec(size_t, simple_vector<int64_t>&);
-  simple_vector<result_item> self_join(simple_vector<int64_t>&, int64_t);
-  result do_join(simple_vector<int64_t>&, simple_vector<int64_t>&, int64_t);
+  simple_vector<result_item> do_self_join(simple_vector<int64_t>&, int64_t);
+  simple_vector<result_item> do_simple_join(simple_vector<int64_t>&,
+                                            simple_vector<int64_t>&, int64_t);
+  result do_hash_join(simple_vector<int64_t>&, simple_vector<int64_t>&,
+                      int64_t);
+
   void checksum(simple_vector<int64_t>[]);
   void clear();
 

@@ -158,6 +158,10 @@ void QueryExec::parse_selections(char* selections) {
 void QueryExec::do_query() {
   simple_vector<int64_t>* intmd_results =
       new simple_vector<int64_t>[this->rel_names.getSize()];
+
+  // set all relations to not have been used initially
+  used_relations.fill(false);
+
   // Check whether there are filters in order to execute them first
   for (size_t i = 0; i < this->filters.getSize(); i++) {
     filter_exec(i, intmd_results[filters[i].rel]);
@@ -167,6 +171,7 @@ void QueryExec::do_query() {
   for (size_t i = 0; i < this->joins.getSize(); i++) {
     if (joins[i].left_rel == joins[i].right_rel) {
       // Self-join found - Execute it
+      do_self_join(intmd_results[joins[i].left_rel], i);
     }
   }
 
@@ -174,18 +179,13 @@ void QueryExec::do_query() {
   for (size_t i = 0; i < this->joins.getSize(); i++) {
     if (joins[i].left_rel != joins[i].right_rel) {
       // Check if both relations exist in intermediate results
-      // if (...) { ... }
-    }
-  }
-
-  // Execute Partitioned Hash Joins (PHJs)
-  for (size_t i = 0; i < this->joins.getSize(); i++) {
-    if (joins[i].left_rel != joins[i].right_rel) {
-      // Check if ΝΟΤ both relations exist in intermediate results
-      // if (...) {
-      // PHJ found - Execute it
-      // ...
-      //}
+      if (used_relations[joins[i].left_rel] == true &&
+          used_relations[joins[i].right_rel] == true) {
+        // do_simple_join();
+      } else if (used_relations[joins[i].left_rel] == false ||
+                 false == used_relations[joins[i].right_rel]) {
+        // do_hash_join();
+      }
     }
   }
 
@@ -197,15 +197,18 @@ void QueryExec::do_query() {
   delete[] intmd_results;
 }
 
+//-----------------------------------------------------------------------------------------
+
 void QueryExec::filter_exec(size_t index,
                             simple_vector<int64_t>& intmd_result) {
   int64_t rel = this->filters[index].rel;
+
   int64_t col = this->filters[index].col;
   int64_t lit = this->filters[index].literal;
   operators operation_type = this->filters[index].op;
 
   // Check if the relation has been through a predicate yet
-  if (intmd_result.getSize() == 0) {
+  if (used_relations[rel] == false) {
     // First time applying a predicate on this relation
     // We have to traverse the initial relation
     for (uint64_t row = 0; row < rel_mmap[rel].rows; row++) {
@@ -252,32 +255,9 @@ void QueryExec::filter_exec(size_t index,
   }
 }
 
-void QueryExec::checksum(simple_vector<int64_t> intmd_results[]) {
-  int64_t curr_rel;
-  int64_t curr_col;
-  int64_t curr_row;
-  int64_t sum;
-
-  for (size_t i = 0; this->projections.getSize(); i++) {
-    curr_rel = this->projections[i].rel;
-    curr_col = this->projections[i].col;
-    sum = 0;
-
-    for (size_t j = 0; j < intmd_results[curr_rel].getSize(); j++) {
-      curr_row = intmd_results[curr_rel][j];
-
-      sum += rel_mmap[curr_rel].colptr[curr_col][curr_row];
-    }
-
-    std::fprintf(stdin, "%ld ", sum);
-  }
-}
-
-//-----------------------------------------------------------------------------------------
-
 // rowids = intermediate for relation
-simple_vector<result_item> QueryExec::self_join(simple_vector<int64_t>& rowids,
-                                                int64_t selfjoin_index) {
+simple_vector<result_item> QueryExec::do_self_join(
+    simple_vector<int64_t>& rowids, int64_t selfjoin_index) {
   // left_rel == right_rel
   int64_t relation = joins[selfjoin_index].left_rel;
   int64_t col1 = joins[selfjoin_index].left_col;
@@ -288,24 +268,44 @@ simple_vector<result_item> QueryExec::self_join(simple_vector<int64_t>& rowids,
   uint64_t* relation_col1 = rel_mmap[relation].colptr[col1];
   uint64_t* relation_col2 = rel_mmap[relation].colptr[col2];
 
-  const size_t row_count = rowids.getSize();
-
-  for (size_t i = 0; i < row_count; i++) {
-    int64_t rowid_left = rowids[i];
-    for (size_t j = 0; j < row_count; j++) {
-      int64_t rowid_right = rowids[j];
-      if (relation_col1[rowid_left] == relation_col2[rowid_right]) {
-        next.add_back(result_item{rowid_left, rowid_right});
+  if (used_relations[relation]) {
+    const size_t row_count = rowids.getSize();
+    for (size_t i = 0; i < row_count; i++) {
+      int64_t rowid_left = rowids[i];
+      for (size_t j = 0; j < row_count; j++) {
+        int64_t rowid_right = rowids[j];
+        if (relation_col1[rowid_left] == relation_col2[rowid_right]) {
+          next.add_back(result_item{rowid_left, rowid_right});
+        }
       }
     }
+  } else {
+    memory_map m = rel_mmap[relation];
+
+    const int64_t row_count = m.rows;
+
+    for (int64_t i = 0; i < row_count; i++) {
+      uint64_t val = relation_col1[i];
+      for (int64_t j = 0; j < row_count; j++) {
+        if (val == relation_col2[j]) next.add_back(result_item{i, j});
+      }
+    }
+
+    used_relations[relation] = true;
   }
 
   return next;
 }
 
-result QueryExec::do_join(simple_vector<int64_t>& rowids_r,
-                          simple_vector<int64_t>& rowids_s,
-                          int64_t index_join) {
+simple_vector<result_item> QueryExec::do_simple_join(
+    simple_vector<int64_t>& rowids_r, simple_vector<int64_t>& rowids_s,
+    int64_t simplejoin_index) {
+  return simple_vector<result_item>();
+}
+
+result QueryExec::do_hash_join(simple_vector<int64_t>& rowids_r,
+                               simple_vector<int64_t>& rowids_s,
+                               int64_t index_join) {
   size_t tuples_count_r = rowids_r.getSize();
   size_t tuples_count_s = rowids_s.getSize();
 
@@ -314,6 +314,8 @@ result QueryExec::do_join(simple_vector<int64_t>& rowids_r,
 
   int64_t relation_r = joins[index_join].left_rel;
   int64_t relation_s = joins[index_join].right_rel;
+
+  used_relations[relation_r] = used_relations[relation_s] = true;
 
   int64_t join_colr = joins[index_join].left_col;
   int64_t join_cols = joins[index_join].right_col;
@@ -337,6 +339,27 @@ result QueryExec::do_join(simple_vector<int64_t>& rowids_r,
   relation s(stuples, tuples_count_s);
 
   return PartitionedHashJoin(r, s);
+}
+
+void QueryExec::checksum(simple_vector<int64_t> intmd_results[]) {
+  int64_t curr_rel;
+  int64_t curr_col;
+  int64_t curr_row;
+  int64_t sum;
+
+  for (size_t i = 0; this->projections.getSize(); i++) {
+    curr_rel = this->projections[i].rel;
+    curr_col = this->projections[i].col;
+    sum = 0;
+
+    for (size_t j = 0; j < intmd_results[curr_rel].getSize(); j++) {
+      curr_row = intmd_results[curr_rel][j];
+
+      sum += rel_mmap[curr_rel].colptr[curr_col][curr_row];
+    }
+
+    std::fprintf(stdin, "%ld ", sum);
+  }
 }
 
 void QueryExec::clear() {
