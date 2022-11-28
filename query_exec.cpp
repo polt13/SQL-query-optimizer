@@ -14,7 +14,8 @@
 void QueryExec::execute(char* query) {
   parse_query(query);
   do_query();
-  /* Clear all simple_vectors to prepare for next Query */
+
+  // Clear all simple_vectors to prepare for next Query
   clear();
 }
 
@@ -158,7 +159,8 @@ void QueryExec::do_query() {
       new simple_vector<int64_t>[this->rel_names.getSize()];
 
   // set all relations to not have been used initially
-  used_relations.fill(false);
+  for (size_t i = 0; i < this->rel_names.getSize(); i++)
+    this->used_relations.add_back(false);
 
   // Check whether there are filters in order to execute them first
   for (size_t i = 0; i < this->filters.getSize(); i++) {
@@ -173,23 +175,26 @@ void QueryExec::do_query() {
     }
   }
 
-  // Execute the rest - Partitioned Hash Joins (PHJs)
+  // Execute the rest -
   for (size_t i = 0; i < this->joins.getSize(); i++) {
     if (joins[i].left_rel != joins[i].right_rel) {
-      // Check if both relations exist in intermediate results
+      // Both relations exist in intermediate results
+      // Execute Simple-Join
       if (used_relations[joins[i].left_rel] == true &&
           used_relations[joins[i].right_rel] == true) {
-        // do_simple_join();
+        do_simple_join(intmd_results[joins[i].left_rel],
+                       intmd_results[joins[i].right_rel], i);
+        // Execute Partitioned Hash Join (PHJ)
       } else if (used_relations[joins[i].left_rel] == false ||
                  false == used_relations[joins[i].right_rel]) {
-        // do_hash_join();
+        do_hash_join(intmd_results[joins[i].left_rel],
+                     intmd_results[joins[i].right_rel], i);
       }
     }
   }
 
   // Done with all predicates
-  // Checksum on given projections
-  // Execute Checksum
+  // Execute Checksum on given projections
   checksum(intmd_results);
 
   delete[] intmd_results;
@@ -205,9 +210,11 @@ void QueryExec::filter_exec(size_t index,
   int64_t lit = this->filters[index].literal;
   operators operation_type = this->filters[index].op;
 
-  // Check if the relation has been through a predicate yet
+  // Relation hasn't been used in a predicate before
   if (used_relations[rel] == false) {
     // First time applying a predicate on this relation
+    // Mark the relation as used
+    used_relations[rel] = true;
     // We have to traverse the initial relation
     for (uint64_t row = 0; row < rel_mmap[rel].rows; row++) {
       switch (operation_type) {
@@ -227,7 +234,7 @@ void QueryExec::filter_exec(size_t index,
     }
     used_relations[rel] = true;
   } else {
-    // Relation has already been through a predicate before
+    // Relation has already been used in a predicate before
     // We have to traverse the intermediate results of the
     // corresponding relation
     simple_vector<int64_t> new_v;
@@ -267,18 +274,21 @@ simple_vector<result_item> QueryExec::do_self_join(
   uint64_t* relation_col1 = rel_mmap[relation].colptr[col1];
   uint64_t* relation_col2 = rel_mmap[relation].colptr[col2];
 
+  // Relation has been used in a predicate before
   if (used_relations[relation]) {
     const size_t row_count = rowids.getSize();
     for (size_t i = 0; i < row_count; i++) {
       int64_t rowid_left = rowids[i];
       for (size_t j = 0; j < row_count; j++) {
         int64_t rowid_right = rowids[j];
-        if (relation_col1[rowid_left] == relation_col2[rowid_right]) {
+        if (relation_col1[rowid_left] == relation_col2[rowid_right])
           next.add_back(result_item{rowid_left, rowid_right});
-        }
       }
     }
   } else {
+    // Mark the relation as used
+    used_relations[relation] = true;
+
     memory_map m = rel_mmap[relation];
 
     const int64_t row_count = m.rows;
@@ -289,8 +299,6 @@ simple_vector<result_item> QueryExec::do_self_join(
         if (val == relation_col2[j]) next.add_back(result_item{i, j});
       }
     }
-
-    used_relations[relation] = true;
   }
 
   return next;
@@ -299,8 +307,33 @@ simple_vector<result_item> QueryExec::do_self_join(
 simple_vector<result_item> QueryExec::do_simple_join(
     simple_vector<int64_t>& rowids_r, simple_vector<int64_t>& rowids_s,
     int64_t simplejoin_index) {
-  // mark relations as used.. do join etc
-  return simple_vector<result_item>();
+  int64_t rel_r = joins[simplejoin_index].left_rel;
+  int64_t col_r = joins[simplejoin_index].left_col;
+
+  int64_t rel_s = joins[simplejoin_index].right_rel;
+  int64_t col_s = joins[simplejoin_index].right_col;
+
+  simple_vector<result_item> next;
+
+  // If-Statement not really needed, just to make sure
+  if (used_relations[rel_r] == true && used_relations[rel_s] == true) {
+    const size_t row_count_r = rowids_r.getSize();
+    const size_t row_count_s = rowids_s.getSize();
+    for (size_t i = 0; i < row_count_r; i++) {
+      int64_t rowid_r = rowids_r[i];
+      for (size_t j = 0; j < row_count_s; j++) {
+        int64_t rowid_s = rowids_s[j];
+        if (rel_mmap[rel_r].colptr[col_r][rowid_r] ==
+            rel_mmap[rel_s].colptr[col_s][rowid_s])
+          next.add_back(result_item{rowid_r, rowid_s});
+      }
+    }
+  } else {
+    std::perror("do_simple_join failed");
+    exit(EXIT_FAILURE);
+  }
+
+  return next;
 }
 
 result QueryExec::do_hash_join(simple_vector<int64_t>& rowids_r,
@@ -362,9 +395,12 @@ void QueryExec::checksum(simple_vector<int64_t> intmd_results[]) {
   }
 }
 
+//-----------------------------------------------------------------------------------------
+
 void QueryExec::clear() {
   this->rel_names.clear();
   this->joins.clear();
   this->filters.clear();
   this->projections.clear();
+  this->used_relations.clear();
 }
