@@ -175,16 +175,16 @@ void QueryExec::do_query() {
   for (size_t i = 0; i < this->filters.getSize(); i++) {
     filter_exec(i);
     intmd_count++;
-    std::fprintf(stderr, "filter %ld done\n", i);
+    // std::fprintf(stderr, "filter %ld done\n", i);
   }
 
   for (size_t i = 0; i < this->joins.getSize(); i++) {
-    std::fprintf(stderr, "%ld.%ld=%ld.%ld\n", this->joins[i].left_rel,
-                 this->joins[i].left_col, this->joins[i].right_rel,
-                 this->joins[i].right_col);
+    // std::fprintf(stderr, "%ld.%ld=%ld.%ld\n", this->joins[i].left_rel,
+    //              this->joins[i].left_col, this->joins[i].right_rel,
+    //              this->joins[i].right_col);
     do_join(i);
     intmd_count++;
-    std::fprintf(stderr, "join %ld done\n", i);
+    // std::fprintf(stderr, "join %ld done\n", i);
   }
 
   //   for (size_t i = 0; i < this->joins.getSize(); i++) {
@@ -239,6 +239,12 @@ void QueryExec::do_query() {
   // Done with all predicates
   // Execute Checksum on given projections
   checksum();
+
+  // Clear intmd & goes_with simple_vectors to prepare for next query
+  for (size_t i = 0; i < this->rel_names.getSize(); i++) {
+    intmd[i].clear();
+    goes_with[i].clear();
+  }
 }
 
 //-----------------------------------------------------------------------------------------
@@ -435,7 +441,7 @@ void QueryExec::do_join(size_t join_index) {
           }
         }
         for (size_t x = 0; x < this->rel_names.getSize(); x++) {
-          if (goes_with[rel_s].find(x)) continue;
+          if (goes_with[rel_r].find(x)) continue;
           new_intmd[x] = intmd[x];
         }
 
@@ -554,9 +560,10 @@ void QueryExec::checksum() {
     actual_rel = this->rel_names[curr_rel];
     sum = 0;
 
+    // std::fprintf(stderr, "Size = %ld\n", intmd[curr_rel].getSize());
+
     for (size_t j = 0; j < intmd[curr_rel].getSize(); j++) {
       curr_row = intmd[curr_rel][j];
-
 
       sum += rel_mmap[actual_rel].colptr[curr_col][curr_row];
     }
