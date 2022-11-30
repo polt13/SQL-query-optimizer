@@ -31,7 +31,7 @@ class simple_vector {
 
   size_t getSize() const { return size; }
 
-  simple_vector(const simple_vector& other) {
+  simple_vector(simple_vector& other) {
     size = other.size;
     capacity = size * 2;
     objarr = new T[capacity];
@@ -40,17 +40,22 @@ class simple_vector {
 
   ~simple_vector() { delete[] objarr; }
 
-  simple_vector<T>& operator=(const simple_vector& other) {
+  simple_vector<T>& operator=(simple_vector& other) {
     // if the vector doesnt have enough memory allocated to fit the copied data
     //  allocate new memory and delete the old one
-    if (capacity < other.size) {
-      delete[] objarr;
-      objarr = new T[other.size + 1];
-    }
+    // if (capacity < other.size) {
+    //   delete[] objarr;
+    //   objarr = new T[other.size + 1];
+    // }
 
+    // size = other.size;
+
+    // std::memmove(objarr, other.objarr, sizeof(T) * size);
+
+    objarr = other.objarr;
+    capacity = other.capacity;
     size = other.size;
-
-    std::memmove(objarr, other.objarr, sizeof(T) * size);
+    other.objarr = nullptr;
 
     return *this;
   }

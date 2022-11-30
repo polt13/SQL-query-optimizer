@@ -383,8 +383,8 @@ void QueryExec::do_join(size_t join_index) {
           for (size_t i = 0; i < rel_mmap[actual_rel_r].rows; i++) {
             if (rel_mmap[actual_rel_s].colptr[col_s][actual_row] ==
                 rel_mmap[actual_rel_r].colptr[col_r][i]) {
-              new_intmd[rel_r].add_back(i);
               new_intmd[rel_s].add_back(actual_row);
+              new_intmd[rel_r].add_back(i);
 
               for (size_t x = 0; x < goes_with[rel_s].getSize(); x++) {
                 int64_t related = goes_with[rel_s][x];
@@ -394,7 +394,9 @@ void QueryExec::do_join(size_t join_index) {
           }
         }
         for (size_t x = 0; x < this->rel_names.getSize(); x++) {
-          if (goes_with[rel_s].find(x) || (x == rel_s)) continue;
+          if (goes_with[rel_s].find(x) || ((int64_t)x == rel_s) ||
+              ((int64_t)x == rel_s))
+            continue;
           new_intmd[x] = intmd[x];
         }
 
@@ -444,7 +446,9 @@ void QueryExec::do_join(size_t join_index) {
         }
       }
       for (size_t x = 0; x < this->rel_names.getSize(); x++) {
-        if (goes_with[rel_r].find(x) || x == rel_r) continue;
+        if (goes_with[rel_r].find(x) || ((int64_t)x == rel_r) ||
+            ((int64_t)x == rel_s))
+          continue;
         new_intmd[x] = intmd[x];
       }
 
@@ -572,14 +576,20 @@ void QueryExec::checksum() {
       sum += rel_mmap[actual_rel].colptr[curr_col][curr_row];
     }
 
-    if (sum == 0) std::fprintf(stderr, "NULL ");
-    // std::printf("NULL ");
-    else
-      std::fprintf(stderr, "%ld ", sum);
-    // std::printf("%ld ", sum);
+    if (sum == 0) {
+      std::fprintf(stderr, "NULL");
+      std::printf("NULL ");
+    } else {
+      std::fprintf(stderr, "%ld", sum);
+      std::printf("%ld ", sum);
+    }
+    if (i < this->projections.getSize() - 1) {
+      std::fprintf(stderr, " ");
+      std::printf(" ");
+    }
   }
   std::fprintf(stderr, "\n");
-  // std::printf("\n");
+  std::printf("\n");
 }
 
 //-----------------------------------------------------------------------------------------
