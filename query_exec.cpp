@@ -12,6 +12,13 @@
 //-----------------------------------------------------------------------------------------
 
 void QueryExec::execute(char* query) {
+//   std::fprintf(stderr, "rel_names size = %ld\n", this->rel_names.getSize());
+//   std::fprintf(stderr, "joins size = %ld\n", this->joins.getSize());
+//   std::fprintf(stderr, "filters size = %ld\n", filters.getSize());
+//   std::fprintf(stderr, "projections size = %ld\n", projections.getSize());
+//   std::fprintf(stderr, "used_relations size = %ld\n", used_relations.getSize());
+//   std::fprintf(stderr, "intmd_count = %ld\n", intmd_count);
+
   parse_query(query);
   do_query();
 
@@ -155,7 +162,6 @@ void QueryExec::parse_selections(char* selections) {
 //-----------------------------------------------------------------------------------------
 
 void QueryExec::do_query() {
-  intmd_count = 0;
   intmd = new simple_vector<
       int64_t>[this->rel_names.getSize()];  // Represents latest
                                             // intermediate results
@@ -239,12 +245,6 @@ void QueryExec::do_query() {
   // Done with all predicates
   // Execute Checksum on given projections
   checksum();
-
-  // Clear intmd & goes_with simple_vectors to prepare for next query
-  for (size_t i = 0; i < this->rel_names.getSize(); i++) {
-    intmd[i].clear();
-    goes_with[i].clear();
-  }
 }
 
 //-----------------------------------------------------------------------------------------
@@ -298,32 +298,31 @@ void QueryExec::filter_exec(size_t index) {
     if (intmd_count == 0) {
       std::perror("No intermediate results found\n");
       exit(EXIT_FAILURE);
-    } else {
-      // We have intermediate results from previous predicates
-      for (size_t x = 0; x < this->rel_names.getSize(); x++) {
-        if ((int64_t)x != rel)
-          new_intmd[x] = intmd[x];
-        else {
-          for (size_t i = 0; i < intmd[rel].getSize(); i++) {
-            int64_t curr_row = intmd[rel][i];
+    }
+    // We have intermediate results from previous predicates
+    for (size_t x = 0; x < this->rel_names.getSize(); x++) {
+      if ((int64_t)x != rel)
+        new_intmd[x] = intmd[x];
+      else {
+        for (size_t i = 0; i < intmd[rel].getSize(); i++) {
+          int64_t curr_row = intmd[rel][i];
 
-            switch (operation_type) {
-              case operators::EQ:
-                if ((int64_t)rel_mmap[actual_rel].colptr[col][curr_row] == lit)
-                  new_intmd[rel].add_back(curr_row);
-                break;
-              case operators::GREATER:
-                if ((int64_t)rel_mmap[actual_rel].colptr[col][curr_row] > lit)
-                  new_intmd[rel].add_back(curr_row);
-                break;
-              case operators::LESS:
-                if ((int64_t)rel_mmap[actual_rel].colptr[col][curr_row] < lit)
-                  new_intmd[rel].add_back(curr_row);
-                break;
-              default:
-                std::perror("Unknown operator\n");
-                exit(EXIT_FAILURE);
-            }
+          switch (operation_type) {
+            case operators::EQ:
+              if ((int64_t)rel_mmap[actual_rel].colptr[col][curr_row] == lit)
+                new_intmd[rel].add_back(curr_row);
+              break;
+            case operators::GREATER:
+              if ((int64_t)rel_mmap[actual_rel].colptr[col][curr_row] > lit)
+                new_intmd[rel].add_back(curr_row);
+              break;
+            case operators::LESS:
+              if ((int64_t)rel_mmap[actual_rel].colptr[col][curr_row] < lit)
+                new_intmd[rel].add_back(curr_row);
+              break;
+            default:
+              std::perror("Unknown operator\n");
+              exit(EXIT_FAILURE);
           }
         }
       }
@@ -339,6 +338,7 @@ void QueryExec::do_join(size_t join_index) {
   int64_t col_s = joins[join_index].right_col;
   int64_t actual_rel_r = this->rel_names[rel_r];
   int64_t actual_rel_s = this->rel_names[rel_s];
+  int64_t actual_row;
 
   simple_vector<int64_t>* new_intmd =
       new simple_vector<int64_t>[this->rel_names.getSize()];
@@ -378,10 +378,11 @@ void QueryExec::do_join(size_t join_index) {
       } else {
         // Relation s has intermediate results
         for (size_t row = 0; row < intmd[rel_s].getSize(); row++) {
+          actual_row = intmd[rel_s][row];
           for (size_t i = 0; i < rel_mmap[actual_rel_r].rows; i++) {
-            if (rel_mmap[actual_rel_s].colptr[col_s][row] ==
+            if (rel_mmap[actual_rel_s].colptr[col_s][actual_row] ==
                 rel_mmap[actual_rel_r].colptr[col_r][i]) {
-              new_intmd[rel_r].add_back(row);
+              new_intmd[rel_r].add_back(actual_row);
               new_intmd[rel_s].add_back(i);
 
               for (size_t x = 0; x < goes_with[rel_s].getSize(); x++) {
@@ -422,56 +423,58 @@ void QueryExec::do_join(size_t join_index) {
     if (intmd_count == 0) {
       std::perror("No intermediate results found\n");
       exit(EXIT_FAILURE);
-    } else {
-      if (used_relations[rel_s] == false) {
-        used_relations[rel_s] = true;
+    }
+    if (used_relations[rel_s] == false) {
+      used_relations[rel_s] = true;
 
-        for (size_t row = 0; row < intmd[rel_r].getSize(); row++) {
-          for (size_t i = 0; i < rel_mmap[actual_rel_s].rows; i++) {
-            if (rel_mmap[actual_rel_r].colptr[col_r][row] ==
-                rel_mmap[actual_rel_s].colptr[col_s][i]) {
-              new_intmd[rel_r].add_back(row);
-              new_intmd[rel_s].add_back(i);
+      for (size_t row = 0; row < intmd[rel_r].getSize(); row++) {
+        actual_row = intmd[rel_r][row];
+        for (size_t i = 0; i < rel_mmap[actual_rel_s].rows; i++) {
+          if (rel_mmap[actual_rel_r].colptr[col_r][actual_row] ==
+              rel_mmap[actual_rel_s].colptr[col_s][i]) {
+            new_intmd[rel_r].add_back(actual_row);
+            new_intmd[rel_s].add_back(i);
 
-              for (size_t x = 0; x < goes_with[rel_r].getSize(); x++) {
-                int64_t related = goes_with[rel_r][x];
-                new_intmd[related].add_back(intmd[related][row]);
-              }
+            for (size_t x = 0; x < goes_with[rel_r].getSize(); x++) {
+              int64_t related = goes_with[rel_r][x];
+              new_intmd[related].add_back(intmd[related][row]);
             }
           }
         }
-        for (size_t x = 0; x < this->rel_names.getSize(); x++) {
-          if (goes_with[rel_r].find(x)) continue;
-          new_intmd[x] = intmd[x];
-        }
-
-        goes_with[rel_r].add_back(rel_s);
-        goes_with[rel_s].add_back(rel_r);
-      } else {
-        for (size_t row = 0; row < intmd[rel_r].getSize(); row++) {
-          for (size_t i = 0; i < intmd[rel_s].getSize(); i++) {
-            if (rel_mmap[actual_rel_r].colptr[col_r][row] ==
-                rel_mmap[actual_rel_s].colptr[col_s][i]) {
-              new_intmd[rel_r].add_back(row);
-              new_intmd[rel_s].add_back(i);
-
-              for (size_t x = 0; x < goes_with[rel_r].getSize(); x++) {
-                int64_t related = goes_with[rel_r][x];
-                if (related == rel_s) break;
-                new_intmd[related].add_back(intmd[related][row]);
-              }
-
-              for (size_t x = 0; x < goes_with[rel_s].getSize(); x++) {
-                int64_t related = goes_with[rel_s][x];
-                if (related == rel_r) break;
-                new_intmd[related].add_back(intmd[related][row]);
-              }
-            }
-          }
-        }
-        if (!(goes_with[rel_r].find(rel_s))) goes_with[rel_r].add_back(rel_s);
-        if (!(goes_with[rel_s].find(rel_r))) goes_with[rel_s].add_back(rel_r);
       }
+      for (size_t x = 0; x < this->rel_names.getSize(); x++) {
+        if (goes_with[rel_r].find(x)) continue;
+        new_intmd[x] = intmd[x];
+      }
+
+      goes_with[rel_r].add_back(rel_s);
+      goes_with[rel_s].add_back(rel_r);
+    } else {
+      for (size_t row = 0; row < intmd[rel_r].getSize(); row++) {
+        actual_row = intmd[rel_r][row];
+        for (size_t i = 0; i < intmd[rel_s].getSize(); i++) {
+          int64_t actual_row_s = intmd[rel_s][i];
+          if (rel_mmap[actual_rel_r].colptr[col_r][actual_row] ==
+              rel_mmap[actual_rel_s].colptr[col_s][actual_row_s]) {
+            new_intmd[rel_r].add_back(actual_row);
+            new_intmd[rel_s].add_back(actual_row_s);
+
+            for (size_t x = 0; x < goes_with[rel_r].getSize(); x++) {
+              int64_t related = goes_with[rel_r][x];
+              if (related == rel_s) break;
+              new_intmd[related].add_back(intmd[related][row]);
+            }
+
+            for (size_t x = 0; x < goes_with[rel_s].getSize(); x++) {
+              int64_t related = goes_with[rel_s][x];
+              if (related == rel_r) break;
+              new_intmd[related].add_back(intmd[related][row]);
+            }
+          }
+        }
+      }
+      if (!(goes_with[rel_r].find(rel_s))) goes_with[rel_r].add_back(rel_s);
+      if (!(goes_with[rel_s].find(rel_r))) goes_with[rel_s].add_back(rel_r);
     }
   }
   intmd = new_intmd;
@@ -581,6 +584,10 @@ void QueryExec::checksum() {
 //-----------------------------------------------------------------------------------------
 
 void QueryExec::clear() {
+  for (size_t i = 0; i < this->rel_names.getSize(); i++) {
+    intmd[i].clear();
+    goes_with[i].clear();
+  }
   this->rel_names.clear();
   this->joins.clear();
   this->filters.clear();
@@ -588,4 +595,5 @@ void QueryExec::clear() {
   this->used_relations.clear();
   delete[] this->intmd;
   delete[] this->goes_with;
+  intmd_count = 0;
 }

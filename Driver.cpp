@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
     if (strcmp(line, "F") == 0) continue;  // End of a batch
     // std::fprintf(stderr, "%s\n", line);
     qe.execute(line);
-    break;
+    //break;
   }
 
   return 0;
