@@ -12,12 +12,13 @@
 //-----------------------------------------------------------------------------------------
 
 void QueryExec::execute(char* query) {
-//   std::fprintf(stderr, "rel_names size = %ld\n", this->rel_names.getSize());
-//   std::fprintf(stderr, "joins size = %ld\n", this->joins.getSize());
-//   std::fprintf(stderr, "filters size = %ld\n", filters.getSize());
-//   std::fprintf(stderr, "projections size = %ld\n", projections.getSize());
-//   std::fprintf(stderr, "used_relations size = %ld\n", used_relations.getSize());
-//   std::fprintf(stderr, "intmd_count = %ld\n", intmd_count);
+  //   std::fprintf(stderr, "rel_names size = %ld\n",
+  //   this->rel_names.getSize()); std::fprintf(stderr, "joins size = %ld\n",
+  //   this->joins.getSize()); std::fprintf(stderr, "filters size = %ld\n",
+  //   filters.getSize()); std::fprintf(stderr, "projections size = %ld\n",
+  //   projections.getSize()); std::fprintf(stderr, "used_relations size =
+  //   %ld\n", used_relations.getSize()); std::fprintf(stderr, "intmd_count =
+  //   %ld\n", intmd_count);
 
   parse_query(query);
   do_query();
@@ -382,8 +383,8 @@ void QueryExec::do_join(size_t join_index) {
           for (size_t i = 0; i < rel_mmap[actual_rel_r].rows; i++) {
             if (rel_mmap[actual_rel_s].colptr[col_s][actual_row] ==
                 rel_mmap[actual_rel_r].colptr[col_r][i]) {
-              new_intmd[rel_r].add_back(actual_row);
-              new_intmd[rel_s].add_back(i);
+              new_intmd[rel_r].add_back(i);
+              new_intmd[rel_s].add_back(actual_row);
 
               for (size_t x = 0; x < goes_with[rel_s].getSize(); x++) {
                 int64_t related = goes_with[rel_s][x];
@@ -393,7 +394,7 @@ void QueryExec::do_join(size_t join_index) {
           }
         }
         for (size_t x = 0; x < this->rel_names.getSize(); x++) {
-          if (goes_with[rel_s].find(x)) continue;
+          if (goes_with[rel_s].find(x) || (x == rel_s)) continue;
           new_intmd[x] = intmd[x];
         }
 
@@ -443,7 +444,7 @@ void QueryExec::do_join(size_t join_index) {
         }
       }
       for (size_t x = 0; x < this->rel_names.getSize(); x++) {
-        if (goes_with[rel_r].find(x)) continue;
+        if (goes_with[rel_r].find(x) || x == rel_r) continue;
         new_intmd[x] = intmd[x];
       }
 
@@ -461,13 +462,13 @@ void QueryExec::do_join(size_t join_index) {
 
             for (size_t x = 0; x < goes_with[rel_r].getSize(); x++) {
               int64_t related = goes_with[rel_r][x];
-              if (related == rel_s) break;
+              if (related == rel_s) continue;
               new_intmd[related].add_back(intmd[related][row]);
             }
 
             for (size_t x = 0; x < goes_with[rel_s].getSize(); x++) {
               int64_t related = goes_with[rel_s][x];
-              if (related == rel_r) break;
+              if (related == rel_r) continue;
               new_intmd[related].add_back(intmd[related][row]);
             }
           }
