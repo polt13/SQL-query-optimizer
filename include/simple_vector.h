@@ -55,6 +55,12 @@ class simple_vector {
     return *this;
   }
 
+  bool find(T item) {
+    for (size_t i = 0; i < size; i++)
+      if (objarr[i] == item) return true;
+    return false;
+  }
+
   void clear() { this->size = 0; }
 };
 #endif
