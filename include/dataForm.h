@@ -71,7 +71,7 @@ struct result {
 
   result() = default;
 
-  result(result &other) { pairs = other.pairs; }
+  result(const result &other) { pairs = other.pairs; }
 
   result_item &operator[](int64_t index) { return pairs[index]; }
 };

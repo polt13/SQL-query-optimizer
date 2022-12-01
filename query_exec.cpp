@@ -303,7 +303,7 @@ void QueryExec::filter_exec(size_t index) {
     // We have intermediate results from previous predicates
     for (size_t x = 0; x < this->rel_names.getSize(); x++) {
       if ((int64_t)x != rel)
-        new_intmd[x] = intmd[x];
+        new_intmd[x].steal(intmd[x]);
       else {
         for (size_t i = 0; i < intmd[rel].getSize(); i++) {
           int64_t curr_row = intmd[rel][i];
@@ -343,7 +343,6 @@ void QueryExec::do_join(size_t join_index) {
 
   simple_vector<int64_t>* new_intmd =
       new simple_vector<int64_t>[this->rel_names.getSize()];
-  ;
 
   // Relation r hasn't been used in a predicate before
   if (used_relations[rel_r] == false) {
@@ -361,7 +360,7 @@ void QueryExec::do_join(size_t join_index) {
         // Take those intermediate results
         for (size_t i = 0; i < this->rel_names.getSize(); i++) {
           if ((int64_t)i != rel_r && (int64_t)i != rel_s)
-            new_intmd[i] = intmd[i];
+            new_intmd[i].steal(intmd[i]);
         }
 
         // We need to join those two
@@ -397,7 +396,7 @@ void QueryExec::do_join(size_t join_index) {
           if (goes_with[rel_s].find(x) || ((int64_t)x == rel_s) ||
               ((int64_t)x == rel_s))
             continue;
-          new_intmd[x] = intmd[x];
+          new_intmd[x].steal(intmd[x]);
         }
 
         goes_with[rel_r].add_back(rel_s);
@@ -449,7 +448,7 @@ void QueryExec::do_join(size_t join_index) {
         if (goes_with[rel_r].find(x) || ((int64_t)x == rel_r) ||
             ((int64_t)x == rel_s))
           continue;
-        new_intmd[x] = intmd[x];
+        new_intmd[x].steal(intmd[x]);
       }
 
       goes_with[rel_r].add_back(rel_s);
@@ -485,76 +484,6 @@ void QueryExec::do_join(size_t join_index) {
   intmd = new_intmd;
 }
 
-// simple_vector<result_item> QueryExec::do_simple_join(
-//     simple_vector<int64_t>& rowids_r, simple_vector<int64_t>& rowids_s,
-//     int64_t simplejoin_index) {
-//   int64_t rel_r = joins[simplejoin_index].left_rel;
-//   int64_t col_r = joins[simplejoin_index].left_col;
-
-//   int64_t rel_s = joins[simplejoin_index].right_rel;
-//   int64_t col_s = joins[simplejoin_index].right_col;
-
-//   simple_vector<result_item> next;
-
-//   // If-Statement not really needed, just to make sure
-//   if (used_relations[rel_r] == true && used_relations[rel_s] == true) {
-//     const size_t row_count_r = rowids_r.getSize();
-//     const size_t row_count_s = rowids_s.getSize();
-//     for (size_t i = 0; i < row_count_r; i++) {
-//       int64_t rowid_r = rowids_r[i];
-//       for (size_t j = 0; j < row_count_s; j++) {
-//         int64_t rowid_s = rowids_s[j];
-//         if (rel_mmap[rel_r].colptr[col_r][rowid_r] ==
-//             rel_mmap[rel_s].colptr[col_s][rowid_s])
-//           next.add_back(result_item{rowid_r, rowid_s});
-//       }
-//     }
-//   } else {
-//     std::perror("do_simple_join failed");
-//     exit(EXIT_FAILURE);
-//   }
-
-//   return next;
-// }
-
-// result QueryExec::do_hash_join(simple_vector<int64_t>& rowids_r,
-//                                simple_vector<int64_t>& rowids_s,
-//                                int64_t index_join) {
-//   size_t tuples_count_r = rowids_r.getSize();
-//   size_t tuples_count_s = rowids_s.getSize();
-
-//   tuple* rtuples = new tuple[tuples_count_r];
-//   tuple* stuples = new tuple[tuples_count_s];
-
-//   int64_t relation_r = joins[index_join].left_rel;
-//   int64_t relation_s = joins[index_join].right_rel;
-
-//   used_relations[relation_r] = used_relations[relation_s] = true;
-
-//   int64_t join_colr = joins[index_join].left_col;
-//   int64_t join_cols = joins[index_join].right_col;
-
-//   uint64_t* relation_colr = rel_mmap[relation_r].colptr[join_colr];
-//   uint64_t* relation_cols = rel_mmap[relation_s].colptr[join_cols];
-
-//   for (size_t i = 0; i < tuples_count_r; i++) {
-//     int64_t rowid = rowids_r[i];
-//     int64_t val = relation_colr[rowid];
-//     rtuples[i] = {val, rowid};
-//   }
-
-//   for (size_t i = 0; i < tuples_count_s; i++) {
-//     int64_t rowid = rowids_s[i];
-//     int64_t val = relation_cols[rowid];
-//     stuples[i] = {val, rowid};
-//   }
-
-//   relation r(rtuples, tuples_count_r);
-//   relation s(stuples, tuples_count_s);
-
-//   return PartitionedHashJoin(r, s);
-// }
-
 void QueryExec::checksum() {
   int64_t curr_rel;
   int64_t curr_col;
@@ -588,6 +517,7 @@ void QueryExec::checksum() {
       std::printf(" ");
     }
   }
+
   std::fprintf(stderr, "\n");
   std::printf("\n");
 }
@@ -595,10 +525,6 @@ void QueryExec::checksum() {
 //-----------------------------------------------------------------------------------------
 
 void QueryExec::clear() {
-  for (size_t i = 0; i < this->rel_names.getSize(); i++) {
-    intmd[i].clear();
-    goes_with[i].clear();
-  }
   this->rel_names.clear();
   this->joins.clear();
   this->filters.clear();

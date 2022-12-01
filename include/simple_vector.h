@@ -9,7 +9,7 @@ class simple_vector {
   T* objarr;
 
  public:
-  simple_vector(size_t start_capacity = 10)
+  simple_vector(size_t start_capacity = 1000)
       : capacity{start_capacity}, size{}, objarr{new T[capacity]} {}
 
   void add_back(const T& obj) {
@@ -40,22 +40,17 @@ class simple_vector {
 
   ~simple_vector() { delete[] objarr; }
 
-  simple_vector<T>& operator=(simple_vector& other) {
-    // if the vector doesnt have enough memory allocated to fit the copied data
-    //  allocate new memory and delete the old one
-    // if (capacity < other.size) {
-    //   delete[] objarr;
-    //   objarr = new T[other.size + 1];
-    // }
+  simple_vector<T>& operator=(const simple_vector& other) {
+    // if the vector doesnt have enough memory allocated to fit the copied
+    // data allocate new memory and delete the old one
+    if (capacity < other.size) {
+      delete[] objarr;
+      objarr = new T[other.size + 1];
+    }
 
-    // size = other.size;
-
-    // std::memmove(objarr, other.objarr, sizeof(T) * size);
-
-    objarr = other.objarr;
-    capacity = other.capacity;
     size = other.size;
-    other.objarr = nullptr;
+
+    std::memmove(objarr, other.objarr, sizeof(T) * size);
 
     return *this;
   }
@@ -64,6 +59,13 @@ class simple_vector {
     for (size_t i = 0; i < size; i++)
       if (objarr[i] == item) return true;
     return false;
+  }
+
+  void steal(simple_vector& temp) {
+    objarr = temp.objarr;
+    size = temp.size;
+    capacity = temp.capacity;
+    temp.objarr = nullptr;
   }
 
   void clear() { this->size = 0; }
