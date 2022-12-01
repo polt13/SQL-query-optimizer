@@ -9,7 +9,7 @@ class simple_vector {
   T* objarr;
 
  public:
-  simple_vector(size_t start_capacity = 1000)
+  simple_vector(size_t start_capacity = 10)
       : capacity{start_capacity}, size{}, objarr{new T[capacity]} {}
 
   void add_back(const T& obj) {
