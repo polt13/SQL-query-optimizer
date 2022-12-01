@@ -169,79 +169,24 @@ void QueryExec::do_query() {
 
   goes_with = new simple_vector<int64_t>[this->rel_names.getSize()];
 
-  // intmd_results = new simple_vector<simple_vector>[this->filters.getSize() +
-  //                                                 this->joins.getSize()];
-  //   simple_vector<int64_t>* intmd_results =
-  //       new simple_vector<int64_t>[this->rel_names.getSize()];
-
   // set all relations to not have been used initially
-  for (size_t i = 0; i < this->rel_names.getSize(); i++)
-    this->used_relations.add_back(false);
 
+  const size_t rel_count = this->rel_names.getSize();
+
+  for (size_t i = 0; i < rel_count; i++) this->used_relations.add_back(false);
+
+  const size_t filter_count = this->filters.getSize();
   // Check whether there are filters in order to execute them first
-  for (size_t i = 0; i < this->filters.getSize(); i++) {
+  for (size_t i = 0; i < filter_count; i++) {
     filter_exec(i);
     intmd_count++;
-    // std::fprintf(stderr, "filter %ld done\n", i);
   }
 
-  for (size_t i = 0; i < this->joins.getSize(); i++) {
-    // std::fprintf(stderr, "%ld.%ld=%ld.%ld\n", this->joins[i].left_rel,
-    //              this->joins[i].left_col, this->joins[i].right_rel,
-    //              this->joins[i].right_col);
+  const size_t joins_count = this->joins.getSize();
+  for (size_t i = 0; i < joins_count; i++) {
     do_join(i);
     intmd_count++;
-    // std::fprintf(stderr, "join %ld done\n", i);
   }
-
-  //   for (size_t i = 0; i < this->joins.getSize(); i++) {
-  //     // Check for Self-joins
-  //     if (this->rel_names[joins[i].left_rel] ==
-  //         this->rel_names[joins[i].right_rel]) {
-  //       // Self-join found - Execute it
-  //       do_self_join(i);
-  //       intmd_count++;
-  //     }
-  //     // Rest stuff
-  //     else {
-  //       if (used_relations[joins[i].left_rel] == true &&
-  //           used_relations[joins[i].right_rel] == true) {
-  //         // Both relations exist in intermediate results
-  //         // do_simple_join(intmd_results[joins[i].left_rel],
-  //         //               intmd_results[joins[i].right_rel], i);
-  //       } else {
-  //         // Execute Partitioned Hash Join (PHJ)
-  //         // do_hash_join(intmd_results[joins[i].left_rel],
-  //         //             intmd_results[joins[i].right_rel], i);
-  //       }
-  //     }
-  //   }
-
-  // Check for Self-joins
-  //   for (size_t i = 0; i < this->joins.getSize(); i++) {
-  //     if (joins[i].left_rel == joins[i].right_rel) {
-  //       // Self-join found - Execute it
-  //       do_self_join(i);
-  //     }
-  //   }
-
-  // Execute the rest -
-  // for (size_t i = 0; i < this->joins.getSize(); i++) {
-  //   if (joins[i].left_rel != joins[i].right_rel) {
-  //     // Both relations exist in intermediate results
-  //     // Execute Simple-Join
-  //     if (used_relations[joins[i].left_rel] == true &&
-  //         used_relations[joins[i].right_rel] == true) {
-  //       do_simple_join(intmd_results[joins[i].left_rel],
-  //                      intmd_results[joins[i].right_rel], i);
-  //       // Execute Partitioned Hash Join (PHJ)
-  //     } else if (used_relations[joins[i].left_rel] == false ||
-  //                false == used_relations[joins[i].right_rel]) {
-  //       do_hash_join(intmd_results[joins[i].left_rel],
-  //                    intmd_results[joins[i].right_rel], i);
-  //     }
-  //   }
-  // }
 
   // Done with all predicates
   // Execute Checksum on given projections
@@ -395,7 +340,7 @@ void QueryExec::do_join(size_t join_index) {
         }
         for (size_t x = 0; x < this->rel_names.getSize(); x++) {
           if (goes_with[rel_s].find(x) || ((int64_t)x == rel_s) ||
-              ((int64_t)x == rel_s))
+              ((int64_t)x == rel_r))
             continue;
           new_intmd[x].steal(intmd[x]);
         }

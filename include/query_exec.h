@@ -46,7 +46,7 @@ class QueryExec {
   simple_vector<filter> filters;
   simple_vector<project_rel> projections;
   simple_vector<int64_t>* intmd;  // Represents latest intermediate results
-  // simple_vector<simple_vector>* intmd_results;
+
   simple_vector<bool> used_relations;
   simple_vector<int64_t>* goes_with;
   int64_t intmd_count = 0;
@@ -60,11 +60,6 @@ class QueryExec {
 
   void filter_exec(size_t);
   void do_join(size_t);
-  //   simple_vector<result_item> do_simple_join(simple_vector<int64_t>&,
-  //                                             simple_vector<int64_t>&,
-  //                                             int64_t);
-  //   result do_hash_join(simple_vector<int64_t>&, simple_vector<int64_t>&,
-  //                       int64_t);
 
   void checksum();
   void clear();
