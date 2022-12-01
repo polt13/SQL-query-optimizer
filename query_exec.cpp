@@ -287,8 +287,7 @@ void QueryExec::do_join(size_t join_index) {
   int64_t actual_rel_s = this->rel_names[rel_s];
   int64_t actual_row;
 
-  simple_vector<int64_t>* new_intmd =
-      new simple_vector<int64_t>[this->rel_names.getSize()];
+  simple_vector<int64_t>* new_intmd = new simple_vector<int64_t>[4];
 
   // Relation r hasn't been used in a predicate before
   if (used_relations[rel_r] == false) {

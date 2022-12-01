@@ -65,6 +65,8 @@ class simple_vector {
     objarr = temp.objarr;
     size = temp.size;
     capacity = temp.capacity;
+    temp.size = 0;
+    temp.capacity = 0;
     temp.objarr = nullptr;
   }
 
