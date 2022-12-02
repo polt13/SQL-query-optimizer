@@ -45,7 +45,6 @@ class QueryExec {
   simple_vector<join> joins;
   simple_vector<filter> filters;
   simple_vector<project_rel> projections;
-  char batch[4096] = "";
 
   bool rel_is_filtered[4];
   bool rel_is_joined[4];
@@ -67,10 +66,6 @@ class QueryExec {
 
  public:
   void execute(char *);
-
-  char *getBatch() { return this->batch; }
-
-  void clearBatch() { strcpy(this->batch, ""); }
 };
 
 #endif
