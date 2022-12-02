@@ -31,7 +31,7 @@ class simple_vector {
 
   size_t getSize() const { return size; }
 
-  simple_vector(simple_vector& other) {
+  simple_vector(const simple_vector& other) {
     size = other.size;
     capacity = size * 2;
     objarr = new T[capacity];
@@ -62,6 +62,8 @@ class simple_vector {
   }
 
   void steal(simple_vector& temp) {
+    delete[] objarr;
+
     objarr = temp.objarr;
     size = temp.size;
     capacity = temp.capacity;
@@ -70,6 +72,11 @@ class simple_vector {
     temp.objarr = nullptr;
   }
 
-  void clear() { this->size = 0; }
+  void clear() {
+    capacity = size;
+    delete[] objarr;
+    objarr = new T[capacity];
+    size = 0;
+  }
 };
 #endif

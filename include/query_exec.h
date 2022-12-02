@@ -45,11 +45,12 @@ class QueryExec {
   simple_vector<join> joins;
   simple_vector<filter> filters;
   simple_vector<project_rel> projections;
-  simple_vector<int64_t>* intmd;  // Represents latest intermediate results
 
-  simple_vector<bool> used_relations;
-  simple_vector<int64_t>* goes_with;
-  int64_t intmd_count = 0;
+  bool rel_is_filtered[4];
+  bool rel_is_joined[4];
+
+  simple_vector<int64_t> joined[4];  // Represents latest intermediate results
+  simple_vector<int64_t> filtered[4];
 
   void parse_query(char*);
   void parse_names(char*);

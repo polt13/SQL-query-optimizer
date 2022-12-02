@@ -163,29 +163,28 @@ void QueryExec::parse_selections(char* selections) {
 //-----------------------------------------------------------------------------------------
 
 void QueryExec::do_query() {
-  intmd = new simple_vector<
-      int64_t>[this->rel_names.getSize()];  // Represents latest
-                                            // intermediate results
-
-  goes_with = new simple_vector<int64_t>[this->rel_names.getSize()];
-
-  // set all relations to not have been used initially
-
-  const size_t rel_count = this->rel_names.getSize();
-
-  for (size_t i = 0; i < rel_count; i++) this->used_relations.add_back(false);
-
   const size_t filter_count = this->filters.getSize();
-  // Check whether there are filters in order to execute them first
-  for (size_t i = 0; i < filter_count; i++) {
-    filter_exec(i);
-    intmd_count++;
+  const size_t joins_count = this->joins.getSize();
+
+  for (size_t i = 0; i < 4; i++) {
+    rel_is_filtered[i] = false;
+    rel_is_joined[i] = false;
   }
 
-  const size_t joins_count = this->joins.getSize();
+  // Check whether there are filters in order to execute them first
+  for (size_t i = 0; i < filter_count; i++) filter_exec(i);
+
   for (size_t i = 0; i < joins_count; i++) {
+    // swap relations so that the left is always the one that's joined
+    if (rel_is_joined[joins[i].left_rel] == false) {
+      int64_t temp = joins[i].left_rel;
+      int64_t temp_col = joins[i].left_col;
+      joins[i].left_rel = joins[i].right_rel;
+      joins[i].left_col = joins[i].right_col;
+      joins[i].right_rel = temp;
+      joins[i].right_col = temp_col;
+    }
     do_join(i);
-    intmd_count++;
   }
 
   // Done with all predicates
@@ -204,78 +203,57 @@ void QueryExec::filter_exec(size_t index) {
   operators operation_type = this->filters[index].op;
   // std::fprintf(stderr, "%d\n", operation_type);
 
-  simple_vector<int64_t>* new_intmd =
-      new simple_vector<int64_t>[this->rel_names.getSize()];
-  ;
+  simple_vector<int64_t> new_filtered;
 
-  // Relation hasn't been used in a predicate before
-  if (used_relations[rel] == false) {
+  // Relation hasn't been used in a filter predicate before
+  if (rel_is_filtered[rel] == false) {
     // First time applying a predicate on this relation
     // Mark the relation as used
-    used_relations[rel] = true;
-    if (intmd_count != 0)
-      // We have intermediate results from previous predicates
-      new_intmd = intmd;
-    // We have to traverse the initial relation
-    // and fill only the simple_vector for given relation
+    rel_is_filtered[rel] = true;
+
     for (uint64_t row = 0; row < rel_mmap[actual_rel].rows; row++) {
       switch (operation_type) {
         case operators::EQ:
           if ((int64_t)rel_mmap[actual_rel].colptr[col][row] == lit)
-            new_intmd[rel].add_back(row);
+            new_filtered.add_back(row);
           break;
         case operators::GREATER:
           if ((int64_t)rel_mmap[actual_rel].colptr[col][row] > lit)
-            new_intmd[rel].add_back(row);
+            new_filtered.add_back(row);
           break;
         case operators::LESS:
           if ((int64_t)rel_mmap[actual_rel].colptr[col][row] < lit)
-            new_intmd[rel].add_back(row);
+            new_filtered.add_back(row);
           break;
         default:
           std::perror("Unknown operator\n");
           exit(EXIT_FAILURE);
       }
     }
-    used_relations[rel] = true;
   } else {
-    // Relation has already been used in a predicate before
-    // We have to traverse the intermediate results of the
-    // corresponding relation
-    if (intmd_count == 0) {
-      std::perror("No intermediate results found\n");
-      exit(EXIT_FAILURE);
-    }
-    // We have intermediate results from previous predicates
-    for (size_t x = 0; x < this->rel_names.getSize(); x++) {
-      if ((int64_t)x != rel)
-        new_intmd[x].steal(intmd[x]);
-      else {
-        for (size_t i = 0; i < intmd[rel].getSize(); i++) {
-          int64_t curr_row = intmd[rel][i];
-
-          switch (operation_type) {
-            case operators::EQ:
-              if ((int64_t)rel_mmap[actual_rel].colptr[col][curr_row] == lit)
-                new_intmd[rel].add_back(curr_row);
-              break;
-            case operators::GREATER:
-              if ((int64_t)rel_mmap[actual_rel].colptr[col][curr_row] > lit)
-                new_intmd[rel].add_back(curr_row);
-              break;
-            case operators::LESS:
-              if ((int64_t)rel_mmap[actual_rel].colptr[col][curr_row] < lit)
-                new_intmd[rel].add_back(curr_row);
-              break;
-            default:
-              std::perror("Unknown operator\n");
-              exit(EXIT_FAILURE);
-          }
-        }
+    for (size_t i = 0; i < filtered[rel].getSize(); i++) {
+      int64_t curr_row = filtered[rel][i];
+      switch (operation_type) {
+        case operators::EQ:
+          if ((int64_t)rel_mmap[actual_rel].colptr[col][curr_row] == lit)
+            new_filtered.add_back(curr_row);
+          break;
+        case operators::GREATER:
+          if ((int64_t)rel_mmap[actual_rel].colptr[col][curr_row] > lit)
+            new_filtered.add_back(curr_row);
+          break;
+        case operators::LESS:
+          if ((int64_t)rel_mmap[actual_rel].colptr[col][curr_row] < lit)
+            new_filtered.add_back(curr_row);
+          break;
+        default:
+          std::perror("Unknown operator\n");
+          exit(EXIT_FAILURE);
       }
     }
   }
-  intmd = new_intmd;
+
+  filtered[rel].steal(new_filtered);
 }
 
 void QueryExec::do_join(size_t join_index) {
@@ -285,148 +263,129 @@ void QueryExec::do_join(size_t join_index) {
   int64_t col_s = joins[join_index].right_col;
   int64_t actual_rel_r = this->rel_names[rel_r];
   int64_t actual_rel_s = this->rel_names[rel_s];
-  int64_t actual_row;
 
-  simple_vector<int64_t>* new_intmd = new simple_vector<int64_t>[4];
+  memory_map mmap_r = rel_mmap[actual_rel_r];
+  memory_map mmap_s = rel_mmap[actual_rel_s];
 
-  // Relation r hasn't been used in a predicate before
-  if (used_relations[rel_r] == false) {
-    // First time applying a predicate on relation r
-    // Mark relation r as used
-    used_relations[rel_r] = true;
-    if (intmd_count != 0) {
-      // We have intermediate results from previous predicates
-      // but do not belong to relation r
-      // Relation s hasn't been used in a predicate before
-      if (used_relations[rel_s] == false) {
-        // Mark the relation as used
-        used_relations[rel_s] = true;
+  simple_vector<int64_t> new_joined[] = {
+      simple_vector<int64_t>{100}, simple_vector<int64_t>{100},
+      simple_vector<int64_t>{100}, simple_vector<int64_t>{100}};
 
-        // Take those intermediate results
-        for (size_t i = 0; i < this->rel_names.getSize(); i++) {
-          if ((int64_t)i != rel_r && (int64_t)i != rel_s)
-            new_intmd[i].steal(intmd[i]);
-        }
+  size_t relr_size;
+  size_t rels_size;
 
-        // We need to join those two
-        for (size_t row = 0; row < rel_mmap[actual_rel_r].rows; row++) {
-          for (size_t i = 0; i < rel_mmap[actual_rel_s].rows; i++) {
-            if (rel_mmap[actual_rel_r].colptr[col_r][row] ==
-                rel_mmap[actual_rel_s].colptr[col_s][i]) {
-              new_intmd[rel_r].add_back(row);
-              new_intmd[rel_s].add_back(i);
-            }
-          }
-        }
-        goes_with[rel_r].add_back(rel_s);
-        goes_with[rel_s].add_back(rel_r);
-      } else {
-        // Relation s has intermediate results
-        for (size_t row = 0; row < intmd[rel_s].getSize(); row++) {
-          actual_row = intmd[rel_s][row];
-          for (size_t i = 0; i < rel_mmap[actual_rel_r].rows; i++) {
-            if (rel_mmap[actual_rel_s].colptr[col_s][actual_row] ==
-                rel_mmap[actual_rel_r].colptr[col_r][i]) {
-              new_intmd[rel_s].add_back(actual_row);
-              new_intmd[rel_r].add_back(i);
+  tuple *rtuples = nullptr, *stuples = nullptr;
 
-              for (size_t x = 0; x < goes_with[rel_s].getSize(); x++) {
-                int64_t related = goes_with[rel_s][x];
-                new_intmd[related].add_back(intmd[related][row]);
-              }
-            }
-          }
-        }
-        for (size_t x = 0; x < this->rel_names.getSize(); x++) {
-          if (goes_with[rel_s].find(x) || ((int64_t)x == rel_s) ||
-              ((int64_t)x == rel_r))
-            continue;
-          new_intmd[x].steal(intmd[x]);
-        }
-
-        goes_with[rel_r].add_back(rel_s);
-        goes_with[rel_s].add_back(rel_r);
+  // first time both relations are used in a join
+  // use filtered rowids if they exist and create new Join array
+  if (rel_is_joined[rel_r] == false && rel_is_joined[rel_s] == false) {
+    if (rel_is_filtered[rel_r]) {
+      relr_size = filtered[rel_r].getSize();
+      rtuples = new tuple[relr_size];
+      for (size_t i = 0; i < relr_size; i++) {
+        int64_t row_id = filtered[rel_r][i];
+        // value, rowid
+        rtuples[i] = {(int64_t)mmap_r.colptr[col_r][row_id], (int64_t)row_id};
       }
     } else {
-      // No intermediate results
-      used_relations[rel_s] = true;
-      // We need to join those two
-      for (size_t row = 0; row < rel_mmap[actual_rel_r].rows; row++) {
-        for (size_t i = 0; i < rel_mmap[actual_rel_s].rows; i++) {
-          if (rel_mmap[actual_rel_r].colptr[col_r][row] ==
-              rel_mmap[actual_rel_s].colptr[col_s][i]) {
-            new_intmd[rel_r].add_back(row);
-            new_intmd[rel_s].add_back(i);
-          }
-        }
+      relr_size = mmap_r.rows;
+      rtuples = new tuple[relr_size];
+      for (size_t i = 0; i < relr_size; i++) {
+        rtuples[i] = {(int64_t)mmap_r.colptr[col_r][i], (int64_t)i};
       }
-      goes_with[rel_r].add_back(rel_s);
-      goes_with[rel_s].add_back(rel_r);
     }
+
+    if (rel_is_filtered[rel_s]) {
+      rels_size = filtered[rel_s].getSize();
+      stuples = new tuple[rels_size];
+      for (size_t i = 0; i < rels_size; i++) {
+        int64_t row_id = filtered[rel_s][i];
+        stuples[i] = {(int64_t)mmap_s.colptr[col_s][row_id], (int64_t)row_id};
+      }
+    } else {
+      rels_size = mmap_s.rows;
+      stuples = new tuple[rels_size];
+      for (size_t i = 0; i < rels_size; i++) {
+        stuples[i] = {(int64_t)mmap_s.colptr[col_s][i], (int64_t)i};
+      }
+    }
+
+    relation r(rtuples, relr_size);
+    relation s(stuples, rels_size);
+    result res = PartitionedHashJoin(r, s);
+
+    for (size_t i = 0; i < res.getSize(); i++) {
+      new_joined[rel_r].add_back(res[i].rowid_1);
+      new_joined[rel_s].add_back(res[i].rowid_2);
+    }
+
+    rel_is_joined[rel_r] = true;
+    rel_is_joined[rel_s] = true;
   } else {
-    // Relation r has already been used in a predicate before
-    // We have to traverse the intermediate results of the
-    // corresponding relation
-    if (intmd_count == 0) {
-      std::perror("No intermediate results found\n");
-      exit(EXIT_FAILURE);
-    }
-    if (used_relations[rel_s] == false) {
-      used_relations[rel_s] = true;
+    // if r is in joined intmds and s isn't
+    // join using existing join result
+    // the left rel is always the one thats joined if only 1/2 is joined
+    if (rel_is_joined[rel_r] && rel_is_joined[rel_s] == false) {
+      relr_size = joined[rel_r].getSize();
+      rtuples = new tuple[relr_size];
+      for (size_t i = 0; i < relr_size; i++) {
+        int64_t row_id = joined[rel_r][i];
+        rtuples[i] = {(int64_t)mmap_r.colptr[col_r][row_id], (int64_t)i};
+      }
 
-      for (size_t row = 0; row < intmd[rel_r].getSize(); row++) {
-        actual_row = intmd[rel_r][row];
-        for (size_t i = 0; i < rel_mmap[actual_rel_s].rows; i++) {
-          if (rel_mmap[actual_rel_r].colptr[col_r][actual_row] ==
-              rel_mmap[actual_rel_s].colptr[col_s][i]) {
-            new_intmd[rel_r].add_back(actual_row);
-            new_intmd[rel_s].add_back(i);
+      // create tuples for s
+      if (rel_is_filtered[rel_s]) {
+        rels_size = filtered[rel_s].getSize();
+        stuples = new tuple[rels_size];
+        for (size_t i = 0; i < rels_size; i++) {
+          int64_t row_id = filtered[rel_s][i];
+          // value, rowid
+          stuples[i] = {(int64_t)mmap_s.colptr[col_s][row_id], (int64_t)row_id};
+        }
+      } else {
+        rels_size = mmap_s.rows;
+        stuples = new tuple[rels_size];
+        for (size_t i = 0; i < rels_size; i++) {
+          stuples[i] = {(int64_t)mmap_s.colptr[col_s][i], (int64_t)i};
+        }
+      }
 
-            for (size_t x = 0; x < goes_with[rel_r].getSize(); x++) {
-              int64_t related = goes_with[rel_r][x];
-              new_intmd[related].add_back(intmd[related][row]);
+      relation r(rtuples, relr_size);
+      relation s(stuples, rels_size);
+      result res = PartitionedHashJoin(r, s);
+
+      for (size_t i = 0; i < res.getSize(); i++) {
+        new_joined[rel_s].add_back(res[i].rowid_2);
+        for (size_t j = 0; j < rel_names.getSize(); j++) {
+          if ((int64_t)j != rel_s && joined[j].getSize() > 0) {
+            new_joined[j].add_back(joined[j][res[i].rowid_1]);
+          }
+        }
+      }
+
+      rel_is_joined[rel_s] = true;
+    } else if (rel_is_joined[rel_r] && rel_is_joined[rel_s]) {
+      for (size_t i = 0; i < joined[rel_r].getSize(); i++) {
+        int64_t row_id_r = joined[rel_r][i];
+        int64_t row_id_s = joined[rel_s][i];
+        if (mmap_r.colptr[col_r][row_id_r] == mmap_s.colptr[col_s][row_id_s]) {
+          new_joined[rel_r].add_back(row_id_r);
+          new_joined[rel_s].add_back(row_id_s);
+
+          for (size_t k = 0; k < rel_names.getSize(); k++) {
+            if ((int64_t)k != rel_s && (int64_t)k != rel_r &&
+                joined[k].getSize() > 0) {
+              new_joined[k].add_back(joined[k][i]);
             }
           }
         }
       }
-      for (size_t x = 0; x < this->rel_names.getSize(); x++) {
-        if (goes_with[rel_r].find(x) || ((int64_t)x == rel_r) ||
-            ((int64_t)x == rel_s))
-          continue;
-        new_intmd[x].steal(intmd[x]);
-      }
-
-      goes_with[rel_r].add_back(rel_s);
-      goes_with[rel_s].add_back(rel_r);
-    } else {
-      for (size_t row = 0; row < intmd[rel_r].getSize(); row++) {
-        actual_row = intmd[rel_r][row];
-        for (size_t i = 0; i < intmd[rel_s].getSize(); i++) {
-          int64_t actual_row_s = intmd[rel_s][i];
-          if (rel_mmap[actual_rel_r].colptr[col_r][actual_row] ==
-              rel_mmap[actual_rel_s].colptr[col_s][actual_row_s]) {
-            new_intmd[rel_r].add_back(actual_row);
-            new_intmd[rel_s].add_back(actual_row_s);
-
-            for (size_t x = 0; x < goes_with[rel_r].getSize(); x++) {
-              int64_t related = goes_with[rel_r][x];
-              if (related == rel_s) continue;
-              new_intmd[related].add_back(intmd[related][row]);
-            }
-
-            for (size_t x = 0; x < goes_with[rel_s].getSize(); x++) {
-              int64_t related = goes_with[rel_s][x];
-              if (related == rel_r) continue;
-              new_intmd[related].add_back(intmd[related][row]);
-            }
-          }
-        }
-      }
-      if (!(goes_with[rel_r].find(rel_s))) goes_with[rel_r].add_back(rel_s);
-      if (!(goes_with[rel_s].find(rel_r))) goes_with[rel_s].add_back(rel_r);
     }
   }
-  intmd = new_intmd;
+
+  for (size_t i = 0; i < rel_names.getSize(); i++) {
+    joined[i].steal(new_joined[i]);
+  }
 }
 
 void QueryExec::checksum() {
@@ -444,22 +403,19 @@ void QueryExec::checksum() {
 
     // std::fprintf(stderr, "Size = %ld\n", intmd[curr_rel].getSize());
 
-    for (size_t j = 0; j < intmd[curr_rel].getSize(); j++) {
-      curr_row = intmd[curr_rel][j];
+    for (size_t j = 0; j < joined[curr_rel].getSize(); j++) {
+      curr_row = joined[curr_rel][j];
 
       sum += rel_mmap[actual_rel].colptr[curr_col][curr_row];
     }
 
     if (sum == 0) {
       std::fprintf(stderr, "NULL");
-      std::printf("NULL ");
     } else {
       std::fprintf(stderr, "%ld", sum);
-      std::printf("%ld ", sum);
     }
     if (i < this->projections.getSize() - 1) {
       std::fprintf(stderr, " ");
-      std::printf(" ");
     }
   }
 
@@ -474,8 +430,8 @@ void QueryExec::clear() {
   this->joins.clear();
   this->filters.clear();
   this->projections.clear();
-  this->used_relations.clear();
-  delete[] this->intmd;
-  delete[] this->goes_with;
-  intmd_count = 0;
+  for (int64_t i = 0; i < 4; i++) {
+    joined[i].clear();
+    filtered[i].clear();
+  }
 }
