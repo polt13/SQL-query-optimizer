@@ -427,7 +427,7 @@ void QueryExec::checksum() {
       std::strcat(batch, buf);
     }
     if (i < this->projections.getSize() - 1) {
-      // std::strcat(buffer, " ");
+      std::strcat(batch, " ");
     }
   }
   std::strcat(batch, "\n");
