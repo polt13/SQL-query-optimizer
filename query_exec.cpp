@@ -1,5 +1,7 @@
 #include "query_exec.h"
 
+#include <iostream>
+
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -12,14 +14,6 @@
 //-----------------------------------------------------------------------------------------
 
 void QueryExec::execute(char* query) {
-  //   std::fprintf(stderr, "rel_names size = %ld\n",
-  //   this->rel_names.getSize()); std::fprintf(stderr, "joins size = %ld\n",
-  //   this->joins.getSize()); std::fprintf(stderr, "filters size = %ld\n",
-  //   filters.getSize()); std::fprintf(stderr, "projections size = %ld\n",
-  //   projections.getSize()); std::fprintf(stderr, "used_relations size =
-  //   %ld\n", used_relations.getSize()); std::fprintf(stderr, "intmd_count =
-  //   %ld\n", intmd_count);
-
   parse_query(query);
   do_query();
   checksum();
@@ -36,34 +30,12 @@ void QueryExec::parse_query(char* query) {
   char* used_relations = strtok_r(query, "|", &buffr);
   parse_names(used_relations);
 
-  // for (size_t i = 0; i < rel_names.getSize(); i++) {
-  //   std::printf("rel %ld\n", rel_names[i]);
-  // }
-
   char* predicates = strtok_r(nullptr, "|", &buffr);
   parse_predicates(predicates);
-
-  // for (size_t i = 0; i < joins.getSize(); i++) {
-  //   std::fprintf(stderr, "%ld.%ld %c %ld.%ld\n", joins[i].left_rel,
-  //                joins[i].left_col,
-  //                (joins[i].op == 0) ? ('=') : ((joins[i].op == 1) ? '>' :
-  //                '<'), joins[i].right_rel, joins[i].right_col);
-  // }
-  // for (size_t i = 0; i < filters.getSize(); i++) {
-  //   std::fprintf(
-  //       stderr, "%ld.%ld %c %ld\n", filters[i].left_rel, filters[i].left_col,
-  //       (filters[i].op == 0) ? ('=') : ((filters[i].op == 1) ? '>' : '<'),
-  //       filters[i].literal);
-  // }
 
   // buffr now points to the last part of the query
   char* selections = buffr;
   parse_selections(selections);
-
-  //   for (size_t i = 0; i < projections.getSize(); i++) {
-  //     std::printf("projection rel %ld col %ld\n", projections[i].rel,
-  //                 projections[i].col);
-  //   }
 }
 
 void QueryExec::parse_names(char* rel_string) {
@@ -421,18 +393,18 @@ void QueryExec::checksum() {
     }
 
     if (sum == 0)
-      std::strcat(buffer, "NULL");
+      strcat(buffer, "NULL");
     else {
       char bufint[50];
-      std::sprintf(bufint, "%ld", sum);
-      std::strcat(buffer, bufint);
+      sprintf(bufint, "%ld", sum);
+      strcat(buffer, bufint);
     }
     if (i < this->projections.getSize() - 1) {
       std::strcat(buffer, " ");
     }
   }
   std::strcat(buffer, "\n");
-  std::printf("%s", buffer);
+  std::cout << std::string(buffer);
 }
 
 //-----------------------------------------------------------------------------------------
