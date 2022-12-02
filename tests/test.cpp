@@ -2544,6 +2544,56 @@ void test_join_5() {
   TEST_CHECK(t2.getSize() == t1.getSize());
 }
 
+void test_svector() {
+  simple_vector<int> test_v, test_v2;
+
+  test_v.add_back(3);
+  test_v.add_back(8);
+  test_v.add_back(9);
+
+  test_v2 = test_v;
+
+  TEST_CHECK(test_v2[0] == 3);
+  TEST_CHECK(test_v2[1] == 8);
+  TEST_CHECK(test_v2[2] == 9);
+  TEST_CHECK(test_v2.getSize() == 3);
+
+  simple_vector<int> test_v3{test_v2};
+
+  TEST_CHECK(test_v3.getSize() == 3);
+
+  for (size_t i = 0; i < test_v3.getSize(); i++) {
+    TEST_CHECK(test_v3[i] == test_v2[i]);
+  }
+
+  struct a {
+    int x, y;
+  };
+
+  simple_vector<a> test_v4(1);
+  test_v4.add_back({1, 2});
+  test_v4.add_back({2, 3});
+  test_v4.add_back({3, 4});
+  test_v4.add_back({4, 5});
+  test_v4.add_back({5, 6});
+
+  TEST_CHECK(test_v4[0].x == 1);
+  TEST_CHECK(test_v4[2].y == 4);
+  TEST_CHECK(test_v4[4].x == 5);
+  TEST_CHECK(test_v4.getSize() == 5);
+}
+
+void test_linked_list() {
+  List l;
+  tuple s[] = {{1, 2}, {1, 4}, {1, 5}, {3, 5}};
+  for (size_t i = 0; i < 4; i++) l.append(&s[i]);
+  TEST_CHECK(l.getLen() == 4);
+  TEST_CHECK(l.find(s[0]));
+  TEST_CHECK(l.find(s[1]));
+  TEST_CHECK(l.find(s[2]));
+  TEST_CHECK(l.find(s[3]));
+}
+
 TEST_LIST = {{"Partitioning function", test_partitioning_function},
              {"Partitioning - small test (One pass)", test_partitions_1},
              {"Partitioning - small test 2 (Two Pass)", test_partitions_2},
@@ -2565,4 +2615,6 @@ TEST_LIST = {{"Partitioning function", test_partitioning_function},
              {"Join without Partitioning", test_join_3},
              {"Join Big", test_join_4},
              {"Join Huge", test_join_5},
+             {"Test Simple Vector", test_svector},
+             {"Test List", test_linked_list},
              {NULL, NULL}};
