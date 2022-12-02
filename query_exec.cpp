@@ -22,6 +22,7 @@ void QueryExec::execute(char* query) {
 
   parse_query(query);
   do_query();
+  checksum();
 
   // Clear all simple_vectors to prepare for next Query
   clear();
@@ -186,10 +187,6 @@ void QueryExec::do_query() {
     }
     do_join(i);
   }
-
-  // Done with all predicates
-  // Execute Checksum on given projections
-  checksum();
 }
 
 //-----------------------------------------------------------------------------------------
@@ -201,14 +198,12 @@ void QueryExec::filter_exec(size_t index) {
   int64_t col = this->filters[index].col;
   int64_t lit = this->filters[index].literal;
   operators operation_type = this->filters[index].op;
-  // std::fprintf(stderr, "%d\n", operation_type);
 
   simple_vector<int64_t> new_filtered;
 
   // Relation hasn't been used in a filter predicate before
   if (rel_is_filtered[rel] == false) {
-    // First time applying a predicate on this relation
-    // Mark the relation as used
+    // Mark the relation as filtered
     rel_is_filtered[rel] = true;
 
     for (uint64_t row = 0; row < rel_mmap[actual_rel].rows; row++) {
@@ -279,6 +274,9 @@ void QueryExec::do_join(size_t join_index) {
   // first time both relations are used in a join
   // use filtered rowids if they exist and create new Join array
   if (rel_is_joined[rel_r] == false && rel_is_joined[rel_s] == false) {
+    rel_is_joined[rel_r] = true;
+    rel_is_joined[rel_s] = true;
+
     if (rel_is_filtered[rel_r]) {
       relr_size = filtered[rel_r].getSize();
       rtuples = new tuple[relr_size];
@@ -318,14 +316,19 @@ void QueryExec::do_join(size_t join_index) {
       new_joined[rel_r].add_back(res[i].rowid_1);
       new_joined[rel_s].add_back(res[i].rowid_2);
     }
-
-    rel_is_joined[rel_r] = true;
-    rel_is_joined[rel_s] = true;
+    // In case of 2 intermediate results
+    for (size_t i = 0; i < this->rel_names.getSize(); i++) {
+      if ((int64_t)i != rel_r && (int64_t)i != rel_s &&
+          (int64_t)joined[i].getSize() > 0)
+        new_joined[i].steal(joined[i]);
+    }
   } else {
     // if r is in joined intmds and s isn't
     // join using existing join result
     // the left rel is always the one thats joined if only 1/2 is joined
     if (rel_is_joined[rel_r] && rel_is_joined[rel_s] == false) {
+      rel_is_joined[rel_s] = true;
+
       relr_size = joined[rel_r].getSize();
       rtuples = new tuple[relr_size];
       for (size_t i = 0; i < relr_size; i++) {
@@ -362,8 +365,6 @@ void QueryExec::do_join(size_t join_index) {
           }
         }
       }
-
-      rel_is_joined[rel_s] = true;
     } else if (rel_is_joined[rel_r] && rel_is_joined[rel_s]) {
       for (size_t i = 0; i < joined[rel_r].getSize(); i++) {
         int64_t row_id_r = joined[rel_r][i];
@@ -394,6 +395,7 @@ void QueryExec::checksum() {
   int64_t curr_row;
   int64_t sum;
   int64_t actual_rel;
+  char buf[100];
 
   for (size_t i = 0; i < this->projections.getSize(); i++) {
     curr_rel = this->projections[i].rel;
@@ -401,26 +403,34 @@ void QueryExec::checksum() {
     actual_rel = this->rel_names[curr_rel];
     sum = 0;
 
-    // std::fprintf(stderr, "Size = %ld\n", intmd[curr_rel].getSize());
+    if (rel_is_joined[curr_rel]) {
+      for (size_t j = 0; j < joined[curr_rel].getSize(); j++) {
+        curr_row = joined[curr_rel][j];
 
-    for (size_t j = 0; j < joined[curr_rel].getSize(); j++) {
-      curr_row = joined[curr_rel][j];
+        sum += rel_mmap[actual_rel].colptr[curr_col][curr_row];
+      }
+    } else if (rel_is_filtered[curr_rel]) {
+      for (size_t j = 0; j < filtered[curr_rel].getSize(); j++) {
+        curr_row = filtered[curr_rel][j];
 
-      sum += rel_mmap[actual_rel].colptr[curr_col][curr_row];
+        sum += rel_mmap[actual_rel].colptr[curr_col][curr_row];
+      }
+    } else {
+      for (size_t j = 0; j < rel_mmap[actual_rel].rows; j++)
+        sum += rel_mmap[actual_rel].colptr[curr_col][j];
     }
 
-    if (sum == 0) {
-      std::fprintf(stderr, "NULL");
-    } else {
-      std::fprintf(stderr, "%ld", sum);
+    if (sum == 0)
+      std::strcat(batch, "NULL");
+    else {
+      std::sprintf(buf, "%ld", sum);
+      std::strcat(batch, buf);
     }
     if (i < this->projections.getSize() - 1) {
-      std::fprintf(stderr, " ");
+      // std::strcat(buffer, " ");
     }
   }
-
-  std::fprintf(stderr, "\n");
-  std::printf("\n");
+  std::strcat(batch, "\n");
 }
 
 //-----------------------------------------------------------------------------------------

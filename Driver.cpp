@@ -19,10 +19,11 @@ int main(int argc, char* argv[]) {
   QueryExec qe;
   while (fgets(line, sizeof(line), stdin)) {
     line[strcspn(line, "\n")] = '\0';
-    if (strcmp(line, "F") == 0) continue;  // End of a batch
-    // std::fprintf(stderr, "%s\n", line);
+    if (strcmp(line, "F") == 0) {  // End of a batch
+      std::printf("%s", qe.getBatch());
+      qe.clearBatch();
+    }
     qe.execute(line);
-    // break;
   }
 
   return 0;
