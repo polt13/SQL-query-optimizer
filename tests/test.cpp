@@ -4,7 +4,7 @@
 #include "histogram.h"
 #include "list.h"
 #include "partitioner.h"
-#include "acutest.h"
+#include "simple_vector.h"
 
 void test_partitioning_function() {
   tuple a{3, 6};
@@ -626,43 +626,44 @@ void test_join_1() {
 
   relation r(tuples1, 6);
   relation s(tuples2, 3);
+
   result t = PartitionedHashJoin(r, s, 1, 4, 8);
-  /* for (int64_t i = 0; i < t.result_size; i++) {
-    std::printf("\nr_id: %ld, r_row: %ld\ns_id: %ld, s_row: %ld\n",
-                t[i].a.getKey(), t[i].a.getPayload(), t[i].b.getKey(),
-                t[i].b.getPayload());
-  } */
-  TEST_CHECK(t.result_size == 5);
+
+  TEST_CHECK(t.getSize() == 5);
 
   // a = {1, 6} | b = {1, 12}
-  TEST_CHECK(t[0].a.getKey() == r[5].getKey());
-  TEST_CHECK(t[0].a.getPayload() == 6);
-  TEST_CHECK(t[0].b.getKey() == s[2].getKey());
-  TEST_CHECK(t[0].b.getPayload() == 12);
 
-  // a = {3, 2} | b = {3, 10}
-  TEST_CHECK(t[1].a.getKey() == r[1].getKey());
-  TEST_CHECK(t[1].a.getPayload() == 2);
-  TEST_CHECK(t[1].b.getKey() == s[0].getKey());
-  TEST_CHECK(t[1].b.getPayload() == 10);
+  // TEST_CHECK(t[0].a.getKey() == r[5].getKey());
+  // TEST_CHECK(t[0].b.getKey() == s[2].getKey());
+
+  TEST_CHECK(t[0].rowid_1 == 6);
+  TEST_CHECK(t[0].rowid_2 == 12);
+
+  // // a = {3, 2} | b = {3, 10}
+  // TEST_CHECK(t[1].a.getKey() == r[1].getKey());
+  // TEST_CHECK(t[1].b.getKey() == s[0].getKey());
+  TEST_CHECK(t[1].rowid_1 == 2);
+  TEST_CHECK(t[1].rowid_2 == 10);
 
   // a = {3, 3} | b = {3, 10}
-  TEST_CHECK(t[2].a.getKey() == r[2].getKey());
-  TEST_CHECK(t[2].a.getPayload() == 3);
-  TEST_CHECK(t[2].b.getKey() == s[0].getKey());
-  TEST_CHECK(t[2].b.getPayload() == 10);
+  // TEST_CHECK(t[2].a.getKey() == r[2].getKey());
+  // TEST_CHECK(t[2].b.getKey() == s[0].getKey());
+
+  TEST_CHECK(t[2].rowid_1 == 3);
+  TEST_CHECK(t[2].rowid_2 == 10);
 
   // a = {3, 2} | b = {3, 11}
-  TEST_CHECK(t[3].a.getKey() == r[1].getKey());
-  TEST_CHECK(t[3].a.getPayload() == 2);
-  TEST_CHECK(t[3].b.getKey() == s[1].getKey());
-  TEST_CHECK(t[3].b.getPayload() == 11);
+  // TEST_CHECK(t[3].a.getKey() == r[1].getKey());
+  // TEST_CHECK(t[3].b.getKey() == s[1].getKey());
+
+  TEST_CHECK(t[3].rowid_1 == 2);
+  TEST_CHECK(t[3].rowid_2 == 11);
 
   // a = {3, 3} | b = {3, 11}
-  TEST_CHECK(t[4].a.getKey() == r[2].getKey());
-  TEST_CHECK(t[4].a.getPayload() == 3);
-  TEST_CHECK(t[4].b.getKey() == s[1].getKey());
-  TEST_CHECK(t[4].b.getPayload() == 11);
+  // TEST_CHECK(t[4].a.getKey() == r[2].getKey());
+  //  TEST_CHECK(t[4].b.getKey() == s[1].getKey());
+  TEST_CHECK(t[4].rowid_1 == 3);
+  TEST_CHECK(t[4].rowid_2 == 11);
 }
 
 /* Test Join with Partitioning (Two Pass)
@@ -680,25 +681,28 @@ void test_join_2() {
                 t[i].a.getKey(), t[i].a.getPayload(), t[i].b.getKey(),
                 t[i].b.getPayload());
   } */
-  TEST_CHECK(t.result_size == 3);
+  TEST_CHECK(t.getSize() == 3);
 
   // a = {1, 6} | b = {1, 12}
-  TEST_CHECK(t[0].a.getKey() == r[5].getKey());
-  TEST_CHECK(t[0].a.getPayload() == 6);
-  TEST_CHECK(t[0].b.getKey() == s[2].getKey());
-  TEST_CHECK(t[0].b.getPayload() == 12);
+  // TEST_CHECK(t[0].a.getKey() == r[5].getKey());
+  //   TEST_CHECK(t[0].b.getKey() == s[2].getKey());
+
+  TEST_CHECK(t[0].rowid_1 == 6);
+  TEST_CHECK(t[0].rowid_2 == 12);
 
   // a = {3, 3} | b = {3, 10}
-  TEST_CHECK(t[1].a.getKey() == r[2].getKey());
-  TEST_CHECK(t[1].a.getPayload() == 3);
-  TEST_CHECK(t[1].b.getKey() == s[0].getKey());
-  TEST_CHECK(t[1].b.getPayload() == 10);
+  // TEST_CHECK(t[1].a.getKey() == r[2].getKey());
+  // TEST_CHECK(t[1].b.getKey() == s[0].getKey());
+
+  TEST_CHECK(t[1].rowid_1 == 3);
+  TEST_CHECK(t[1].rowid_2 == 10);
 
   // a = {4, 5} | b = {4, 11}
-  TEST_CHECK(t[2].a.getKey() == r[4].getKey());
-  TEST_CHECK(t[2].a.getPayload() == 5);
-  TEST_CHECK(t[2].b.getKey() == s[1].getKey());
-  TEST_CHECK(t[2].b.getPayload() == 11);
+  // TEST_CHECK(t[2].a.getKey() == r[4].getKey());
+  //  TEST_CHECK(t[2].b.getKey() == s[1].getKey());
+
+  TEST_CHECK(t[2].rowid_1 == 5);
+  TEST_CHECK(t[2].rowid_2 == 11);
 }
 
 /* Test Join without Partitioning
@@ -711,30 +715,29 @@ void test_join_3() {
   relation r(tuples1, 3);
   relation s(tuples2, 5);
   result t = PartitionedHashJoin(r, s, 0, 4, 8);
-  /* for (int64_t i = 0; i < t.result_size; i++) {
-    std::printf("\nr_id: %ld, r_row: %ld\ns_id: %ld, s_row: %ld\n",
-                t[i].a.getKey(), t[i].a.getPayload(), t[i].b.getKey(),
-                t[i].b.getPayload());
-  } */
-  TEST_CHECK(t.result_size == 3);
+
+  TEST_CHECK(t.getSize() == 3);
 
   // a = {2, 2} | b = {2, 6}
-  TEST_CHECK(t[0].a.getKey() == r[1].getKey());
-  TEST_CHECK(t[0].a.getPayload() == 2);
-  TEST_CHECK(t[0].b.getKey() == s[0].getKey());
-  TEST_CHECK(t[0].b.getPayload() == 6);
+  // TEST_CHECK(t[0].a.getKey() == r[1].getKey());
+  // TEST_CHECK(t[0].b.getKey() == s[0].getKey());
+
+  TEST_CHECK(t[0].rowid_1 == 2);
+  TEST_CHECK(t[0].rowid_2 == 6);
 
   // a = {6, 3} | b = {6, 7}
-  TEST_CHECK(t[1].a.getKey() == r[2].getKey());
-  TEST_CHECK(t[1].a.getPayload() == 3);
-  TEST_CHECK(t[1].b.getKey() == s[1].getKey());
-  TEST_CHECK(t[1].b.getPayload() == 7);
+  // TEST_CHECK(t[1].a.getKey() == r[2].getKey());
+  // TEST_CHECK(t[1].b.getKey() == s[1].getKey());
+
+  TEST_CHECK(t[1].rowid_1 == 3);
+  TEST_CHECK(t[1].rowid_2 == 7);
 
   // a = {5, 1} | b = {5, 10}
-  TEST_CHECK(t[2].a.getKey() == r[0].getKey());
-  TEST_CHECK(t[2].a.getPayload() == 1);
-  TEST_CHECK(t[2].b.getKey() == s[3].getKey());
-  TEST_CHECK(t[2].b.getPayload() == 10);
+  // TEST_CHECK(t[2].a.getKey() == r[0].getKey());
+  // TEST_CHECK(t[2].b.getKey() == s[3].getKey());
+
+  TEST_CHECK(t[2].rowid_1 == 1);
+  TEST_CHECK(t[2].rowid_2 == 10);
 }
 
 void test_join_4() {
@@ -772,7 +775,7 @@ void test_join_4() {
   relation s(tuples2, 200);
 
   result t = PartitionedHashJoin(r, s);
-  TEST_CHECK(t.result_size == 219);
+  TEST_CHECK(t.getSize() == 219);
 }
 
 /* Join Huge
@@ -2535,10 +2538,10 @@ void test_join_5() {
   relation s(tuples2, 15000);
 
   result t1 = PartitionedHashJoin(r, s);
-  TEST_CHECK(t1.result_size == 149814);
+  TEST_CHECK(t1.getSize() == 149814);
 
   result t2 = PartitionedHashJoin(s, r);
-  TEST_CHECK(t2.result_size == t1.result_size);
+  TEST_CHECK(t2.getSize() == t1.getSize());
 }
 
 TEST_LIST = {{"Partitioning function", test_partitioning_function},

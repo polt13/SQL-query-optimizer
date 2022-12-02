@@ -1,6 +1,7 @@
 #include "dataForm.h"
 #include "hashTable.h"
 #include "partitioner.h"
+#include "simple_vector.h"
 
 result PartitionedHashJoin(relation& r, relation& s, int64_t forceDepth,
                            int64_t bits_pass1, int64_t bits_pass2) {
@@ -14,11 +15,8 @@ result PartitionedHashJoin(relation& r, relation& s, int64_t forceDepth,
   relation s_ =
       spartitioner.partition(s, forcePartitioning, bits_pass1, bits_pass2);
 
-  // grow result array dynamically
-  int64_t capacity = 100;
-
-  result_item* result_join = new result_item[capacity];
-  int64_t result_size = 0;
+  // use the vector inside for the results
+  result result_join;
 
   // if partitioning has occured
   if (forcePartitioning != 0) {
@@ -54,15 +52,10 @@ result PartitionedHashJoin(relation& r, relation& s, int64_t forceDepth,
         if (tuple_list) {
           Node* traverse = tuple_list->getRoot();
           while (traverse) {
-            // result is [tuple_r, tuple_s]
-            result_join[result_size++] = {*(traverse->mytuple), s_[k]};
-            if (result_size == capacity) {
-              capacity *= 2;
-              result_item* old = result_join;
-              result_join = new result_item[capacity];
-              std::memmove(result_join, old, result_size * sizeof(result_item));
-              delete[] old;
-            }
+            // result is [rowid_r,rowid_s]
+            result_item entry{traverse->mytuple->getPayload(),
+                              s_[k].getPayload()};
+            result_join.push(entry);
             traverse = traverse->next;
           }
         }
@@ -86,19 +79,13 @@ result PartitionedHashJoin(relation& r, relation& s, int64_t forceDepth,
       if (tuple_list) {
         Node* traverse = tuple_list->getRoot();
         while (traverse) {
-          result_join[result_size++] = {*(traverse->mytuple), s[j]};
-          if (result_size == capacity) {
-            capacity *= 2;
-            result_item* old = result_join;
-            result_join = new result_item[capacity];
-            std::memmove(result_join, old, result_size * sizeof(result_item));
-            delete[] old;
-          }
+          result_item entry{traverse->mytuple->getPayload(), s[j].getPayload()};
+          result_join.push(entry);
           traverse = traverse->next;
         }
       }
     }
   }
 
-  return result(result_join, result_size);
+  return result_join;
 }

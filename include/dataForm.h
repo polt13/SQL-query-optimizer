@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include "simple_vector.h"
 
 /* Type definition for a tuple */
 class tuple {
@@ -55,26 +56,24 @@ class relation {
 };
 
 struct result_item {
-  tuple a;
-  tuple b;
+  int64_t rowid_1;
+  int64_t rowid_2;
 };
 
 struct result {
-  result_item *r;
-  int64_t result_size;
+ private:
+  simple_vector<result_item> pairs;
 
-  result(result_item *r, int64_t result_size)
-      : r{r}, result_size{result_size} {}
+ public:
+  void push(const result_item &r) { pairs.add_back(r); }
 
-  result(const result &other) {
-    result_size = other.result_size;
-    r = new result_item[result_size];
-    std::memmove(r, other.r, sizeof(result_item) * result_size);
-  }
+  size_t getSize() const { return pairs.getSize(); }
 
-  result_item &operator[](int64_t index) { return r[index]; }
+  result() = default;
 
-  ~result() { delete[] r; }
+  result(const result &other) : pairs{other.pairs} {}
+
+  result_item &operator[](int64_t index) { return pairs[index]; }
 };
 
 #endif
