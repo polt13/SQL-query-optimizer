@@ -157,7 +157,7 @@ The size of the Neighbourhood is defined in ``hashtable.h`` as ``NBHD_SIZE``.
 ## Simple Vector
 
 We have implemented a simple version of the vector class using C++ templates since there are numerous situations where such a data structures is needed to operate
-on different types. `simple_vector` uses a dynamic array under the hood that grows whenever its capacity is met. Changing how much the vector grows each time and the method of copying each element to a new location when the capacity is maxed out may have an impact on performance. By default, the start capacity is 10.
+on different types. `simple_vector` uses a dynamic array under the hood that grows whenever its capacity is met. Changing how much the vector grows each time and the method of copying each element to a new location when the capacity is maxed out may have an impact on performance. By default, the starting capacity is 10.
 
 
 ## Query Execution
@@ -173,11 +173,12 @@ For the purpose of maintaining information regarding which relations are filtere
 
 The order of predicate execution is always filters first, joins second. That means as soon as the first join happens, all filters have already been computed.
 
-** 
+***
 
 An array of simple vectors, `filtered[4]` contains all the filtered rowIDs for a relation `r` (only useful if `rel_is_filtered[r] = true`). When a relation is first joined with another, we use the rowIDs in the `filtered` vector to create the relation (or the entire relation if the relation hasn't been through a filter). 
 
 A different array of simple vectors contains the rowIDs for the relation that have already been joined. When a join happens, we update the rest of the relations (with the matching index) based on the join result.
 
-** NOTE 1: We assume that at most 4 relations are part of a query for simplicity purposes. This can easily be tweaked if needed.**
-** NOTE 2 [Part 2]: When it comes to joins, we expect to only have a single intermediate result at a given time. If a situation arises where more than one intermediate result is needed, we can later work around it by changing the order of predicate execution, so that we always end up with 1 intermediate result **
+**NOTE 1: We assume that at most 4 relations are part of a query for simplicity purposes. This can easily be tweaked if needed.**
+
+**NOTE 2 [Part 2]: When it comes to joins, we expect to only have a single intermediate result at a given time. If a situation arises where more than one intermediate result is needed, we can later work around it by changing the order of predicate execution, so that we always end up with 1 intermediate result**
