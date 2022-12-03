@@ -16,6 +16,8 @@
 * [Creating Relations](#creating-relations)
 * [Partitioning](#partitioning)
 * [Hash Table](#hash-table)
+* [Simple Vector](#simple-vector)
+* [Query Execution](#query-execution)
 <br/><br/>
 
 ## Requirements
@@ -84,7 +86,7 @@ Testing with harness:
  query2
  ```
  with the relation names containing either the full path or the relative path to the `Driver` executable (e.g. ../workloads/small/r0)
-
+<br/><br/>
 
 ## Type Description
 
@@ -153,12 +155,13 @@ The size of the Neighbourhood is defined in ``hashtable.h`` as ``NBHD_SIZE``.
 
 **NOTE:** Some of the unit tests (e.g Full HT Insert, Swap HT Insert) will fail if NBHD_SIZE is changed because they are based on that specific size.
 *Nevertheless, the whole implementation works just fine*.
+<br/><br/>
 
 ## Simple Vector
 
 We have implemented a simple version of the vector class using C++ templates since there are numerous situations where such a data structures is needed to operate
 on different types. `simple_vector` uses a dynamic array under the hood that grows whenever its capacity is met. Changing how much the vector grows each time and the method of copying each element to a new location when the capacity is maxed out may have an impact on performance. By default, the starting capacity is 10.
-
+<br/><br/>
 
 ## Query Execution
 
