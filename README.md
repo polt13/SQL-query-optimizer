@@ -168,9 +168,9 @@ on different types. `simple_vector` uses a dynamic array under the hood that gro
 `QueryExec` contains all the relevant code for parsing each query, executing it and printing the checksum. After parsing, every filter predicate is stored in a way so
 that every literal is on the right hand side. For instance, `5 < 0.1` is turned into `0.1 > 5`. This simplifies operations later - more specifically, we can avoid having multiple data types defined where the literal is either on the left or the right hand side in the case of filters.
 
-A filter is defined as any predicate that operates on a single relation, meaning that the right handside (after parsing) is always a literal. The `filter` struct stores the `rel` field and the `col` field, as well as the literal in the `literal` field.
+A filter is defined as any predicate that operates on a single relation, meaning that the right handside (after parsing) is always a literal. The `filter` struct stores the `rel` field and the `col` field, as well as the literal in the `literal` field. It also stores the operator in a form of enum (`EQ` for `=`, `GREATER` for `>` and `LESS`for `<`) in the `op` field.
 
-A join is defined as any predicate that operates on two relations. The `join` struct stores the `left_rel` and `right_rel` along with their respective columns.
+A join is defined as any predicate that operates on two relations. The `join` struct stores the `left_rel` and `right_rel` along with their respective columns and operator used between them.
 
 For the purpose of maintaining information regarding which relations are filtered and which have been part of joins two different arrays are defined. `rel_is_filtered`,`rel_is_joined` indicate whether a relation has been through a filter or a join operation. 
 
