@@ -41,7 +41,11 @@
   ```
 <br/><br/>
 
-## How To Run
+**NOTE**: To comply with best C++ practices, we're using the C++ version of the headers for all the C libraries we use. Namely, we opted for `cstdio` over `stdio.h`
+and `cstring` over `string.h` (the latter is useful because of `memmove`). Every method is also wrapped in the `std` namespace, which helps avoid conflicts.
+<br/><br/>
+
+## How To Run 
 
   ```sh
   cmake .
@@ -50,14 +54,37 @@
   ```sh
   make
   ```
+
+Testing with harness:
+
 <!-- tsk -->
   ```sh
-  ./Project_JJ_Part1
+  ./runTestharness.sh
   ```
+ 
+ Running the driver with specific input:
+ 
+ <!-- tsk -->
+ ```sh
+ ./Driver < input.txt
+ ```
+ 
+ **Driver** expects input in its `stdin`. It first reads a list of the participating relations, the word 'Done' after it and then a list of the queries that are going to be executed.
+ 
+ **If `runTestharness` is used for running the program, there's predefined input that's being fed to Driver**
+ 
+ **If `Driver` is run as a standalone program input.txt shall be of the form:**
+ 
+ ```
+ r0
+ r1
+ r2
+ Done
+ query1
+ query2
+ ```
+ with the relation names containing either the full path or the relative path to the `Driver` executable (e.g. ../workloads/small/r0)
 
-**NOTE**: To comply with best C++ practices, we're using the C++ version of the headers for all the C libraries we use. Namely, we opted for `cstdio` over `stdio.h`
-and `cstring` over `string.h` (the latter is useful because of `memmove`). Every method is also wrapped in the `std` namespace, which helps avoid conflicts.
-<br/><br/>
 
 ## Type Description
 
@@ -126,3 +153,31 @@ The size of the Neighbourhood is defined in ``hashtable.h`` as ``NBHD_SIZE``.
 
 **NOTE:** Some of the unit tests (e.g Full HT Insert, Swap HT Insert) will fail if NBHD_SIZE is changed because they are based on that specific size.
 *Nevertheless, the whole implementation works just fine*.
+
+## Simple Vector
+
+We have implemented a simple version of the vector class using C++ templates since there are numerous situations where such a data structures is needed to operate
+on different types. `simple_vector` uses a dynamic array under the hood that grows whenever its capacity is met. Changing how much the vector grows each time and the method of copying each element to a new location when the capacity is maxed out may have an impact on performance. By default, the start capacity is 10.
+
+
+## Query Execution
+
+`QueryExec` contains all the relevant code for parsing each query, executing it and printing the checksum. After parsing, every filter predicate is stored in a way so
+that every literal is on the right hand side. For instance, `5 < 0.1` is turned into `0.1 > 5`. This simplifies operations later - more specifically, we can avoid having multiple data types defined where the literal is either on the left or the right hand side in the case of filters.
+
+A filter is defined as any predicate that operates on a single relation, meaning that the right handside (after parsing) is always a literal. The `filter` struct stores the `rel` field and the `col` field, as well as the literal in the `literal` field.
+
+A join is defined as any predicate that operates on two relations. The `join` struct stores the `left_rel` and `right_rel` along with their respective columns.
+
+For the purpose of maintaining information regarding which relations are filtered and which have been part of joins two different arrays are defined. `rel_is_filtered`,`rel_is_joined` indicate whether a relation has been through a filter or a join operation. 
+
+The order of predicate execution is always filters first, joins second. That means as soon as the first join happens, all filters have already been computed.
+
+** 
+
+An array of simple vectors, `filtered[4]` contains all the filtered rowIDs for a relation `r` (only useful if `rel_is_filtered[r] = true`). When a relation is first joined with another, we use the rowIDs in the `filtered` vector to create the relation (or the entire relation if the relation hasn't been through a filter). 
+
+A different array of simple vectors contains the rowIDs for the relation that have already been joined. When a join happens, we update the rest of the relations (with the matching index) based on the join result.
+
+** NOTE 1: We assume that at most 4 relations are part of a query for simplicity purposes. This can easily be tweaked if needed.**
+** NOTE 2 [Part 2]: When it comes to joins, we expect to only have a single intermediate result at a given time. If a situation arises where more than one intermediate result is needed, we can later work around it by changing the order of predicate execution, so that we always end up with 1 intermediate result **
