@@ -56,7 +56,6 @@ When on the root directory of the project:
   ```sh
   cmake -B build
   ```
- (if this doesn't work, you can alternatively try `cmake -B build -S .`)
   
 ```sh
 cd build
@@ -66,6 +65,8 @@ cd build
   ```sh
   make
   ```
+ 
+**If any of the above steps don't work, use `cmake . && make && cp Driver harness ./build`**
  
 ***
 
