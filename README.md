@@ -49,11 +49,9 @@ and `cstring` over `string.h` (the latter is useful because of `memmove`). Every
 
 ## How To Run 
 
-When on the root directory of the project:
-
-***
-
 **Building:**
+
+When on the root directory of the project:
 
   ```sh
   cmake -B build
