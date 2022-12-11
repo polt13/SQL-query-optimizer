@@ -56,7 +56,7 @@ When on the root directory of the project:
   ```sh
   cmake -B build
   ```
- (if this doesn't work, you can alternatively try `cmake -S . -B build`)
+ (if this doesn't work, you can alternatively try `cmake -B build -S .`)
   
 ```sh
 cd build
