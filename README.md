@@ -49,22 +49,47 @@ and `cstring` over `string.h` (the latter is useful because of `memmove`). Every
 
 ## How To Run 
 
+When on the root directory of the project:
+
+***
+
+**Building:**
+
   ```sh
-  cmake .
+  cmake -B build
   ```
+ (if this doesn't work, you can alternatively try `cmake -S . -B build`)
+  
+```sh
+cd build
+```
+ 
 <!-- tsk -->
   ```sh
   make
   ```
+ 
+***
 
-Testing with harness:
+**Testing with harness:**
+
+Having built the project, jump to the root directory of the project and make the scripts executable:
+<!-- tsk -->
+```sh
+chmod +x run.sh
+chmod +x runTestharness.sh
+````
+
+Then:
 
 <!-- tsk -->
   ```sh
   ./runTestharness.sh
   ```
  
- Running the driver with specific input:
+***
+
+**Running the driver with specific input:**
  
  <!-- tsk -->
  ```sh
