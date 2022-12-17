@@ -1,3 +1,5 @@
+![badge](https://github.com/polt13/JJ_Project/actions/workflows/cmake_test.yml/badge.svg)
+
 ## Contributors
 <table>
   <tbody>
