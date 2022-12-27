@@ -17,10 +17,10 @@ int main(int argc, char* argv[]) {
     rel_mmap[relations_count++] = parse_relation(line);
     for (int i = 0; i < 14; i++) {
         for (int j = 0; j < rel_mmap[i].cols; j++) {
-            fprintf(stderr, "l%d = %d\n", j, rel_mmap[i].stats->l);
-            fprintf(stderr, "u%d = %d\n", j, rel_mmap[i].stats->u);
-            fprintf(stderr, "f%d = %d\n", j, rel_mmap[i].stats->f);
-            fprintf(stderr, "d%d = %d\n", j, rel_mmap[i].stats->d);
+            fprintf(stderr, "l%d = %ld\n", j, rel_mmap[i].stats->l);
+            fprintf(stderr, "u%d = %ld\n", j, rel_mmap[i].stats->u);
+            fprintf(stderr, "f%d = %ld\n", j, rel_mmap[i].stats->f);
+            fprintf(stderr, "d%d = %ld\n", j, rel_mmap[i].stats->d);
         }
         fprintf(stderr, "\n");
     }
