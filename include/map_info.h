@@ -7,7 +7,7 @@ struct statistics {
   int64_t l;    // minimum
   int64_t u;    // maximum
   int64_t f;    // count
-  int64_t d;    // distinct count
+  int64_t d = 0;    // distinct count
 };
 
 struct memory_map {

@@ -56,7 +56,6 @@ memory_map parse_relation(const char* fileName) {
     // For Query Optimizer - Find and Store Statistics
     uint64_t min = mapper.colptr[i][0];
     uint64_t max = mapper.colptr[i][0];
-    mapper.stats[i].f = mapper.rows;
     for (unsigned j = 0; j < mapper.rows; j++) {
       if (mapper.colptr[i][j] < min)
         min = mapper.colptr[i][j];
@@ -65,11 +64,12 @@ memory_map parse_relation(const char* fileName) {
     }
     mapper.stats[i].l = min;
     mapper.stats[i].u = max;
+    mapper.stats[i].f = mapper.rows;
 
     int64_t arr_size = max - min + 1;
     if (arr_size > UPPER_LIMIT)
       arr_size = UPPER_LIMIT;
-    bool *d_array = new bool[arr_size]{false};    // initialize all with "false"
+    bool *d_array = new bool[arr_size]{ false };    // initialize all with "false"
 
     for (unsigned j = 0; j < mapper.rows; j++) {
       uint64_t val = mapper.colptr[i][j];
