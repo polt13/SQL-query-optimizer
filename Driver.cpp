@@ -1,7 +1,9 @@
 #include <cstring>
+#include <iostream>
 
 #include "map_info.h"
 #include "query_exec.h"
+#include "job_scheduler.h"
 
 memory_map rel_mmap[14];
 
@@ -17,9 +19,12 @@ int main(int argc, char* argv[]) {
   }
 
   QueryExec qe;
-  while (std::fgets(line, sizeof(line), stdin)) {
-    line [std::strcspn(line, "\r\n")] = '\0';
-    if (std::strcmp(line, "F") == 0) continue;
+  while (fgets(line, sizeof(line), stdin)) {
+    line[strcspn(line, "\n")] = '\0';
+    if (strcmp(line, "F") == 0) {  // End of a batch
+      fflush(stdout);
+      continue;
+    }
     qe.execute(line);
   }
 

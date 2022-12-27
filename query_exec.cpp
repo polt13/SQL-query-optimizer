@@ -367,7 +367,6 @@ void QueryExec::checksum() {
   int64_t curr_row;
   int64_t sum;
   int64_t actual_rel;
-  char buffer[4096] = "";
 
   for (size_t i = 0; i < this->projections.getSize(); i++) {
     curr_rel = this->projections[i].rel;
@@ -393,18 +392,15 @@ void QueryExec::checksum() {
     }
 
     if (sum == 0)
-      strcat(buffer, "NULL");
+      std::printf("NULL");
     else {
-      char bufint[50];
-      sprintf(bufint, "%ld", sum);
-      strcat(buffer, bufint);
+      std::printf("%ld", sum);
     }
     if (i < this->projections.getSize() - 1) {
-      std::strcat(buffer, " ");
+      std::printf(" ");
     }
   }
-  std::strcat(buffer, "\n");
-  std::cout << std::string(buffer);
+  std::printf("\n");
 }
 
 //-----------------------------------------------------------------------------------------

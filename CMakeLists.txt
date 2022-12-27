@@ -1,7 +1,6 @@
 cmake_minimum_required (VERSION 2.6)
 project (Project_JJ)
 
-set(CMAKE_BUILD_TYPE "Debug")
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -11,13 +10,14 @@ enable_testing()
 
 include_directories(include)
 
-# For Part1
-add_executable(Part1 hashTable.cpp histogram.cpp list.cpp partitioner.cpp tests/test.cpp join.cpp)
+#unit test
+add_executable(utest hashTable.cpp histogram.cpp list.cpp partitioner.cpp join.cpp tests/test.cpp )
 
-# For Part2
 add_executable(harness harness.cpp)
-add_executable(Driver hashTable.cpp histogram.cpp list.cpp partitioner.cpp join.cpp parse_relation.cpp query_exec.cpp Driver.cpp)
-add_executable(test2 hashTable.cpp histogram.cpp list.cpp partitioner.cpp join.cpp tests/test2.cpp parse_relation.cpp query_exec.cpp)
-#add_executable(test3 tests/test3.cpp query_exec.cpp)
 
-add_test(unit_tests ${PROJECT_NAME})
+add_executable(Driver hashTable.cpp histogram.cpp list.cpp partitioner.cpp join.cpp parse_relation.cpp query_exec.cpp Driver.cpp)
+
+target_link_libraries(Driver pthread)
+
+
+add_test(unit_tests utest)
