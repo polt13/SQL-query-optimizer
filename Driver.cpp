@@ -3,6 +3,7 @@
 
 #include "map_info.h"
 #include "query_exec.h"
+#include "job_scheduler.h"
 
 memory_map rel_mmap[14];
 

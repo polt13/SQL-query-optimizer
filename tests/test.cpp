@@ -5,6 +5,7 @@
 #include "list.h"
 #include "partitioner.h"
 #include "simple_vector.h"
+#include "simple_queue.h"
 
 void test_partitioning_function() {
   tuple a{3, 6};
@@ -2594,6 +2595,20 @@ void test_linked_list() {
   TEST_CHECK(l.find(s[3]));
 }
 
+void test_squeue() {
+  simple_queue<int> sq;
+  sq.enqueue(3);
+  sq.enqueue(5);
+  sq.enqueue(11);
+  sq.enqueue(10);
+  TEST_CHECK(sq.getLen() == 4);
+  TEST_CHECK(sq.pop() == 3);
+  TEST_CHECK(sq.pop() == 5);
+  TEST_CHECK(sq.pop() == 11);
+  TEST_CHECK(sq.pop() == 10);
+  TEST_CHECK(sq.getLen() == 0);
+}
+
 TEST_LIST = {{"Partitioning function", test_partitioning_function},
              {"Partitioning - small test (One pass)", test_partitions_1},
              {"Partitioning - small test 2 (Two Pass)", test_partitions_2},
@@ -2617,4 +2632,5 @@ TEST_LIST = {{"Partitioning function", test_partitioning_function},
              {"Join Huge", test_join_5},
              {"Test Simple Vector", test_svector},
              {"Test List", test_linked_list},
+             {"Test Simple Queue,", test_squeue},
              {NULL, NULL}};
