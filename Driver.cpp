@@ -7,6 +7,12 @@
 
 memory_map rel_mmap[14];
 
+pthread_cond_t JobScheduler::cvar = PTHREAD_COND_INITIALIZER;
+pthread_mutex_t JobScheduler::qmtx = PTHREAD_MUTEX_INITIALIZER;
+simple_queue<Job*> JobScheduler::job_pool;
+
+JobScheduler js;
+
 int main(int argc, char* argv[]) {
   int64_t relations_count = 0;
 

@@ -1,4 +1,16 @@
-#include "histogram.h"
+
+#include "partitioner.h"
+
+void calcHist(relation& r, size_t start, size_t end, Histogram& res,
+              int64_t bits) {
+  // histogram with as many partitions as threads
+  for (size_t t = start; t < end; t++) {
+    tuple record = r[t];
+    // assuming THREADS = PARTITIONS = 4, meaning use only last 2 bits
+    int64_t index = Partitioner::hash1(record.getKey(), bits);
+    res[index]++;
+  }
+}
 
 // create histogram with 2^n entries -- zero initialize all}
 Histogram::Histogram(int64_t size)

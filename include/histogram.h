@@ -25,4 +25,7 @@ class Histogram {
   // for later use in the hashtable insertion and traversing
   const int64_t* getPsum() const { return psum; }
 };
+
+void calcHist(relation&, size_t, size_t, Histogram&, int64_t);
+
 #endif

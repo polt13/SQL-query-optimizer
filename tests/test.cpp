@@ -6,6 +6,15 @@
 #include "partitioner.h"
 #include "simple_vector.h"
 #include "simple_queue.h"
+#include <pthread.h>
+#include "job_scheduler.h"
+
+// stop linker from complaining
+pthread_cond_t JobScheduler::cvar = PTHREAD_COND_INITIALIZER;
+pthread_mutex_t JobScheduler::qmtx = PTHREAD_MUTEX_INITIALIZER;
+simple_queue<Job*> JobScheduler::job_pool;
+
+JobScheduler js;
 
 void test_partitioning_function() {
   tuple a{3, 6};
