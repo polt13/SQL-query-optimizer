@@ -6,9 +6,10 @@
 
 #include "config.h"
 
+
 class Partitioner {
   Histogram* hist;
-  // how many partition phases the R relation went through
+  //  how many partition phases the R relation went through
   int64_t partitioningLevel;
 
   relation partition1(relation&, int64_t = USE_BITS);

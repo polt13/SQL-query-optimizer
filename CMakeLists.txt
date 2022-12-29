@@ -19,5 +19,6 @@ add_executable(Driver hashTable.cpp histogram.cpp list.cpp partitioner.cpp join.
 
 target_link_libraries(Driver pthread)
 
+target_link_libraries(utest pthread)
 
 add_test(unit_tests utest)

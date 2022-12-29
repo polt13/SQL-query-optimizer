@@ -1,7 +1,9 @@
 #include "partitioner.h"
-
+#include "job_scheduler.h"
 #include <cstdio>
 #include <cstring>
+
+extern JobScheduler js;
 
 /*
  * Hash Function for partitioning
@@ -22,14 +24,30 @@ relation Partitioner::partition1(relation& r, int64_t bits_pass1) {
   // std::printf("\nOne pass needed\n");
   partitioningLevel = 1;
 
-  hist = new Histogram(1 << bits_pass1);
+  int64_t partitions = 1 << bits_pass1;
 
-  for (int64_t t = 0; t < r_entries; t++) {
-    tuple record = r[t];
-    // partition based on the key
-    // index indicates which partition the tuple goes to
-    int64_t index = hash1(record.getKey(), bits_pass1);
-    (*hist)[index]++;
+  // main hist
+  hist = new Histogram(partitions);
+
+  simple_vector<Histogram*> hvector(THREAD_COUNT);
+  for (int64_t i = 0; i < THREAD_COUNT; i++) {
+    hvector.add_back(new Histogram{partitions});
+  }
+
+  int64_t per_thread = r_entries / THREAD_COUNT;
+
+  for (int64_t i = 0; i < THREAD_COUNT; i++) {
+    int64_t start = i * per_thread;
+    int64_t end = (i + 1) * per_thread;
+    if ((i == THREAD_COUNT - 1) && (end < r_entries)) end = r_entries;
+    js.add_job(new HistogramJob(r, start, end, *hvector[i], bits_pass1));
+  }
+
+  for (int64_t j = 0; j < partitions; j++) {
+    (*hist)[j] = 0;
+    for (int64_t i = 0; i < THREAD_COUNT; i++) {
+      (*hist)[j] += (*(hvector[i]))[j];
+    }
   }
 
   const int64_t* psum = hist->generatePsum();
@@ -118,10 +136,11 @@ relation Partitioner::partition(relation& r, int64_t force_partition_depth,
   for (int64_t i = 0; i < partitions; i++) {
     if (((*hist)[i] * sizeof(tuple)) > L2_SIZE) {
       return partition2(r2, bits_pass2);
-      break;
     }
   }
+
   // if partitions fit
+
   return r2;
 }
 
