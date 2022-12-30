@@ -1,5 +1,6 @@
 #include "query_exec.h"
 
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -160,6 +161,90 @@ void QueryExec::parse_selections(char* selections) {
     selections = nullptr;
   }
 }
+//-----------------------------------------------------------------------------------------
+
+void QueryExec::update_stats(size_t index, int64_t flag) {
+  // Filter σ_A=k
+  if (flag == 0) {
+    int64_t rel = this->filters[index].rel;
+    int64_t actual_rel = this->rel_names[rel];
+    int64_t col = this->filters[index].col;
+    uint64_t lit = this->filters[index].literal;
+    int64_t prev_f = rel_mmap[actual_rel].stats[col].f;
+
+    rel_mmap[actual_rel].stats[col].l = lit;
+    rel_mmap[actual_rel].stats[col].u = lit;
+
+    rel_mmap[actual_rel].stats[col].d = 0;
+    rel_mmap[actual_rel].stats[col].f = 0;
+    for (uint64_t i = 0; i < rel_mmap[actual_rel].rows; i++)
+      if (rel_mmap[actual_rel].colptr[col][i] == lit) {
+        rel_mmap[actual_rel].stats[col].f /= rel_mmap[actual_rel].stats[col].d;
+        rel_mmap[actual_rel].stats[col].d = 1;
+        break;
+      }
+
+    for (size_t i = 0; i < rel_mmap[actual_rel].cols; i++)
+      if ((int64_t)i != col) {
+        rel_mmap[actual_rel].stats[i].d *=
+            (1 - pow((1 - (rel_mmap[actual_rel].stats[col].f / prev_f)),
+                     (rel_mmap[actual_rel].stats[i].f /
+                      rel_mmap[actual_rel].stats[i].d)));
+        rel_mmap[actual_rel].stats[i].f = rel_mmap[actual_rel].stats[col].f;
+      }
+  }
+  if (flag == 1) {
+    int64_t r_rel = this->joins[index].left_rel;
+    int64_t r_col = this->joins[index].left_col;
+    int64_t s_rel = this->joins[index].right_rel;
+    int64_t s_col = this->joins[index].right_col;
+    int64_t actual_r = this->rel_names[r_rel];
+    int64_t actual_s = this->rel_names[s_rel];
+
+    // Filter σ_A=B
+    if (r_rel == s_rel) {
+      int64_t prev_f = rel_mmap[actual_r].stats[r_col].f;
+      int64_t prev_d = rel_mmap[actual_r].stats[r_col].d;
+      if (rel_mmap[actual_r].stats[r_col].l > rel_mmap[actual_s].stats[s_col].l)
+        rel_mmap[actual_s].stats[s_col].l = rel_mmap[actual_r].stats[r_col].l;
+      else
+        rel_mmap[actual_r].stats[r_col].l = rel_mmap[actual_s].stats[s_col].l;
+
+      if (rel_mmap[actual_r].stats[r_col].u < rel_mmap[actual_s].stats[s_col].u)
+        rel_mmap[actual_s].stats[s_col].u = rel_mmap[actual_r].stats[r_col].u;
+      else
+        rel_mmap[actual_r].stats[r_col].u = rel_mmap[actual_s].stats[s_col].u;
+
+      rel_mmap[actual_r].stats[r_col].f = rel_mmap[actual_s].stats[s_col].f =
+          prev_f / (rel_mmap[actual_r].stats[r_col].u -
+                    rel_mmap[actual_r].stats[r_col].l + 1);
+      rel_mmap[actual_r].stats[r_col].d = rel_mmap[actual_s].stats[s_col].d =
+          prev_d * (1 - pow((1 - (rel_mmap[actual_r].stats[r_col].f / prev_f)),
+                            (prev_f / prev_d)));
+
+      for (size_t i = 0; i < rel_mmap[actual_r].cols; i++)
+        if ((int64_t)i != r_col && (int64_t)i != s_col) {
+          rel_mmap[actual_r].stats[i].d *=
+              (1 - pow((1 - (rel_mmap[actual_r].stats[r_col].f / prev_f)),
+                       (rel_mmap[actual_r].stats[i].f /
+                        rel_mmap[actual_r].stats[i].d)));
+          rel_mmap[actual_r].stats[i].f = rel_mmap[actual_r].stats[r_col].f;
+        }
+    }
+
+    // Self-Join
+    if (actual_r == actual_s) {
+      int64_t prev_f = rel_mmap[actual_r].stats[r_col].f;
+      rel_mmap[actual_r].stats[r_col].f =
+          (prev_f * prev_f) / (rel_mmap[actual_r].stats[r_col].u -
+                               rel_mmap[actual_r].stats[r_col].l + 1);
+
+      for (size_t i = 0; i < rel_mmap[actual_r].cols; i++)
+        if ((int64_t)i != r_col)
+          rel_mmap[actual_r].stats[i].f = rel_mmap[actual_r].stats[r_col].f;
+    }
+  }
+}
 
 //-----------------------------------------------------------------------------------------
 
@@ -173,7 +258,10 @@ void QueryExec::do_query() {
   }
 
   // Check whether there are filters in order to execute them first
-  for (size_t i = 0; i < filter_count; i++) filter_exec(i);
+  for (size_t i = 0; i < filter_count; i++) {
+    filter_exec(i);
+    update_stats(i, 0);
+  }
 
   for (size_t i = 0; i < joins_count; i++) {
     // swap relations so that the left is always the one that's joined
@@ -186,6 +274,7 @@ void QueryExec::do_query() {
       joins[i].right_col = temp_col;
     }
     do_join(i);
+    update_stats(i, 1);
   }
 }
 

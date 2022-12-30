@@ -69,14 +69,11 @@ memory_map parse_relation(const char* fileName) {
     int64_t arr_size = max - min + 1;
     if (arr_size > UPPER_LIMIT)
       arr_size = UPPER_LIMIT;
-    bool *d_array = new bool[arr_size]{ false };    // initialize all with "false"
+    bool *d_array = new bool[arr_size]{};    // initialize all with "false"
 
     for (unsigned j = 0; j < mapper.rows; j++) {
       uint64_t val = mapper.colptr[i][j];
-      if (arr_size == UPPER_LIMIT)
-        d_array[val - min % UPPER_LIMIT] = true;    // might need ()?
-      else
-        d_array[val - min] = true;
+      d_array[(val - min) % UPPER_LIMIT] = true;
     }
     for (unsigned j = 0; j < arr_size; j++)
       if (d_array[j])

@@ -57,6 +57,8 @@ class QueryExec {
   void parse_predicates(char *);
   void parse_selections(char *);
 
+  void update_stats(size_t, int64_t);
+
   void do_query();
   void filter_exec(size_t);
   void do_join(size_t);
