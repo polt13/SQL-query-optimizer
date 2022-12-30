@@ -2,6 +2,9 @@
 #include "hashTable.h"
 #include "partitioner.h"
 #include "simple_vector.h"
+#include "job_scheduler.h"
+
+extern JobScheduler js;
 
 result PartitionedHashJoin(relation& r, relation& s, int64_t forceDepth,
                            int64_t bits_pass1, int64_t bits_pass2) {
@@ -25,8 +28,7 @@ result PartitionedHashJoin(relation& r, relation& s, int64_t forceDepth,
     const int64_t* rpsum = rHist->getPsum();
     int64_t partitions = rHist->getSize();
 
-    // initialize all to nullptr
-    hashTable** partitionsHT = new hashTable* [partitions] {};
+    hashTable** partitionsHT = new hashTable*[partitions];
 
     // build phase
     for (int64_t i = 0; i < partitions; i++) {
@@ -41,30 +43,27 @@ result PartitionedHashJoin(relation& r, relation& s, int64_t forceDepth,
     }
 
     Histogram* sHist = spartitioner.getHistogram();
+
     const int64_t* spsum = sHist->getPsum();
+
+    result* thread_results = new result[partitions];
 
     for (int64_t j = 0; j < partitions; j++) {
       int64_t start = spsum[j];
       int64_t end = (j < (partitions - 1)) ? (spsum[j + 1]) : (s_.getAmount());
 
-      for (int64_t k = start; k < end; k++) {
-        List* tuple_list = partitionsHT[j]->findEntry(s_[k].getKey());
-        if (tuple_list) {
-          Node* traverse = tuple_list->getRoot();
-          while (traverse) {
-            // result is [rowid_r,rowid_s]
-            result_item entry{traverse->mytuple->getPayload(),
-                              s_[k].getPayload()};
-            result_join.push(entry);
-            traverse = traverse->next;
-          }
-        }
-      }
+      js.add_job(
+          new JoinJob(s_, start, end, partitionsHT[j], thread_results[j]));
     }
 
+    js.wait_all();
+
     for (int64_t i = 0; i < partitions; i++) {
+      for (int64_t j = 0; j < thread_results[i].getSize(); j++)
+        result_join.push(thread_results[i][j]);
       delete partitionsHT[i];
     }
+    delete[] thread_results;
     delete[] partitionsHT;
 
   }
@@ -88,4 +87,20 @@ result PartitionedHashJoin(relation& r, relation& s, int64_t forceDepth,
   }
 
   return result_join;
+}
+
+void joinBuckets(relation& s_, int64_t start, int64_t end,
+                 hashTable* partitionHT, result& result_join) {
+  for (int64_t k = start; k < end; k++) {
+    List* tuple_list = partitionHT->findEntry(s_[k].getKey());
+    if (tuple_list) {
+      Node* traverse = tuple_list->getRoot();
+      while (traverse) {
+        // result is [rowid_r,rowid_s]
+        result_item entry{traverse->mytuple->getPayload(), s_[k].getPayload()};
+        result_join.push(entry);
+        traverse = traverse->next;
+      }
+    }
+  }
 }

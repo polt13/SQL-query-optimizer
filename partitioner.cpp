@@ -43,8 +43,9 @@ relation Partitioner::partition1(relation& r, int64_t bits_pass1) {
   js.wait_all();
 
   for (int64_t i = 0; i < THREAD_COUNT; i++) {
+    Histogram& histogram_i = *hvector[i];
     for (int64_t j = 0; j < partitions; j++) {
-      (*hist)[j] += (*(hvector[i]))[j];
+      (*hist)[j] += histogram_i[j];
     }
 
     delete hvector[i];
@@ -104,9 +105,11 @@ relation Partitioner::partition2(relation& r2, int64_t bits_pass2) {
   js.wait_all();
 
   for (int64_t i = 0; i < THREAD_COUNT; i++) {
+    Histogram& histogram_i = *hvector[i];
     for (int64_t j = 0; j < partitions2; j++) {
-      (*hist)[j] += (*(hvector[i]))[j];
+      (*hist)[j] += histogram_i[j];
     }
+
     delete hvector[i];
   }
 

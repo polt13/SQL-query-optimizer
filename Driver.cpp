@@ -3,6 +3,7 @@
 #include "map_info.h"
 #include "query_exec.h"
 #include "job_scheduler.h"
+#include <atomic>
 
 memory_map rel_mmap[14];
 
@@ -10,9 +11,12 @@ pthread_cond_t JobScheduler::eq = PTHREAD_COND_INITIALIZER;
 pthread_cond_t JobScheduler::jobs_done = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t JobScheduler::qmtx = PTHREAD_MUTEX_INITIALIZER;
 
-simple_queue<Job*> JobScheduler::job_pool;
+pthread_mutex_t JobScheduler::busymtx = PTHREAD_MUTEX_INITIALIZER;
 
+simple_queue<Job*> JobScheduler::job_pool;
 pthread_barrier_t JobScheduler::waitb;
+
+std::atomic<int> JobScheduler::busy(0);
 
 JobScheduler js;
 

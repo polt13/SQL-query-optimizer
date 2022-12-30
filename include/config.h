@@ -2,10 +2,9 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#define THREAD_COUNT 4  //= partition count
-
+#define THREAD_COUNT 3
 #define USE_BITS 2       // first partitioning
 #define USE_BITS_NEXT 4  // 2nd partitioning
 
-#define L2_SIZE 1048576
+#define L2_SIZE 262144  // set to 256KB
 #endif

@@ -5,8 +5,7 @@
 #include <pthread.h>
 #include "job.h"
 #include "config.h"
-
-extern pthread_barrier_t waitb;
+#include <atomic>
 
 class JobScheduler {
   pthread_t total_threads[THREAD_COUNT];
@@ -15,6 +14,8 @@ class JobScheduler {
   static pthread_cond_t jobs_done;
   static simple_queue<Job*> job_pool;
   static pthread_barrier_t waitb;
+  static pthread_mutex_t busymtx;
+  static std::atomic<int> busy;
 
   static void* do_job(void* v) {
     while (1) {
@@ -24,16 +25,23 @@ class JobScheduler {
         pthread_cond_wait(&eq, &qmtx);
       }
 
-      // prolong lifetime
       Job* j = job_pool.pop();
+
+      busy++;
 
       pthread_mutex_unlock(&qmtx);
 
       j->run();
 
-      delete j;
+      busy--;
 
-      pthread_barrier_wait(&waitb);
+      pthread_mutex_lock(&qmtx);
+
+      if (busy == 0 && job_pool.getLen() == 0) pthread_cond_signal(&jobs_done);
+
+      pthread_mutex_unlock(&qmtx);
+
+      delete j;
     }
   }
 
@@ -47,11 +55,17 @@ class JobScheduler {
   void add_job(Job* job) {
     pthread_mutex_lock(&qmtx);
     job_pool.enqueue(job);
-    pthread_cond_broadcast(&eq);
     pthread_mutex_unlock(&qmtx);
+    pthread_cond_signal(&eq);
   }
 
-  void wait_all() { pthread_barrier_wait(&waitb); }
+  void wait_all() {
+    pthread_mutex_lock(&qmtx);
+    while (job_pool.getLen() > 0 || busy > 0) {
+      pthread_cond_wait(&jobs_done, &qmtx);
+    }
+    pthread_mutex_unlock(&qmtx);
+  }
 };
 
 #endif

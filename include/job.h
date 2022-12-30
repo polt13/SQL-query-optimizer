@@ -30,4 +30,23 @@ class HistogramJob : public Job {
 
 class PartitionJob : public Job {};
 
+class JoinJob : public Job {
+  relation& s;
+  int64_t start;
+  int64_t end;
+  hashTable* partitionHT;
+  result& result_join;
+
+ public:
+  void run() { joinBuckets(s, start, end, partitionHT, result_join); }
+  JoinJob(relation& s, int64_t start, int64_t end, hashTable* partitionHT,
+          result& result_join)
+      : Job(1),
+        s{s},
+        start{start},
+        end{end},
+        partitionHT{partitionHT},
+        result_join{result_join} {}
+};
+
 #endif
