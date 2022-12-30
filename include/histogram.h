@@ -26,6 +26,6 @@ class Histogram {
   const int64_t* getPsum() const { return psum; }
 };
 
-void calcHist(relation&, size_t, size_t, Histogram&, int64_t);
+void calcHist(relation&, size_t, size_t, Histogram*&, int64_t);
 
 #endif

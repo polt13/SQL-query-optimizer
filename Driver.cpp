@@ -1,5 +1,4 @@
 #include <cstring>
-#include <iostream>
 
 #include "map_info.h"
 #include "query_exec.h"
@@ -7,9 +6,13 @@
 
 memory_map rel_mmap[14];
 
-pthread_cond_t JobScheduler::cvar = PTHREAD_COND_INITIALIZER;
+pthread_cond_t JobScheduler::eq = PTHREAD_COND_INITIALIZER;
+pthread_cond_t JobScheduler::jobs_done = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t JobScheduler::qmtx = PTHREAD_MUTEX_INITIALIZER;
+
 simple_queue<Job*> JobScheduler::job_pool;
+
+pthread_barrier_t JobScheduler::waitb;
 
 JobScheduler js;
 

@@ -9,6 +9,7 @@ class Job {
   short int get_job_type() const { return job_type; }
   virtual void run() = 0;
   Job(short int job_type) : job_type{job_type} {}
+  virtual ~Job() {}
 };
 
 class HistogramJob : public Job {
@@ -16,15 +17,15 @@ class HistogramJob : public Job {
   relation& r;
   size_t start;
   size_t end;
-  Histogram& h;
+  Histogram*& h;
   int64_t bits;
 
  public:
   void run() { calcHist(r, start, end, h, bits); }
 
-  HistogramJob(relation& r, size_t start, size_t end, Histogram& h,
+  HistogramJob(relation& r, size_t start, size_t end, Histogram*& h,
                int64_t bits)
-      : Job(0), r{r}, start{start}, end{end}, h(h) {}
+      : Job(0), r{r}, start{start}, end{end}, h{h}, bits{bits} {}
 };
 
 class PartitionJob : public Job {};
