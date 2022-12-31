@@ -39,17 +39,16 @@ void QueryExec::parse_query(char* query) {
 }
 
 void QueryExec::parse_names(char* rel_string) {
-  char *buffr, *ignore;
+  char* buffr;
   char* rel;
 
   while ((rel = strtok_r(rel_string, " ", &buffr))) {
-    this->rel_names.add_back(std::strtol(rel, &ignore, 10));
+    this->rel_names.add_back(std::strtol(rel, nullptr, 10));
     rel_string = nullptr;
   }
 }
 
 void QueryExec::parse_predicates(char* predicates) {
-  char* ignore;
   char *buffr, *buffr2, *buffr3;
   const char* op_val;
 
@@ -73,7 +72,7 @@ void QueryExec::parse_predicates(char* predicates) {
 
     if (std::strchr(left, '.') == nullptr) {
       // left contains literal - 100% filter
-      long literal = std::strtol(left, &ignore, 10);
+      long literal = std::strtol(left, nullptr, 10);
 
       if (operation_type == operators::GREATER)
         operation_type = operators::LESS;
@@ -84,30 +83,30 @@ void QueryExec::parse_predicates(char* predicates) {
 
       char* right = buffr2;
 
-      long right_rel = std::strtol(strtok_r(right, ".", &buffr3), &ignore, 10);
+      long right_rel = std::strtol(strtok_r(right, ".", &buffr3), nullptr, 10);
 
-      long right_col = std::strtol(buffr3, &ignore, 10);
+      long right_col = std::strtol(buffr3, nullptr, 10);
 
       filter myfilter(right_rel, right_col, operation_type, literal);
       this->filters.add_back(myfilter);
 
     } else {
       // e.g 0.2 (relation.column) - Could be filter OR join
-      long left_rel = std::strtol(strtok_r(left, ".", &buffr3), &ignore, 10);
-      long left_col = std::strtol(buffr3, &ignore, 10);
+      long left_rel = std::strtol(strtok_r(left, ".", &buffr3), nullptr, 10);
+      long left_col = std::strtol(buffr3, nullptr, 10);
 
       char* right = buffr2;
       if (std::strchr(right, '.') == nullptr) {
         // right contains literal - 100% filter
-        long literal = std::strtol(right, &ignore, 10);
+        long literal = std::strtol(right, nullptr, 10);
 
         filter myfilter(left_rel, left_col, operation_type, literal);
         this->filters.add_back(myfilter);
       } else {
         // e.g 1.4 (relation.column) - 100% join (but can be same relation!!!)
         long right_rel =
-            std::strtol(strtok_r(right, ".", &buffr3), &ignore, 10);
-        long right_col = std::strtol(buffr3, &ignore, 10);
+            std::strtol(strtok_r(right, ".", &buffr3), nullptr, 10);
+        long right_col = std::strtol(buffr3, nullptr, 10);
 
         join myjoin(left_rel, left_col, operation_type, right_rel, right_col);
         this->joins.add_back(myjoin);
@@ -119,15 +118,14 @@ void QueryExec::parse_predicates(char* predicates) {
 
 void QueryExec::parse_selections(char* selections) {
   char *buffr, *buffr2;
-  char* ignore;
   char* selection;
 
   while ((selection = strtok_r(selections, " ", &buffr))) {
     char* rel = strtok_r(selection, ".", &buffr2);
     char* col = buffr2;
 
-    this->projections.add_back(project_rel{std::strtol(rel, &ignore, 10),
-                                           std::strtol(col, &ignore, 10)});
+    this->projections.add_back(project_rel{std::strtol(rel, nullptr, 10),
+                                           std::strtol(col, nullptr, 10)});
 
     selections = nullptr;
   }

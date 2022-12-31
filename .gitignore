@@ -4,3 +4,4 @@
 **/*.ini
 **/*.py
 **/*.txt
+workloads/public
