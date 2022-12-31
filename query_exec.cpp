@@ -280,18 +280,18 @@ void QueryExec::do_join(size_t join_index) {
 
     relation r(rtuples, relr_size);
     relation s(stuples, rels_size);
-    result res = PartitionedHashJoin(r, s);
 
+    result res = PartitionedHashJoin(r, s);
     for (size_t i = 0; i < res.getSize(); i++) {
       new_joined[rel_r].add_back(res[i].rowid_1);
       new_joined[rel_s].add_back(res[i].rowid_2);
     }
-    // In case of 2 intermediate results
-    for (size_t i = 0; i < this->rel_names.getSize(); i++) {
-      if ((int64_t)i != rel_r && (int64_t)i != rel_s &&
-          (int64_t)joined[i].getSize() > 0)
-        new_joined[i].steal(joined[i]);
-    }
+    // // In case of 2 intermediate results
+    // for (size_t i = 0; i < this->rel_names.getSize(); i++) {
+    //   if ((int64_t)i != rel_r && (int64_t)i != rel_s &&
+    //       (int64_t)joined[i].getSize() > 0)
+    //     new_joined[i].steal(joined[i]);
+    // }
   } else {
     // if r is in joined intmds and s isn't
     // join using existing join result
@@ -325,6 +325,7 @@ void QueryExec::do_join(size_t join_index) {
 
       relation r(rtuples, relr_size);
       relation s(stuples, rels_size);
+
       result res = PartitionedHashJoin(r, s);
 
       for (size_t i = 0; i < res.getSize(); i++) {
@@ -335,6 +336,7 @@ void QueryExec::do_join(size_t join_index) {
           }
         }
       }
+
     } else if (rel_is_joined[rel_r] && rel_is_joined[rel_s]) {
       for (size_t i = 0; i < joined[rel_r].getSize(); i++) {
         int64_t row_id_r = joined[rel_r][i];
