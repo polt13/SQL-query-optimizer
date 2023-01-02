@@ -39,4 +39,6 @@ result_mt PartitionedHashJoin(relation&, relation&, int64_t = -1,
 
 void joinBuckets(relation&, int64_t, int64_t, hashTable*, result&);
 
+void buildHT(relation&, int64_t, int64_t, hashTable*);
+
 #endif

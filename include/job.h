@@ -4,11 +4,8 @@
 #include "partitioner.h"
 
 class Job {
-  short int job_type;  // 0 = HistogramJob, 1 = PartitionJob
  public:
-  short int get_job_type() const { return job_type; }
   virtual void run() = 0;
-  Job(short int job_type) : job_type{job_type} {}
   virtual ~Job() {}
 };
 
@@ -25,7 +22,7 @@ class HistogramJob : public Job {
 
   HistogramJob(relation& r, size_t start, size_t end, Histogram*& h,
                int64_t bits)
-      : Job(0), r{r}, start{start}, end{end}, h{h}, bits{bits} {}
+      : r{r}, start{start}, end{end}, h{h}, bits{bits} {}
 };
 
 class PartitionJob : public Job {};
@@ -41,12 +38,24 @@ class JoinJob : public Job {
   void run() { joinBuckets(s, start, end, partitionHT, result_join); }
   JoinJob(relation& s, int64_t start, int64_t end, hashTable* partitionHT,
           result& result_join)
-      : Job(1),
-        s{s},
+      : s{s},
         start{start},
         end{end},
         partitionHT{partitionHT},
         result_join{result_join} {}
+};
+
+class BuildJob : public Job {
+  relation& r;
+  int64_t start;
+  int64_t end;
+  hashTable* partitionHT;
+
+ public:
+  void run() { buildHT(r, start, end, partitionHT); }
+
+  BuildJob(relation& r, int64_t start, int64_t end, hashTable* partitionHT)
+      : r{r}, start{start}, end{end}, partitionHT{partitionHT} {}
 };
 
 #endif

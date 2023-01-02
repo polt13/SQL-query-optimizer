@@ -30,18 +30,21 @@ result_mt PartitionedHashJoin(relation& r, relation& s, int64_t forceDepth,
     // build phase
     for (int64_t i = 0; i < partitions; i++) {
       int64_t entries = (*rHist)[i];
-      // create hashtable with size =  as many as the partitions in the tuple
-      partitionsHT[i] = new hashTable(entries);
 
       int64_t start = rpsum[i];
       int64_t end = (i < (partitions - 1)) ? (rpsum[i + 1]) : (r_.getAmount());
 
-      for (int64_t j = start; j < end; j++) partitionsHT[i]->insert(&r_[j]);
+      // create hashtable with size =  as many as the partitions in the tuple
+      partitionsHT[i] = new hashTable(entries);
+
+      js.add_job(new BuildJob(r_, start, end, partitionsHT[i]));
     }
 
     Histogram* sHist = spartitioner.getHistogram();
 
     const int64_t* spsum = sHist->getPsum();
+
+    js.wait_all();
 
     result* thread_results = new result[partitions];
 
@@ -84,6 +87,10 @@ result_mt PartitionedHashJoin(relation& r, relation& s, int64_t forceDepth,
 
     return result_mt{result_join, 1};
   }
+}
+
+void buildHT(relation& r, int64_t start, int64_t end, hashTable* partitionHT) {
+  for (int64_t j = start; j < end; j++) partitionHT->insert(&r[j]);
 }
 
 void joinBuckets(relation& s_, int64_t start, int64_t end,

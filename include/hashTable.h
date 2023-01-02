@@ -25,6 +25,7 @@ class bucket {
 class hashTable {
   bucket *buckets;
   int64_t num_buckets;  // Basically HT Size
+  char pad[48];
 
  public:
   // Getters
