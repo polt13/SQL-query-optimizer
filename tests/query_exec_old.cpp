@@ -12,6 +12,14 @@
 //-----------------------------------------------------------------------------------------
 
 void QueryExec::execute(char* query) {
+  //   std::fprintf(stderr, "rel_names size = %ld\n",
+  //   this->rel_names.getSize()); std::fprintf(stderr, "joins size = %ld\n",
+  //   this->joins.getSize()); std::fprintf(stderr, "filters size = %ld\n",
+  //   filters.getSize()); std::fprintf(stderr, "projections size = %ld\n",
+  //   projections.getSize()); std::fprintf(stderr, "used_relations size =
+  //   %ld\n", used_relations.getSize()); std::fprintf(stderr, "intmd_count =
+  //   %ld\n", intmd_count);
+
   parse_query(query);
   do_query();
   checksum();
@@ -28,25 +36,48 @@ void QueryExec::parse_query(char* query) {
   char* used_relations = strtok_r(query, "|", &buffr);
   parse_names(used_relations);
 
+  // for (size_t i = 0; i < rel_names.getSize(); i++) {
+  //   std::printf("rel %ld\n", rel_names[i]);
+  // }
+
   char* predicates = strtok_r(nullptr, "|", &buffr);
   parse_predicates(predicates);
+
+  // for (size_t i = 0; i < joins.getSize(); i++) {
+  //   std::fprintf(stderr, "%ld.%ld %c %ld.%ld\n", joins[i].left_rel,
+  //                joins[i].left_col,
+  //                (joins[i].op == 0) ? ('=') : ((joins[i].op == 1) ? '>' :
+  //                '<'), joins[i].right_rel, joins[i].right_col);
+  // }
+  // for (size_t i = 0; i < filters.getSize(); i++) {
+  //   std::fprintf(
+  //       stderr, "%ld.%ld %c %ld\n", filters[i].left_rel, filters[i].left_col,
+  //       (filters[i].op == 0) ? ('=') : ((filters[i].op == 1) ? '>' : '<'),
+  //       filters[i].literal);
+  // }
 
   // buffr now points to the last part of the query
   char* selections = buffr;
   parse_selections(selections);
+
+  //   for (size_t i = 0; i < projections.getSize(); i++) {
+  //     std::printf("projection rel %ld col %ld\n", projections[i].rel,
+  //                 projections[i].col);
+  //   }
 }
 
 void QueryExec::parse_names(char* rel_string) {
-  char* buffr;
+  char *buffr, *ignore;
   char* rel;
 
   while ((rel = strtok_r(rel_string, " ", &buffr))) {
-    this->rel_names.add_back(std::strtol(rel, nullptr, 10));
+    this->rel_names.add_back(std::strtol(rel, &ignore, 10));
     rel_string = nullptr;
   }
 }
 
 void QueryExec::parse_predicates(char* predicates) {
+  char* ignore;
   char *buffr, *buffr2, *buffr3;
   const char* op_val;
 
@@ -70,7 +101,7 @@ void QueryExec::parse_predicates(char* predicates) {
 
     if (std::strchr(left, '.') == nullptr) {
       // left contains literal - 100% filter
-      long literal = std::strtol(left, nullptr, 10);
+      long literal = std::strtol(left, &ignore, 10);
 
       if (operation_type == operators::GREATER)
         operation_type = operators::LESS;
@@ -81,30 +112,30 @@ void QueryExec::parse_predicates(char* predicates) {
 
       char* right = buffr2;
 
-      long right_rel = std::strtol(strtok_r(right, ".", &buffr3), nullptr, 10);
+      long right_rel = std::strtol(strtok_r(right, ".", &buffr3), &ignore, 10);
 
-      long right_col = std::strtol(buffr3, nullptr, 10);
+      long right_col = std::strtol(buffr3, &ignore, 10);
 
       filter myfilter(right_rel, right_col, operation_type, literal);
       this->filters.add_back(myfilter);
 
     } else {
       // e.g 0.2 (relation.column) - Could be filter OR join
-      long left_rel = std::strtol(strtok_r(left, ".", &buffr3), nullptr, 10);
-      long left_col = std::strtol(buffr3, nullptr, 10);
+      long left_rel = std::strtol(strtok_r(left, ".", &buffr3), &ignore, 10);
+      long left_col = std::strtol(buffr3, &ignore, 10);
 
       char* right = buffr2;
       if (std::strchr(right, '.') == nullptr) {
         // right contains literal - 100% filter
-        long literal = std::strtol(right, nullptr, 10);
+        long literal = std::strtol(right, &ignore, 10);
 
         filter myfilter(left_rel, left_col, operation_type, literal);
         this->filters.add_back(myfilter);
       } else {
         // e.g 1.4 (relation.column) - 100% join (but can be same relation!!!)
         long right_rel =
-            std::strtol(strtok_r(right, ".", &buffr3), nullptr, 10);
-        long right_col = std::strtol(buffr3, nullptr, 10);
+            std::strtol(strtok_r(right, ".", &buffr3), &ignore, 10);
+        long right_col = std::strtol(buffr3, &ignore, 10);
 
         join myjoin(left_rel, left_col, operation_type, right_rel, right_col);
         this->joins.add_back(myjoin);
@@ -116,14 +147,15 @@ void QueryExec::parse_predicates(char* predicates) {
 
 void QueryExec::parse_selections(char* selections) {
   char *buffr, *buffr2;
+  char* ignore;
   char* selection;
 
   while ((selection = strtok_r(selections, " ", &buffr))) {
     char* rel = strtok_r(selection, ".", &buffr2);
     char* col = buffr2;
 
-    this->projections.add_back(project_rel{std::strtol(rel, nullptr, 10),
-                                           std::strtol(col, nullptr, 10)});
+    this->projections.add_back(project_rel{std::strtol(rel, &ignore, 10),
+                                           std::strtol(col, &ignore, 10)});
 
     selections = nullptr;
   }
@@ -278,16 +310,18 @@ void QueryExec::do_join(size_t join_index) {
 
     relation r(rtuples, relr_size);
     relation s(stuples, rels_size);
+    result res = PartitionedHashJoin(r, s);
 
-    result_mt res = PartitionedHashJoin(r, s);
-    for (size_t subresult = 0; subresult < res.subresult_count; subresult++) {
-      result& r = res.r[subresult];
-      for (size_t i = 0; i < r.getSize(); i++) {
-        new_joined[rel_r].add_back(r[i].rowid_1);
-        new_joined[rel_s].add_back(r[i].rowid_2);
-      }
+    for (size_t i = 0; i < res.getSize(); i++) {
+      new_joined[rel_r].add_back(res[i].rowid_1);
+      new_joined[rel_s].add_back(res[i].rowid_2);
     }
-
+    // In case of 2 intermediate results
+    for (size_t i = 0; i < this->rel_names.getSize(); i++) {
+      if ((int64_t)i != rel_r && (int64_t)i != rel_s &&
+          (int64_t)joined[i].getSize() > 0)
+        new_joined[i].steal(joined[i]);
+    }
   } else {
     // if r is in joined intmds and s isn't
     // join using existing join result
@@ -321,21 +355,16 @@ void QueryExec::do_join(size_t join_index) {
 
       relation r(rtuples, relr_size);
       relation s(stuples, rels_size);
+      result res = PartitionedHashJoin(r, s);
 
-      result_mt res = PartitionedHashJoin(r, s);
-
-      for (size_t subresult = 0; subresult < res.subresult_count; subresult++) {
-        result& r = res.r[subresult];
-        for (size_t i = 0; i < r.getSize(); i++) {
-          new_joined[rel_s].add_back(r[i].rowid_2);
-          for (size_t j = 0; j < rel_names.getSize(); j++) {
-            if ((int64_t)j != rel_s && joined[j].getSize() > 0) {
-              new_joined[j].add_back(joined[j][r[i].rowid_1]);
-            }
+      for (size_t i = 0; i < res.getSize(); i++) {
+        new_joined[rel_s].add_back(res[i].rowid_2);
+        for (size_t j = 0; j < rel_names.getSize(); j++) {
+          if ((int64_t)j != rel_s && joined[j].getSize() > 0) {
+            new_joined[j].add_back(joined[j][res[i].rowid_1]);
           }
         }
       }
-
     } else if (rel_is_joined[rel_r] && rel_is_joined[rel_s]) {
       for (size_t i = 0; i < joined[rel_r].getSize(); i++) {
         int64_t row_id_r = joined[rel_r][i];

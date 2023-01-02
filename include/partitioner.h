@@ -34,8 +34,8 @@ class Partitioner {
 };
 
 /* Partitioned Hash Join */
-result PartitionedHashJoin(relation&, relation&, int64_t = -1,
-                           int64_t = USE_BITS, int64_t = USE_BITS_NEXT);
+result_mt PartitionedHashJoin(relation&, relation&, int64_t = -1,
+                              int64_t = USE_BITS, int64_t = USE_BITS_NEXT);
 
 void joinBuckets(relation&, int64_t, int64_t, hashTable*, result&);
 

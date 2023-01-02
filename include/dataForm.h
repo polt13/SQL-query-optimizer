@@ -63,6 +63,7 @@ struct result_item {
 struct result {
  private:
   simple_vector<result_item> pairs;
+  char pad[40];
 
  public:
   void push(const result_item &r) { pairs.add_back(r); }
@@ -74,6 +75,14 @@ struct result {
   result(const result &other) : pairs{other.pairs} {}
 
   result_item &operator[](int64_t index) { return pairs[index]; }
+};
+
+struct result_mt {
+  result *r;
+  int64_t subresult_count;  // how many different results have been created
+  // avoid having to join them in one
+  result_mt(result *r, int64_t subresult_count)
+      : r{r}, subresult_count{subresult_count} {}
 };
 
 #endif

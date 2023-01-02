@@ -6,24 +6,10 @@
 #include "partitioner.h"
 #include "simple_vector.h"
 #include "simple_queue.h"
-#include <pthread.h>
-#include "job_scheduler.h"
-#include <atomic>
 
-// stop linker from complaining
-
-pthread_cond_t JobScheduler::eq = PTHREAD_COND_INITIALIZER;
-pthread_cond_t JobScheduler::jobs_done = PTHREAD_COND_INITIALIZER;
-pthread_mutex_t JobScheduler::qmtx = PTHREAD_MUTEX_INITIALIZER;
-
-pthread_mutex_t JobScheduler::busymtx = PTHREAD_MUTEX_INITIALIZER;
-
-simple_queue<Job*> JobScheduler::job_pool;
-pthread_barrier_t JobScheduler::waitb;
-
-std::atomic<int> JobScheduler::busy(0);
-
-JobScheduler js;
+// use only for unit testing
+result PartitionedHashJoin_ST(relation&, relation&, int64_t = -1,
+                              int64_t = USE_BITS, int64_t = USE_BITS_NEXT);
 
 void test_partitioning_function() {
   tuple a{3, 6};
@@ -646,7 +632,7 @@ void test_join_1() {
   relation r(tuples1, 6);
   relation s(tuples2, 3);
 
-  result t = PartitionedHashJoin(r, s, 1, 4, 8);
+  result t = PartitionedHashJoin_ST(r, s, 1, 4, 8);
 
   TEST_CHECK(t.getSize() == 5);
 
@@ -694,7 +680,7 @@ void test_join_2() {
 
   relation r(tuples1, 6);
   relation s(tuples2, 3);
-  result t = PartitionedHashJoin(r, s, 2, 4, 8);
+  result t = PartitionedHashJoin_ST(r, s, 2, 4, 8);
   /* for (int64_t i = 0; i < t.result_size; i++) {
     std::printf("\nr_id: %ld, r_row: %ld\ns_id: %ld, s_row: %ld\n",
                 t[i].a.getKey(), t[i].a.getPayload(), t[i].b.getKey(),
@@ -733,7 +719,7 @@ void test_join_3() {
 
   relation r(tuples1, 3);
   relation s(tuples2, 5);
-  result t = PartitionedHashJoin(r, s, 0, 4, 8);
+  result t = PartitionedHashJoin_ST(r, s, 0, 4, 8);
 
   TEST_CHECK(t.getSize() == 3);
 
@@ -793,7 +779,7 @@ void test_join_4() {
   relation r(tuples1, 100);
   relation s(tuples2, 200);
 
-  result t = PartitionedHashJoin(r, s);
+  result t = PartitionedHashJoin_ST(r, s);
   TEST_CHECK(t.getSize() == 219);
 }
 
@@ -2556,10 +2542,10 @@ void test_join_5() {
   relation r(tuples1, 10000);
   relation s(tuples2, 15000);
 
-  result t1 = PartitionedHashJoin(r, s);
+  result t1 = PartitionedHashJoin_ST(r, s);
   TEST_CHECK(t1.getSize() == 149814);
 
-  result t2 = PartitionedHashJoin(s, r);
+  result t2 = PartitionedHashJoin_ST(s, r);
   TEST_CHECK(t2.getSize() == t1.getSize());
 }
 

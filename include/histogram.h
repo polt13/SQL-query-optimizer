@@ -8,6 +8,7 @@ class Histogram {
   int64_t* entries;
   int64_t* psum;
   int64_t size;
+  char pad[40];
 
  public:
   Histogram(int64_t);
