@@ -164,34 +164,63 @@ void QueryExec::parse_selections(char* selections) {
 //-----------------------------------------------------------------------------------------
 
 void QueryExec::update_stats(size_t index, int64_t flag) {
-  // Filter σ_A=k
   if (flag == 0) {
     int64_t rel = this->filters[index].rel;
     int64_t actual_rel = this->rel_names[rel];
     int64_t col = this->filters[index].col;
     uint64_t lit = this->filters[index].literal;
-    int64_t prev_f = rel_mmap[actual_rel].stats[col].f;
 
-    rel_mmap[actual_rel].stats[col].l = lit;
-    rel_mmap[actual_rel].stats[col].u = lit;
+    // Filter σ_A=k
+    if (this->filters[index].op == operators::EQ) {
+      int64_t prev_f = rel_mmap[actual_rel].stats[col].f;
 
-    rel_mmap[actual_rel].stats[col].d = 0;
-    rel_mmap[actual_rel].stats[col].f = 0;
-    for (uint64_t i = 0; i < rel_mmap[actual_rel].rows; i++)
-      if (rel_mmap[actual_rel].colptr[col][i] == lit) {
-        rel_mmap[actual_rel].stats[col].f /= rel_mmap[actual_rel].stats[col].d;
-        rel_mmap[actual_rel].stats[col].d = 1;
-        break;
-      }
+      rel_mmap[actual_rel].stats[col].l = lit;
+      rel_mmap[actual_rel].stats[col].u = lit;
 
-    for (size_t i = 0; i < rel_mmap[actual_rel].cols; i++)
-      if ((int64_t)i != col) {
-        rel_mmap[actual_rel].stats[i].d *=
-            (1 - pow((1 - (rel_mmap[actual_rel].stats[col].f / prev_f)),
-                     (rel_mmap[actual_rel].stats[i].f /
-                      rel_mmap[actual_rel].stats[i].d)));
-        rel_mmap[actual_rel].stats[i].f = rel_mmap[actual_rel].stats[col].f;
-      }
+      rel_mmap[actual_rel].stats[col].d = 0;
+      rel_mmap[actual_rel].stats[col].f = 0;
+      for (uint64_t i = 0; i < rel_mmap[actual_rel].rows; i++)
+        if (rel_mmap[actual_rel].colptr[col][i] == lit) {
+          rel_mmap[actual_rel].stats[col].f /=
+              rel_mmap[actual_rel].stats[col].d;
+          rel_mmap[actual_rel].stats[col].d = 1;
+          break;
+        }
+
+      for (size_t i = 0; i < rel_mmap[actual_rel].cols; i++)
+        if ((int64_t)i != col) {
+          rel_mmap[actual_rel].stats[i].d *=
+              (1 - (pow((1 - (rel_mmap[actual_rel].stats[col].f / prev_f)),
+                        (rel_mmap[actual_rel].stats[i].f /
+                         rel_mmap[actual_rel].stats[i].d))));
+          rel_mmap[actual_rel].stats[i].f = rel_mmap[actual_rel].stats[col].f;
+        }
+    }
+
+    // Filter σ_A>k OR σ_A<k
+    else {
+      int64_t prev_f = rel_mmap[actual_rel].stats[col].f;
+
+      // Filter σ_A>k
+      if (this->filters[index].op == operators::GREATER)
+        if ((int64_t)lit < rel_mmap[actual_rel].stats[col].l)
+          lit = rel_mmap[actual_rel].stats[col].l;
+
+      // Filter σ_A<k
+      if (this->filters[index].op == operators::LESS)
+        if ((int64_t)lit > rel_mmap[actual_rel].stats[col].u)
+          lit = rel_mmap[actual_rel].stats[col].u;
+
+      for (size_t i = 0; i < rel_mmap[actual_rel].cols; i++)
+        if ((int64_t)i != col) {
+          rel_mmap[actual_rel].stats[i].d *=
+              (1 - (pow((1 - (rel_mmap[actual_rel].stats[col].f / prev_f)),
+                        (rel_mmap[actual_rel].stats[i].f /
+                         rel_mmap[actual_rel].stats[i].d))));
+
+          rel_mmap[actual_rel].stats[i].f = rel_mmap[actual_rel].stats[col].f;
+        }
+    }
   }
   if (flag == 1) {
     int64_t r_rel = this->joins[index].left_rel;
@@ -219,21 +248,21 @@ void QueryExec::update_stats(size_t index, int64_t flag) {
           prev_f / (rel_mmap[actual_r].stats[r_col].u -
                     rel_mmap[actual_r].stats[r_col].l + 1);
       rel_mmap[actual_r].stats[r_col].d = rel_mmap[actual_s].stats[s_col].d =
-          prev_d * (1 - pow((1 - (rel_mmap[actual_r].stats[r_col].f / prev_f)),
-                            (prev_f / prev_d)));
+          prev_d * (1 - (pow((1 - (rel_mmap[actual_r].stats[r_col].f / prev_f)),
+                             (prev_f / prev_d))));
 
       for (size_t i = 0; i < rel_mmap[actual_r].cols; i++)
         if ((int64_t)i != r_col && (int64_t)i != s_col) {
           rel_mmap[actual_r].stats[i].d *=
-              (1 - pow((1 - (rel_mmap[actual_r].stats[r_col].f / prev_f)),
-                       (rel_mmap[actual_r].stats[i].f /
-                        rel_mmap[actual_r].stats[i].d)));
+              (1 - (pow((1 - (rel_mmap[actual_r].stats[r_col].f / prev_f)),
+                        (rel_mmap[actual_r].stats[i].f /
+                         rel_mmap[actual_r].stats[i].d))));
           rel_mmap[actual_r].stats[i].f = rel_mmap[actual_r].stats[r_col].f;
         }
     }
 
     // Self-Join
-    if (actual_r == actual_s) {
+    else if (actual_r == actual_s) {
       int64_t prev_f = rel_mmap[actual_r].stats[r_col].f;
       rel_mmap[actual_r].stats[r_col].f =
           (prev_f * prev_f) / (rel_mmap[actual_r].stats[r_col].u -
@@ -242,6 +271,55 @@ void QueryExec::update_stats(size_t index, int64_t flag) {
       for (size_t i = 0; i < rel_mmap[actual_r].cols; i++)
         if ((int64_t)i != r_col)
           rel_mmap[actual_r].stats[i].f = rel_mmap[actual_r].stats[r_col].f;
+    }
+
+    // Join between 2 different relations
+    else if ((actual_r != actual_s) && (r_rel != s_rel)) {
+      int64_t lower = rel_mmap[actual_r].stats[r_col].l;
+      int64_t upper = rel_mmap[actual_r].stats[r_col].u;
+      int64_t prev_d_r = rel_mmap[actual_r].stats[r_col].d;
+      int64_t prev_d_s = rel_mmap[actual_s].stats[s_col].d;
+      if (rel_mmap[actual_s].stats[s_col].l > lower)
+        lower = rel_mmap[actual_s].stats[s_col].l;
+      if (rel_mmap[actual_s].stats[s_col].u < upper)
+        upper = rel_mmap[actual_s].stats[s_col].u;
+
+      rel_mmap[actual_r].stats[r_col].l = rel_mmap[actual_s].stats[s_col].l =
+          lower;
+      rel_mmap[actual_r].stats[r_col].u = rel_mmap[actual_s].stats[s_col].u =
+          upper;
+
+      rel_mmap[actual_r].stats[r_col].f = rel_mmap[actual_s].stats[s_col].f =
+          (rel_mmap[actual_r].stats[r_col].f *
+           rel_mmap[actual_s].stats[s_col].f) /
+          (upper - lower + 1);
+
+      rel_mmap[actual_r].stats[r_col].d = rel_mmap[actual_s].stats[s_col].d =
+          (rel_mmap[actual_r].stats[r_col].d *
+           rel_mmap[actual_s].stats[s_col].d) /
+          (upper - lower + 1);
+
+      for (size_t i = 0; i < rel_mmap[actual_r].cols; i++)
+        if ((int64_t)i != r_col) {
+          int64_t prev_f_c = rel_mmap[actual_r].stats[i].f;
+          int64_t prev_d_c = rel_mmap[actual_r].stats[i].d;
+          rel_mmap[actual_r].stats[i].f = rel_mmap[actual_r].stats[r_col].f;
+
+          rel_mmap[actual_r].stats[i].d *=
+              (1 - (pow((1 - (rel_mmap[actual_r].stats[r_col].d / prev_d_r)),
+                        (prev_f_c / prev_d_c))));
+        }
+
+      for (size_t i = 0; i < rel_mmap[actual_s].cols; i++)
+        if ((int64_t)i != s_col) {
+          int64_t prev_f_c = rel_mmap[actual_s].stats[i].f;
+          int64_t prev_d_c = rel_mmap[actual_s].stats[i].d;
+          rel_mmap[actual_s].stats[i].f = rel_mmap[actual_r].stats[r_col].f;
+
+          rel_mmap[actual_r].stats[i].d *=
+              (1 - (pow((1 - (rel_mmap[actual_s].stats[s_col].d / prev_d_s)),
+                        (prev_f_c / prev_d_c))));
+        }
     }
   }
 }
