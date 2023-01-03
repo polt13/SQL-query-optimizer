@@ -55,7 +55,7 @@ class JobScheduler {
   void add_job(Job* job) {
     pthread_mutex_lock(&qmtx);
     job_pool.enqueue(job);
-    pthread_cond_broadcast(&eq);
+    pthread_cond_signal(&eq);
     pthread_mutex_unlock(&qmtx);
   }
 
