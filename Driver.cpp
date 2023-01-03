@@ -15,15 +15,15 @@ int main(int argc, char* argv[]) {
     if (strcmp(line, "Done") == 0) break;
 
     rel_mmap[relations_count++] = parse_relation(line);
-    for (int i = 0; i < 14; i++) {
-      for (unsigned j = 0; j < rel_mmap[i].cols; j++) {
-        fprintf(stderr, "l%d = %ld\n", j, rel_mmap[i].stats[j].l);
-        fprintf(stderr, "u%d = %ld\n", j, rel_mmap[i].stats[j].u);
-        fprintf(stderr, "f%d = %ld\n", j, rel_mmap[i].stats[j].f);
-        fprintf(stderr, "d%d = %ld\n", j, rel_mmap[i].stats[j].d);
-      }
-      fprintf(stderr, "\n");
-    }
+    // for (int i = 0; i < 14; i++) {
+    //   for (unsigned j = 0; j < rel_mmap[i].cols; j++) {
+    //     fprintf(stderr, "l%d = %ld\n", j, rel_mmap[i].stats[j].l);
+    //     fprintf(stderr, "u%d = %ld\n", j, rel_mmap[i].stats[j].u);
+    //     fprintf(stderr, "f%d = %ld\n", j, rel_mmap[i].stats[j].f);
+    //     fprintf(stderr, "d%d = %ld\n", j, rel_mmap[i].stats[j].d);
+    //   }
+    //   fprintf(stderr, "\n");
+    // }
   }
 
   QueryExec qe;

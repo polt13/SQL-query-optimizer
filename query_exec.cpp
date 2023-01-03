@@ -316,7 +316,7 @@ void QueryExec::update_stats(size_t index, int64_t flag) {
           int64_t prev_d_c = rel_mmap[actual_s].stats[i].d;
           rel_mmap[actual_s].stats[i].f = rel_mmap[actual_r].stats[r_col].f;
 
-          rel_mmap[actual_r].stats[i].d *=
+          rel_mmap[actual_s].stats[i].d *=
               (1 - (pow((1 - (rel_mmap[actual_s].stats[s_col].d / prev_d_s)),
                         (prev_f_c / prev_d_c))));
         }
