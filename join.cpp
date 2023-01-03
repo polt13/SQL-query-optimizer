@@ -68,7 +68,7 @@ result_mt PartitionedHashJoin(relation& r, relation& s, int64_t forceDepth,
   else {
     // use the vector inside for the results in the case where only one
     // subresult exists
-    result* result_join = new result{};
+    result* result_join = new result[1];
     int64_t r_entries = r.getAmount();
     int64_t s_entries = s.getAmount();
     hashTable h{r_entries};

@@ -41,11 +41,12 @@ struct project_rel {
 };
 
 class QueryExec {
+  int qindex;  // which query
+
   simple_vector<int64_t> rel_names;
   simple_vector<join> joins;
   simple_vector<filter> filters;
   simple_vector<project_rel> projections;
-
   bool rel_is_filtered[4];
   bool rel_is_joined[4];
 
@@ -65,6 +66,7 @@ class QueryExec {
   void clear();
 
  public:
+  QueryExec(int);
   void execute(char *);
 };
 

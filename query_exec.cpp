@@ -8,6 +8,12 @@
 #include "map_info.h"
 #include "partitioner.h"
 #include "simple_vector.h"
+#include "query_results.h"
+
+extern QueryResults qres[100];
+
+QueryExec::QueryExec(int qindex)
+    : qindex{qindex}, rel_names{4}, projections{4} {}
 
 //-----------------------------------------------------------------------------------------
 
@@ -15,9 +21,7 @@ void QueryExec::execute(char* query) {
   parse_query(query);
   do_query();
   checksum();
-
-  // Clear all simple_vectors to prepare for next Query
-  clear();
+  std::free(query);  // free strdup'd memory
 }
 
 //-----------------------------------------------------------------------------------------
@@ -280,13 +284,16 @@ void QueryExec::do_join(size_t join_index) {
     relation s(stuples, rels_size);
 
     result_mt res = PartitionedHashJoin(r, s);
-    for (size_t subresult = 0; subresult < res.subresult_count; subresult++) {
+    for (size_t subresult = 0; subresult < (size_t)res.subresult_count;
+         subresult++) {
       result& r = res.r[subresult];
       for (size_t i = 0; i < r.getSize(); i++) {
         new_joined[rel_r].add_back(r[i].rowid_1);
         new_joined[rel_s].add_back(r[i].rowid_2);
       }
     }
+
+    delete[] res.r;
 
   } else {
     // if r is in joined intmds and s isn't
@@ -324,7 +331,8 @@ void QueryExec::do_join(size_t join_index) {
 
       result_mt res = PartitionedHashJoin(r, s);
 
-      for (size_t subresult = 0; subresult < res.subresult_count; subresult++) {
+      for (size_t subresult = 0; subresult < (size_t)res.subresult_count;
+           subresult++) {
         result& r = res.r[subresult];
         for (size_t i = 0; i < r.getSize(); i++) {
           new_joined[rel_s].add_back(r[i].rowid_2);
@@ -335,6 +343,8 @@ void QueryExec::do_join(size_t join_index) {
           }
         }
       }
+
+      delete[] res.r;
 
     } else if (rel_is_joined[rel_r] && rel_is_joined[rel_s]) {
       for (size_t i = 0; i < joined[rel_r].getSize(); i++) {
@@ -367,6 +377,8 @@ void QueryExec::checksum() {
   int64_t sum;
   int64_t actual_rel;
 
+  QueryResults& qr = qres[qindex];
+
   for (size_t i = 0; i < this->projections.getSize(); i++) {
     curr_rel = this->projections[i].rel;
     curr_col = this->projections[i].col;
@@ -390,16 +402,8 @@ void QueryExec::checksum() {
         sum += rel_mmap[actual_rel].colptr[curr_col][j];
     }
 
-    if (sum == 0)
-      std::printf("NULL");
-    else {
-      std::printf("%ld", sum);
-    }
-    if (i < this->projections.getSize() - 1) {
-      std::printf(" ");
-    }
+    qr.sums[qr.projections++] = sum;
   }
-  std::printf("\n");
 }
 
 //-----------------------------------------------------------------------------------------

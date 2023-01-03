@@ -2,6 +2,7 @@
 #define JOB_H
 #include "dataForm.h"
 #include "partitioner.h"
+#include "query_exec.h"
 
 class Job {
  public:
@@ -56,6 +57,19 @@ class BuildJob : public Job {
 
   BuildJob(relation& r, int64_t start, int64_t end, hashTable* partitionHT)
       : r{r}, start{start}, end{end}, partitionHT{partitionHT} {}
+};
+
+class QueryJob : public Job {
+  char* q;
+  int qindex;
+
+ public:
+  void run() {
+    QueryExec qe(qindex);
+    qe.execute(q);
+  }
+
+  QueryJob(char* q, int qindex) : q{q}, qindex{qindex} {}
 };
 
 #endif
