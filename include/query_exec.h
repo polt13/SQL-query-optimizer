@@ -52,12 +52,15 @@ class QueryExec {
   simple_vector<int64_t> joined[4];  // Represents latest intermediate results
   simple_vector<int64_t> filtered[4];
 
+  statistics* rel_stats[4];
+
   void parse_query(char *);
   void parse_names(char *);
   void parse_predicates(char *);
   void parse_selections(char *);
 
-  void update_stats(size_t, int64_t);
+  void initialize_stats();
+  void update_stats(size_t, int);
 
   void do_query();
   void filter_exec(size_t);

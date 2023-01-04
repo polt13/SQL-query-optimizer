@@ -4,10 +4,10 @@
 #include <cstdint>
 
 struct statistics {
-  int64_t l;    // minimum
-  int64_t u;    // maximum
-  int64_t f;    // count
-  int64_t d = 0;    // distinct count
+  uint64_t l;    // minimum
+  uint64_t u;    // maximum
+  uint64_t f;    // count
+  uint64_t d = 0;    // distinct count
 };
 
 struct memory_map {
