@@ -329,8 +329,8 @@ void QueryExec::update_stats(size_t index, int flag) {
           double base = (1 - ((double)rel_stats[s_rel][s_col].d / prev_d_s));
           double power = ((double)prev_f_c / prev_d_c);
           double res = pow(base, power);
-          res = rel_stats[r_rel][i].d * (1 - res);
-          rel_stats[r_rel][i].d = (uint64_t)res;
+          res = rel_stats[s_rel][i].d * (1 - res);
+          rel_stats[s_rel][i].d = (uint64_t)res;
         }
     }
   }
