@@ -159,7 +159,8 @@ void QueryExec::update_stats(size_t index, int flag) {
     int64_t col = this->filters[index].col;
     uint64_t lit = this->filters[index].literal;
 
-    if (filtered[rel].getSize() == 0) {
+    if (filtered[rel].getSize() == 0 || rel_stats[rel][col].f == 0 ||
+        rel_stats[rel][col].d == 0) {
       //   rel_stats[rel][col].l = 0;
       //   rel_stats[rel][col].u = 0;
       //   rel_stats[rel][col].f = 0;
@@ -169,6 +170,21 @@ void QueryExec::update_stats(size_t index, int flag) {
 
     // Filter σ_A=k
     if (this->filters[index].op == operators::EQ) {
+      //   if (query_sum == 8) {
+      //     fprintf(stderr, "BEFORE FILTER\n--------\n");
+      //     fprintf(stderr, "l%ld = %lu\n", col, rel_stats[rel][col].l);
+      //     fprintf(stderr, "u%ld = %lu\n", col, rel_stats[rel][col].u);
+      //     fprintf(stderr, "f%ld = %lu\n", col, rel_stats[rel][col].f);
+      //     fprintf(stderr, "d%ld = %lu\n", col, rel_stats[rel][col].d);
+      //     for (size_t i = 0; i < rel_mmap[actual_rel].cols; i++) {
+      //       if ((int64_t)i != col) {
+      //         fprintf(stderr, "l%ld = %lu\n", i, rel_stats[rel][i].l);
+      //         fprintf(stderr, "u%ld = %lu\n", i, rel_stats[rel][i].u);
+      //         fprintf(stderr, "f%ld = %lu\n", i, rel_stats[rel][i].f);
+      //         fprintf(stderr, "d%ld = %lu\n", i, rel_stats[rel][i].d);
+      //       }
+      //     }
+      //   }
       uint64_t prev_f = this->rel_stats[rel][col].f;
       uint64_t prev_d = this->rel_stats[rel][col].d;
 
@@ -193,6 +209,22 @@ void QueryExec::update_stats(size_t index, int flag) {
           rel_stats[rel][i].d = (uint64_t)res;
           rel_stats[rel][i].f = rel_stats[rel][col].f;
         }
+
+      //   if (query_sum == 8) {
+      //     fprintf(stderr, "AFTER FILTER\n--------\n");
+      //     fprintf(stderr, "l%ld = %lu\n", col, rel_stats[rel][col].l);
+      //     fprintf(stderr, "u%ld = %lu\n", col, rel_stats[rel][col].u);
+      //     fprintf(stderr, "f%ld = %lu\n", col, rel_stats[rel][col].f);
+      //     fprintf(stderr, "d%ld = %lu\n", col, rel_stats[rel][col].d);
+      //     for (size_t i = 0; i < rel_mmap[actual_rel].cols; i++) {
+      //       if ((int64_t)i != col) {
+      //         fprintf(stderr, "l%ld = %lu\n", i, rel_stats[rel][i].l);
+      //         fprintf(stderr, "u%ld = %lu\n", i, rel_stats[rel][i].u);
+      //         fprintf(stderr, "f%ld = %lu\n", i, rel_stats[rel][i].f);
+      //         fprintf(stderr, "d%ld = %lu\n", i, rel_stats[rel][i].d);
+      //       }
+      //     }
+      //   }
     }
 
     // Filter σ_A>k OR σ_A<k
@@ -229,7 +261,9 @@ void QueryExec::update_stats(size_t index, int flag) {
     int64_t actual_r = this->rel_names[r_rel];
     int64_t actual_s = this->rel_names[s_rel];
 
-    if (joined[r_rel].getSize() == 0 || joined[s_rel].getSize() == 0) {
+    if (joined[r_rel].getSize() == 0 || joined[s_rel].getSize() == 0 ||
+        rel_stats[r_rel][r_col].f == 0 || rel_stats[s_rel][s_col].f == 0 ||
+        rel_stats[r_rel][r_col].d == 0 || rel_stats[s_rel][s_col].d == 0) {
       //   rel_stats[r_rel][r_col].l = rel_stats[s_rel][s_col].l = 0;
       //   rel_stats[r_rel][r_col].u = rel_stats[s_rel][s_col].u = 0;
       //   rel_stats[r_rel][r_col].f = rel_stats[s_rel][s_col].f = 0;
@@ -263,7 +297,8 @@ void QueryExec::update_stats(size_t index, int flag) {
       for (size_t i = 0; i < rel_mmap[actual_r].cols; i++)
         if ((int64_t)i != r_col && (int64_t)i != s_col) {
           double base = (1 - ((double)rel_stats[r_rel][r_col].f / prev_f));
-          double power = ((double)rel_stats[r_rel][i].f / rel_stats[r_rel][i].d);
+          double power =
+              ((double)rel_stats[r_rel][i].f / rel_stats[r_rel][i].d);
           double res = pow(base, power);
           res = rel_stats[r_rel][i].d * (1 - res);
           rel_stats[r_rel][i].d = (uint64_t)res;
@@ -286,6 +321,17 @@ void QueryExec::update_stats(size_t index, int flag) {
 
     // Join between 2 different relations
     else if ((actual_r != actual_s) && (r_rel != s_rel)) {
+      //   if (query_sum == 8) {
+      //     fprintf(stderr, "BEFORE JOIN\n--------\n");
+      //     fprintf(stderr, "l_r = %lu\n", rel_stats[r_rel][r_col].l);
+      //     fprintf(stderr, "u_r = %lu\n", rel_stats[r_rel][r_col].u);
+      //     fprintf(stderr, "f_r = %lu\n", rel_stats[r_rel][r_col].f);
+      //     fprintf(stderr, "d_r = %lu\n", rel_stats[r_rel][r_col].d);
+      //     fprintf(stderr, "l_s = %lu\n", rel_stats[s_rel][s_col].l);
+      //     fprintf(stderr, "u_s = %lu\n", rel_stats[s_rel][s_col].u);
+      //     fprintf(stderr, "f_s = %lu\n", rel_stats[s_rel][s_col].f);
+      //     fprintf(stderr, "d_s = %lu\n", rel_stats[s_rel][s_col].d);
+      //   }
       uint64_t lower = rel_stats[r_rel][r_col].l;
       uint64_t upper = rel_stats[r_rel][r_col].u;
       uint64_t prev_d_r = rel_stats[r_rel][r_col].d;
@@ -332,6 +378,19 @@ void QueryExec::update_stats(size_t index, int flag) {
           res = rel_stats[s_rel][i].d * (1 - res);
           rel_stats[s_rel][i].d = (uint64_t)res;
         }
+
+      //   if (query_sum == 8) {
+      //     fprintf(stderr, "AFTER JOIN\n--------\n");
+      //     fprintf(stderr, "l_r = %lu\n", rel_stats[r_rel][r_col].l);
+      //     fprintf(stderr, "u_r = %lu\n", rel_stats[r_rel][r_col].u);
+      //     fprintf(stderr, "f_r = %lu\n", rel_stats[r_rel][r_col].f);
+      //     fprintf(stderr, "d_r = %lu\n", rel_stats[r_rel][r_col].d);
+      //     fprintf(stderr, "l_s = %lu\n", rel_stats[s_rel][s_col].l);
+      //     fprintf(stderr, "u_s = %lu\n", rel_stats[s_rel][s_col].u);
+      //     fprintf(stderr, "f_s = %lu\n", rel_stats[s_rel][s_col].f);
+      //     fprintf(stderr, "d_s = %lu\n", rel_stats[s_rel][s_col].d);
+      //     fprintf(stderr, "\n\n");
+      //   }
     }
   }
 }
