@@ -41,4 +41,9 @@ void joinBuckets(relation&, int64_t, int64_t, hashTable*, result&);
 
 void buildHT(relation&, int64_t, int64_t, hashTable*);
 
+/// only for unit testing
+
+result PartitionedHashJoin_ST(relation&, relation&, int64_t = -1,
+                              int64_t = USE_BITS, int64_t = USE_BITS_NEXT);
+
 #endif

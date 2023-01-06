@@ -4,13 +4,13 @@
 #include "query_exec.h"
 #include "job_scheduler.h"
 #include "query_results.h"
-
+#include "config.h"
 memory_map rel_mmap[14];
 
 QueryResults qres[100];
 
-JobScheduler js(4);
-JobScheduler qe_jobs(4);
+JobScheduler js(THREAD_COUNT);
+JobScheduler qe_jobs(THREAD_COUNT);
 
 int main(int argc, char* argv[]) {
   int64_t relations_count = 0;
@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
       continue;
     }
     qe_jobs.add_job(new QueryJob(strdup(line), queries++));
-    }
+  }
 
   return 0;
 }
