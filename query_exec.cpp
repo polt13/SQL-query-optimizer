@@ -158,7 +158,7 @@ void QueryExec::join_enumeration() {
 
   while (joins.getSize() > 0) {
     uint64_t min_cost = UINT64_MAX;
-    size_t min_index;
+    size_t min_index = SIZE_MAX;
     for (size_t i = 0; i < joins.getSize(); i++) {
       if ((joins.getSize() != initial_size) && (!isConnected(joins_order, i)))
         continue;
@@ -168,6 +168,7 @@ void QueryExec::join_enumeration() {
         min_index = i;
       }
     }
+    if (min_index == SIZE_MAX) exit(EXIT_FAILURE);
     if (rel_is_joined[joins[min_index].left_rel] == false) {
       int64_t temp = joins[min_index].left_rel;
       int64_t temp_col = joins[min_index].left_col;
@@ -177,7 +178,7 @@ void QueryExec::join_enumeration() {
       joins[min_index].right_col = temp_col;
     }
     do_join(min_index);
-    update_stats(min_index);
+    update_stats(min_index, 1);
     joins_order.add_back(joins[min_index]);
     joins.remove(min_index);
   }
@@ -221,8 +222,6 @@ uint64_t QueryExec::calculate_cost(size_t index) {
   else {
     uint64_t lower = rel_stats[r_rel][r_col].l;
     uint64_t upper = rel_stats[r_rel][r_col].u;
-    uint64_t prev_d_r = rel_stats[r_rel][r_col].d;
-    uint64_t prev_d_s = rel_stats[s_rel][s_col].d;
 
     if (rel_stats[s_rel][s_col].l > lower) lower = rel_stats[s_rel][s_col].l;
     if (rel_stats[s_rel][s_col].u < upper) upper = rel_stats[s_rel][s_col].u;
@@ -438,7 +437,7 @@ void QueryExec::update_stats(size_t index, int flag) {
 
 void QueryExec::do_query() {
   const size_t filter_count = this->filters.getSize();
-  const size_t joins_count = this->joins.getSize();
+  //   const size_t joins_count = this->joins.getSize();
 
   for (size_t i = 0; i < 4; i++) {
     rel_is_filtered[i] = false;
