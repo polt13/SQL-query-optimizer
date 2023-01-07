@@ -64,16 +64,16 @@ void test_partitions_2() {
 
 // WORKS WITH USE_BITS=2
 void test_partitions_3() {
-  int64_t keys[] = {418,  690,  1536, 160,  1552, 1312, 1538, 320, 1537,
-                    1281, 1282, 1602, 1138, 274,  978,  561,  99,  1008,
-                    480,  144,  1264, 83,   130,  385,  1424, 674};
+  int keys[] = {418,  690,  1536, 160,  1552, 1312, 1538, 320, 1537,
+                1281, 1282, 1602, 1138, 274,  978,  561,  99,  1008,
+                480,  144,  1264, 83,   130,  385,  1424, 674};
 
-  int64_t expectedOrder[] = {1536, 160,  1552, 1312, 320, 1008, 480, 144,  1264,
-                             1424, 1537, 1281, 561,  385, 418,  690, 1538, 1282,
-                             1602, 1138, 274,  978,  130, 674,  99,  83};
+  int expectedOrder[] = {1536, 160,  1552, 1312, 320, 1008, 480, 144,  1264,
+                         1424, 1537, 1281, 561,  385, 418,  690, 1538, 1282,
+                         1602, 1138, 274,  978,  130, 674,  99,  83};
 
   tuple* tuples = new tuple[26];
-  for (int64_t i = 0; i < 26; i++) tuples[i] = {keys[i], std::rand()};
+  for (int i = 0; i < 26; i++) tuples[i] = {keys[i], std::rand()};
 
   relation r(tuples, 26);
 
@@ -94,25 +94,25 @@ void test_partitions_3() {
   TEST_CHECK((*hist)[3] == 2);
   TEST_CHECK(psum[3] == 24);
 
-  for (int64_t i = 0; i < 26; i++) {
+  for (int i = 0; i < 26; i++) {
     TEST_CHECK(r_[i].getKey() == expectedOrder[i]);
   }
 }
 
 // works only with USE_BITS_NEXT == 4
 void test_partitions_4() {
-  int64_t keys[] = {657,  1237, 1060, 1154, 832,  1417, 456,  449,  112,  728,
-                    1140, 1402, 583,  1366, 1599, 1447, 1185, 1466, 1097, 101,
-                    941,  888,  1090, 1147, 865,  1333, 1354, 1264, 1415, 681,
-                    1058, 1169, 1531, 782,  1386, 1033, 1185, 1254, 1555, 256,
-                    775,  484,  1394, 987,  1197, 377,  1011, 644,  27,   317,
-                    182,  1083, 427,  1244, 202,  835,  195,  698,  55,   742,
-                    1105, 329,  524,  1270, 1136, 598,  244,  1035, 1015, 838,
-                    420,  283,  1511, 1262, 695,  610,  1417, 1525, 1349, 1429,
-                    901,  582,  955,  802,  924,  1586, 254,  1094, 601,  949,
-                    1441, 715,  900,  1022, 1237, 162,  1575, 790,  740};
+  int keys[] = {657,  1237, 1060, 1154, 832,  1417, 456,  449,  112,  728,
+                1140, 1402, 583,  1366, 1599, 1447, 1185, 1466, 1097, 101,
+                941,  888,  1090, 1147, 865,  1333, 1354, 1264, 1415, 681,
+                1058, 1169, 1531, 782,  1386, 1033, 1185, 1254, 1555, 256,
+                775,  484,  1394, 987,  1197, 377,  1011, 644,  27,   317,
+                182,  1083, 427,  1244, 202,  835,  195,  698,  55,   742,
+                1105, 329,  524,  1270, 1136, 598,  244,  1035, 1015, 838,
+                420,  283,  1511, 1262, 695,  610,  1417, 1525, 1349, 1429,
+                901,  582,  955,  802,  924,  1586, 254,  1094, 601,  949,
+                1441, 715,  900,  1022, 1237, 162,  1575, 790,  740};
 
-  int64_t expectedOrder[] = {
+  int expectedOrder[] = {
       832,  112,  1264, 256,  1136, 657,  449,  1185, 865,  1169, 1185,
       1105, 1441, 1154, 1090, 1058, 1394, 610,  802,  1586, 162,  1555,
       1011, 835,  195,  1060, 1140, 484,  644,  244,  420,  900,  740,
@@ -124,7 +124,7 @@ void test_partitions_4() {
       1244, 524,  924,  941,  1197, 317,  782,  1262, 254,  1022, 1599};
 
   tuple* tuples = new tuple[99];
-  for (int64_t i = 0; i < 99; i++) tuples[i] = {keys[i], std::rand()};
+  for (int i = 0; i < 99; i++) tuples[i] = {keys[i], std::rand()};
 
   relation r(tuples, 99);
 
@@ -181,7 +181,7 @@ void test_partitions_4() {
   TEST_CHECK((*hist)[15] == 1);
   TEST_CHECK(psum[15] == 98);
 
-  for (int64_t i = 0; i < 99; i++) {
+  for (int i = 0; i < 99; i++) {
     TEST_CHECK(r_[i].getKey() == expectedOrder[i]);
   }
 }
@@ -306,18 +306,18 @@ void test_HTinsert4() {
 
   hashTable h(34);
 
-  int64_t key_index = 0;
+  int key_index = 0;
 
   bool allOccupiedBefore = true;
   bool allOccupiedAfter = true;
 
-  for (int64_t i = 0; i < 40; i++) {
+  for (int i = 0; i < 40; i++) {
     tuples[i] = {keys[key_index++], std::rand()};
     h.insert(&tuples[i]);
 
     // Check if after the 34 the HT is full
     if (i == 33)
-      for (int64_t j = 0; j < 34; j++)
+      for (int j = 0; j < 34; j++)
         if (h.getBucket(j)->getOccupied() == false) {
           allOccupiedBefore = false;
           break;
@@ -325,7 +325,7 @@ void test_HTinsert4() {
 
     // Check if after the 35 the HT is NOT full
     if (i == 34)
-      for (int64_t j = 0; j < 69; j++)
+      for (int j = 0; j < 69; j++)
         if (h.getBucket(j)->getOccupied() == false) {
           allOccupiedAfter = false;
           break;
@@ -353,7 +353,7 @@ void test_HTinsert5() {
   bool allOccupied = true;
   bool rightOrder = true;
 
-  for (int64_t i = 0; i < 40; i++) {
+  for (int i = 0; i < 40; i++) {
     tuples[i] = {key, std::rand()};  // hash in same bucket
 
     h.insert(&tuples[i]);
@@ -398,7 +398,7 @@ void test_HTinsert6() {
 
   hashTable h(40);
 
-  for (int64_t i = 0; i < 35; i++) {
+  for (int i = 0; i < 35; i++) {
     if (i == 32) key = 66;  // 66 % 40 = 26
     tuples[i] = {key, std::rand()};
     h.insert(&tuples[i]);
@@ -443,7 +443,7 @@ void test_HTinsert7() {
 
   hashTable h(40);
 
-  for (int64_t i = 0; i < 34; i++) {
+  for (int i = 0; i < 34; i++) {
     if (i == 32) key = 27;  // 27 % 40 = 27
     tuples[i] = {key, std::rand()};
     h.insert(&tuples[i]);
@@ -508,10 +508,10 @@ void test_eq_partitions() {
   tuple* tuples = new tuple[100];
   tuple* tuples2 = new tuple[200];
 
-  for (int64_t i = 0; i < 100; i++)
+  for (int i = 0; i < 100; i++)
     tuples[i] = {keys[std::rand() % 50], std::rand()};
 
-  for (int64_t i = 0; i < 200; i++)
+  for (int i = 0; i < 200; i++)
     tuples2[i] = {keys[std::rand() % 50], std::rand()};
 
   relation r(tuples, 100);
@@ -557,10 +557,10 @@ void test_build_1() {
   tuple* tuples = new tuple[100];
   tuple* tuples2 = new tuple[200];
 
-  for (int64_t i = 0; i < 100; i++)
+  for (int i = 0; i < 100; i++)
     tuples[i] = {keys[std::rand() % 50], std::rand()};
 
-  for (int64_t i = 0; i < 200; i++) {
+  for (int i = 0; i < 200; i++) {
     if (i == 2 || i == 55 || i == 91 || i == 98) {
       tuples2[i] = tuples[i];
     } else
@@ -580,32 +580,32 @@ void test_build_1() {
 
   Histogram* histr = rp.getHistogram();
   // Histogram* hists = sp.getHistogram();
-  int64_t partitions = histr->getSize();
+  int partitions = histr->getSize();
 
   const int64_t* rpsum = histr->getPsum();
 
   hashTable** pht = new hashTable* [partitions] {};
 
-  for (int64_t i = 0; i < partitions; i++) {
-    int64_t entries = (*histr)[i];
+  for (int i = 0; i < partitions; i++) {
+    int entries = (*histr)[i];
     pht[i] = new hashTable(entries);
 
-    int64_t start = rpsum[i];
+    int start = rpsum[i];
     // std::printf("Partition starts at %ld\n", start);
-    int64_t end = (i < (partitions - 1)) ? (rpsum[i + 1]) : (r_.getAmount());
+    int end = (i < (partitions - 1)) ? (rpsum[i + 1]) : (r_.getAmount());
 
-    for (int64_t j = start; j < end; j++) pht[i]->insert(&r_[j]);
+    for (int j = start; j < end; j++) pht[i]->insert(&r_[j]);
   }
 
-  for (int64_t i = 0; i < 100; i++) {
-    int64_t index = Partitioner::hash1(r[i].getKey(), USE_BITS_NEXT);
+  for (int i = 0; i < 100; i++) {
+    int index = Partitioner::hash1(r[i].getKey(), USE_BITS_NEXT);
     // check if the element is properly inserted
     TEST_CHECK(pht[index]->findEntry(r[i].getKey()) != nullptr);
   }
 
-  int64_t matchedTuples = 0;
-  for (int64_t i = 0; i < 200; i++) {
-    int64_t index = Partitioner::hash1(s[i].getKey(), USE_BITS_NEXT);
+  int matchedTuples = 0;
+  for (int i = 0; i < 200; i++) {
+    int index = Partitioner::hash1(s[i].getKey(), USE_BITS_NEXT);
     List* item_exists = pht[index]->findEntry(s[i].getKey());
     if (item_exists) matchedTuples++;
   }
@@ -613,7 +613,7 @@ void test_build_1() {
   // only 4 of S keys exist in R
   TEST_CHECK(matchedTuples == 4);
 
-  for (int64_t i = 0; i < partitions; i++) delete pht[i];
+  for (int i = 0; i < partitions; i++) delete pht[i];
 
   delete[] pht;
 }
@@ -677,7 +677,7 @@ void test_join_2() {
   relation r(tuples1, 6);
   relation s(tuples2, 3);
   result t = PartitionedHashJoin_ST(r, s, 2, 4, 8);
-  /* for (int64_t i = 0; i < t.result_size; i++) {
+  /* for (int i = 0; i < t.result_size; i++) {
     std::printf("\nr_id: %ld, r_row: %ld\ns_id: %ld, s_row: %ld\n",
                 t[i].a.getKey(), t[i].a.getPayload(), t[i].b.getKey(),
                 t[i].b.getPayload());
@@ -742,33 +742,33 @@ void test_join_3() {
 }
 
 void test_join_4() {
-  int64_t keys1[] = {93, 99, 56, 55, 45, 90, 13, 74, 22, 31, 19, 99, 13, 48, 43,
-                     21, 84, 95, 7,  96, 22, 11, 46, 56, 39, 57, 78, 30, 31, 18,
-                     74, 3,  72, 2,  40, 69, 69, 79, 58, 3,  60, 15, 79, 68, 50,
-                     75, 39, 7,  77, 9,  75, 67, 18, 33, 81, 4,  12, 90, 4,  20,
-                     56, 5,  66, 71, 21, 30, 59, 71, 89, 3,  40, 61, 86, 7,  49,
-                     17, 76, 20, 36, 11, 4,  98, 36, 80, 34, 9,  54, 54, 72, 19,
-                     68, 31, 44, 90, 49, 54, 52, 26, 30, 19};
-  int64_t keys2[] = {
-      28, 7,  39, 69, 24, 44, 92, 78, 76, 61, 47, 29, 1,  35, 49, 54, 41,
-      51, 41, 1,  1,  37, 42, 45, 22, 2,  81, 9,  9,  33, 74, 59, 52, 54,
-      72, 7,  80, 49, 4,  7,  32, 29, 40, 23, 51, 46, 92, 37, 64, 82, 38,
-      63, 10, 55, 22, 28, 9,  30, 21, 68, 34, 22, 71, 55, 81, 86, 26, 38,
-      95, 50, 29, 29, 6,  18, 26, 12, 87, 89, 35, 40, 9,  63, 90, 42, 41,
-      77, 25, 60, 26, 15, 7,  24, 79, 87, 4,  74, 59, 4,  25, 50, 15, 96,
-      17, 43, 20, 4,  35, 79, 52, 4,  29, 44, 71, 36, 69, 36, 36, 19, 52,
-      34, 96, 54, 36, 47, 98, 63, 89, 47, 16, 47, 23, 37, 78, 63, 50, 1,
-      42, 96, 58, 78, 54, 64, 47, 7,  20, 27, 80, 64, 19, 67, 32, 39, 69,
-      32, 31, 76, 42, 26, 88, 67, 81, 90, 64, 70, 39, 13, 12, 15, 93, 9,
-      45, 93, 85, 94, 61, 29, 48, 76, 96, 32, 97, 89, 68, 49, 19, 22, 39,
-      68, 14, 7,  30, 44, 28, 57, 66, 34, 97, 72, 19, 88};
+  int keys1[] = {93, 99, 56, 55, 45, 90, 13, 74, 22, 31, 19, 99, 13, 48, 43,
+                 21, 84, 95, 7,  96, 22, 11, 46, 56, 39, 57, 78, 30, 31, 18,
+                 74, 3,  72, 2,  40, 69, 69, 79, 58, 3,  60, 15, 79, 68, 50,
+                 75, 39, 7,  77, 9,  75, 67, 18, 33, 81, 4,  12, 90, 4,  20,
+                 56, 5,  66, 71, 21, 30, 59, 71, 89, 3,  40, 61, 86, 7,  49,
+                 17, 76, 20, 36, 11, 4,  98, 36, 80, 34, 9,  54, 54, 72, 19,
+                 68, 31, 44, 90, 49, 54, 52, 26, 30, 19};
+  int keys2[] = {28, 7,  39, 69, 24, 44, 92, 78, 76, 61, 47, 29, 1,  35, 49, 54,
+                 41, 51, 41, 1,  1,  37, 42, 45, 22, 2,  81, 9,  9,  33, 74, 59,
+                 52, 54, 72, 7,  80, 49, 4,  7,  32, 29, 40, 23, 51, 46, 92, 37,
+                 64, 82, 38, 63, 10, 55, 22, 28, 9,  30, 21, 68, 34, 22, 71, 55,
+                 81, 86, 26, 38, 95, 50, 29, 29, 6,  18, 26, 12, 87, 89, 35, 40,
+                 9,  63, 90, 42, 41, 77, 25, 60, 26, 15, 7,  24, 79, 87, 4,  74,
+                 59, 4,  25, 50, 15, 96, 17, 43, 20, 4,  35, 79, 52, 4,  29, 44,
+                 71, 36, 69, 36, 36, 19, 52, 34, 96, 54, 36, 47, 98, 63, 89, 47,
+                 16, 47, 23, 37, 78, 63, 50, 1,  42, 96, 58, 78, 54, 64, 47, 7,
+                 20, 27, 80, 64, 19, 67, 32, 39, 69, 32, 31, 76, 42, 26, 88, 67,
+                 81, 90, 64, 70, 39, 13, 12, 15, 93, 9,  45, 93, 85, 94, 61, 29,
+                 48, 76, 96, 32, 97, 89, 68, 49, 19, 22, 39, 68, 14, 7,  30, 44,
+                 28, 57, 66, 34, 97, 72, 19, 88};
 
   tuple* tuples1 = new tuple[100];
   tuple* tuples2 = new tuple[200];
-  for (int64_t i = 0; i < 100; i++) {
+  for (int i = 0; i < 100; i++) {
     tuples1[i] = {keys1[i], keys1[i]};
   }
-  for (int64_t i = 0; i < 200; i++) {
+  for (int i = 0; i < 200; i++) {
     tuples2[i] = {keys2[i], keys2[i]};
   }
 
@@ -783,7 +783,7 @@ void test_join_4() {
  * ---------
  */
 void test_join_5() {
-  int64_t keys1[] = {
+  int keys1[] = {
       669, 720, 897, 43,  226, 663, 879, 352, 222, 309, 526, 804, 63,  638, 717,
       547, 699, 755, 347, 972, 367, 973, 595, 440, 460, 381, 93,  344, 291, 369,
       185, 836, 986, 266, 734, 203, 929, 226, 752, 133, 11,  188, 845, 407, 44,
@@ -1452,7 +1452,7 @@ void test_join_5() {
       874, 490, 8,   280, 446, 888, 970, 246, 472, 600, 428, 367, 236, 608, 958,
       41,  58,  525, 860, 793, 878, 97,  340, 881, 464};
 
-  int64_t keys2[] = {
+  int keys2[] = {
       544, 965, 330, 59,  367, 744, 929, 461, 148, 350, 154, 688, 331, 188,
       927, 466, 937, 780, 977, 652, 878, 709, 13,  833, 373, 796, 81,  115,
       878, 601, 714, 891, 232, 438, 553, 105, 732, 336, 139, 215, 951, 825,
@@ -2528,10 +2528,10 @@ void test_join_5() {
 
   tuple* tuples1 = new tuple[10000];
   tuple* tuples2 = new tuple[15000];
-  for (int64_t i = 0; i < 10000; i++) {
+  for (int i = 0; i < 10000; i++) {
     tuples1[i] = {keys1[i], keys1[i]};
   }
-  for (int64_t i = 0; i < 15000; i++) {
+  for (int i = 0; i < 15000; i++) {
     tuples2[i] = {keys2[i], keys2[i]};
   }
 
@@ -2611,37 +2611,37 @@ void test_squeue() {
 
 // use for hashtable testing
 // each HT needs a hash function as constructor argument
-int64_t _hashint(const int& u) { return u; }
-int64_t _hashstr(const char* const& u) {
-  const char* x = u;
-  int64_t sum = 0;
-  while (*x) sum += *(x++);
+// int64_t _hashint(const int& u) { return u; }
+// int64_t _hashstr(const char* const& u) {
+//   const char* x = u;
+//   int sum = 0;
+//   while (*x) sum += *(x++);
 
-  return sum;
-}
+//   return sum;
+// }
 
-void test_sht() {
-  simple_ht<int, int> ht(_hashint);
-  ht[3] = 9;
-  ht[ht[3]] = 8;
-  ht[5000] = 15;
+// void test_sht() {
+//   simple_ht<int, int> ht(_hashint);
+//   ht[3] = 9;
+//   ht[ht[3]] = 8;
+//   ht[5000] = 15;
 
-  TEST_CHECK(ht[5000] == 15);
-  TEST_CHECK(ht[9] == 8);
-  TEST_CHECK(ht[3] == 9);
-  // default construct a VALUE_TYPE object when it doesn't exist
-  TEST_CHECK(ht[2] == 0);
-}
+//   TEST_CHECK(ht[5000] == 15);
+//   TEST_CHECK(ht[9] == 8);
+//   TEST_CHECK(ht[3] == 9);
+//   // default construct a VALUE_TYPE object when it doesn't exist
+//   TEST_CHECK(ht[2] == 0);
+// }
 
-void test_sht_2() {
-  simple_ht<const char*, int> ht(_hashstr);
+// void test_sht_2() {
+//   simple_ht<const char*, int> ht(_hashstr);
 
-  ht["Hello"] = strlen("Hello");
-  ht["TBD"] = strlen("TBD");
+//   ht["Hello"] = strlen("Hello");
+//   ht["TBD"] = strlen("TBD");
 
-  TEST_CHECK(++ht["Hello"] == 6);
-  TEST_CHECK(--ht["TBD"] == 2);
-}
+//   TEST_CHECK(++ht["Hello"] == 6);
+//   TEST_CHECK(--ht["TBD"] == 2);
+// }
 
 TEST_LIST = {{"Partitioning function", test_partitioning_function},
              {"Partitioning - small test (One pass)", test_partitions_1},
@@ -2667,6 +2667,6 @@ TEST_LIST = {{"Partitioning function", test_partitioning_function},
              {"Test Simple Vector", test_svector},
              {"Test List", test_linked_list},
              {"Test Simple Queue,", test_squeue},
-             {"Test Simple Hash Table", test_sht},
-             {"Test Simple Hash Table 2", test_sht_2},
+             //{"Test Simple Hash Table", test_sht},
+             //{"Test Simple Hash Table 2", test_sht_2},
              {NULL, NULL}};

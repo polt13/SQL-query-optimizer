@@ -28,6 +28,10 @@ class hashTable {
   char pad[48];
 
  public:
+  // Getters
+  bucket *getBucket(int64_t) const;
+  int64_t getBucketCount() const;
+
   int64_t hash2(int64_t);
   void insert(tuple *);
   void rehash();

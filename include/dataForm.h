@@ -31,10 +31,11 @@ class relation {
   int64_t num_tuples;
 
  public:
-  relation(tuple *tuples, uint64_t num_tuples) {
+  relation(tuple *tuples, int64_t num_tuples) {
     this->num_tuples = num_tuples;
     this->tuples = tuples;
   }
+
 
   relation(const relation &other) {
     num_tuples = other.num_tuples;
@@ -69,7 +70,7 @@ struct result {
 
   result(const result &other) : pairs{other.pairs} {}
 
-  result_item &operator[](int index) { return pairs[index]; }
+  result_item &operator[](int64_t index) { return pairs[index]; }
 };
 
 struct result_mt {

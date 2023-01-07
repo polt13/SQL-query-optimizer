@@ -14,11 +14,11 @@ struct filter {
   int rel;
   int col;
   operators op;
-  int literal;
+  int64_t literal;
 
   filter() = default;
 
-  filter(int lr, int lc, operators o, int lit)
+  filter(int lr, int lc, operators o, int64_t lit)
       : rel{lr}, col{lc}, op{o}, literal{lit} {}
 };
 

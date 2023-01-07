@@ -47,7 +47,7 @@ void QueryExec::parse_names(char* rel_string) {
   char* rel;
 
   while ((rel = strtok_r(rel_string, " ", &buffr))) {
-    this->rel_names.add_back((int)std::strtol(rel, nullptr, 10));
+    this->rel_names.add_back(std::strtol(rel, nullptr, 10));
     rel_string = nullptr;
   }
 }
@@ -237,9 +237,9 @@ uint64_t QueryExec::calculate_cost(size_t index) {
 
 void QueryExec::update_stats(size_t index, int flag) {
   if (flag == 0) {
-    int rel = this->filters[index].rel;
-    int actual_rel = this->rel_names[rel];
-    int col = this->filters[index].col;
+    int64_t rel = this->filters[index].rel;
+    int64_t actual_rel = this->rel_names[rel];
+    int64_t col = this->filters[index].col;
     uint64_t lit = this->filters[index].literal;
 
     if (filtered[rel].getSize() == 0 || rel_stats[rel][col].f == 0 ||
@@ -318,12 +318,12 @@ void QueryExec::update_stats(size_t index, int flag) {
     }
   }
   if (flag == 1) {
-    int r_rel = this->joins[index].left_rel;
-    int r_col = this->joins[index].left_col;
-    int s_rel = this->joins[index].right_rel;
-    int s_col = this->joins[index].right_col;
-    int actual_r = this->rel_names[r_rel];
-    int actual_s = this->rel_names[s_rel];
+    int64_t r_rel = this->joins[index].left_rel;
+    int64_t r_col = this->joins[index].left_col;
+    int64_t s_rel = this->joins[index].right_rel;
+    int64_t s_col = this->joins[index].right_col;
+    int64_t actual_r = this->rel_names[r_rel];
+    int64_t actual_s = this->rel_names[s_rel];
 
     if (joined[r_rel].getSize() == 0 || joined[s_rel].getSize() == 0 ||
         rel_stats[r_rel][r_col].f == 0 || rel_stats[s_rel][s_col].f == 0 ||
@@ -545,9 +545,9 @@ void QueryExec::do_join(size_t join_index) {
   memory_map mmap_r = rel_mmap[actual_rel_r];
   memory_map mmap_s = rel_mmap[actual_rel_s];
 
-  simple_vector<int> new_joined[] = {
-      simple_vector<int>{100}, simple_vector<int>{100}, simple_vector<int>{100},
-      simple_vector<int>{100}};
+  simple_vector<int> new_joined[] = {simple_vector<int>{}, simple_vector<int>{},
+                                     simple_vector<int>{},
+                                     simple_vector<int>{}};
 
   size_t relr_size;
   size_t rels_size;
@@ -564,7 +564,7 @@ void QueryExec::do_join(size_t join_index) {
       relr_size = filtered[rel_r].getSize();
       rtuples = new tuple[relr_size];
       for (size_t i = 0; i < relr_size; i++) {
-        int64_t row_id = filtered[rel_r][i];
+        int row_id = filtered[rel_r][i];
         // value, rowid
         rtuples[i] = {(int)mmap_r.colptr[col_r][row_id], (int)row_id};
       }
@@ -580,7 +580,7 @@ void QueryExec::do_join(size_t join_index) {
       rels_size = filtered[rel_s].getSize();
       stuples = new tuple[rels_size];
       for (size_t i = 0; i < rels_size; i++) {
-        int64_t row_id = filtered[rel_s][i];
+        int row_id = filtered[rel_s][i];
         stuples[i] = {(int)mmap_s.colptr[col_s][row_id], (int)row_id};
       }
     } else {
@@ -616,7 +616,7 @@ void QueryExec::do_join(size_t join_index) {
       relr_size = joined[rel_r].getSize();
       rtuples = new tuple[relr_size];
       for (size_t i = 0; i < relr_size; i++) {
-        int64_t row_id = joined[rel_r][i];
+        int row_id = joined[rel_r][i];
         rtuples[i] = {(int)mmap_r.colptr[col_r][row_id], (int)i};
       }
 
@@ -625,7 +625,7 @@ void QueryExec::do_join(size_t join_index) {
         rels_size = filtered[rel_s].getSize();
         stuples = new tuple[rels_size];
         for (size_t i = 0; i < rels_size; i++) {
-          int64_t row_id = filtered[rel_s][i];
+          int row_id = filtered[rel_s][i];
           // value, rowid
           stuples[i] = {(int)mmap_s.colptr[col_s][row_id], (int)row_id};
         }
