@@ -24,7 +24,7 @@ class List {
 
   void append(tuple*);
   bool find(tuple&);
-  void print() const;
+
 
   List();
   ~List();

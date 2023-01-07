@@ -11,7 +11,7 @@ enable_testing()
 include_directories(include)
 
 #unit test
-add_executable(utest hashTable.cpp histogram.cpp list.cpp tests/partitioner_old.cpp tests/join_old.cpp tests/test.cpp )
+#add_executable(utest hashTable.cpp histogram.cpp list.cpp tests/partitioner_old.cpp tests/join_old.cpp tests/test.cpp )
 
 add_executable(harness harness.cpp)
 

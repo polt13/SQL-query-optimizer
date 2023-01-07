@@ -11,38 +11,38 @@ constexpr size_t relation_count = 14;
 enum operators { EQ, GREATER, LESS };
 
 struct filter {
-  int64_t rel;
-  int64_t col;
+  int rel;
+  int col;
   operators op;
-  int64_t literal;
+  int literal;
 
   filter() = default;
 
-  filter(int64_t lr, int64_t lc, operators o, int64_t lit)
+  filter(int lr, int lc, operators o, int lit)
       : rel{lr}, col{lc}, op{o}, literal{lit} {}
 };
 
 struct join {
-  int64_t left_rel;
-  int64_t left_col;
+  int left_rel;
+  int left_col;
   operators op;
-  int64_t right_rel;
-  int64_t right_col;
+  int right_rel;
+  int right_col;
 
   join() = default;
 
-  join(int64_t lr, int64_t lc, operators o, int64_t rr, int64_t rc)
+  join(int lr, int lc, operators o, int rr, int rc)
       : left_rel{lr}, left_col{lc}, op{o}, right_rel{rr}, right_col{rc} {}
 };
 
 struct project_rel {
-  int64_t rel;
-  int64_t col;
+  int rel;
+  int col;
 };
 
 class QueryExec {
   int qindex;  // which query
-  simple_vector<int64_t> rel_names;
+  simple_vector<int> rel_names;
   simple_vector<join> joins;
   simple_vector<filter> filters;
   simple_vector<project_rel> projections;
@@ -50,8 +50,8 @@ class QueryExec {
   bool rel_is_filtered[4];
   bool rel_is_joined[4];
 
-  simple_vector<int64_t> joined[4];  // Represents latest intermediate results
-  simple_vector<int64_t> filtered[4];
+  simple_vector<int> joined[4];  // Represents latest intermediate results
+  simple_vector<int> filtered[4];
 
   statistics *rel_stats[4];
 
@@ -62,7 +62,7 @@ class QueryExec {
 
   void initialize_stats();
   void join_enumeration();
-  bool isConnected(simple_vector<join>&, size_t);
+  bool isConnected(simple_vector<join> &, size_t);
   uint64_t calculate_cost(size_t);
   void update_stats(size_t, int);
 

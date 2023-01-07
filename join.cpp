@@ -61,7 +61,7 @@ result_mt PartitionedHashJoin(relation& r, relation& s, int64_t forceDepth,
     for (int64_t i = 0; i < partitions; i++) delete partitionsHT[i];
     delete[] partitionsHT;
 
-    return result_mt{thread_results, partitions};
+    return result_mt{thread_results, (int)partitions};
 
   }
   // no partitioning case
@@ -71,7 +71,7 @@ result_mt PartitionedHashJoin(relation& r, relation& s, int64_t forceDepth,
     result* result_join = new result[1];
     int64_t r_entries = r.getAmount();
     int64_t s_entries = s.getAmount();
-    hashTable h{r_entries};
+    hashTable h{r_entries / 5};
     for (int64_t i = 0; i < r_entries; i++) h.insert(&r[i]);
     for (int64_t j = 0; j < s_entries; j++) {
       List* tuple_list = h.findEntry(s[j].getKey());

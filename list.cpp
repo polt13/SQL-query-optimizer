@@ -31,15 +31,6 @@ bool List::find(tuple& t) {
   return false;
 }
 
-void List::print() const {
-  Node* traverse = start;
-  for (int64_t i = 0; i < len; i++) {
-    std::printf("Key %ld with payload %ld\n", traverse->mytuple->getKey(),
-                traverse->mytuple->getPayload());
-    traverse = traverse->next;
-  }
-}
-
 List::List() : start{nullptr}, end{nullptr}, len{} {}
 
 List::~List() {

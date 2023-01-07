@@ -7,14 +7,14 @@
 
 /* Type definition for a tuple */
 class tuple {
-  int64_t key;      // value (R.a)
-  int64_t payload;  // rowID
+  int key;      // value (R.a)
+  int payload;  // rowID
 
  public:
-  int64_t getKey() { return key; }
-  int64_t getPayload() { return payload; }
+  int getKey() { return key; }
+  int getPayload() { return payload; }
 
-  tuple(int64_t key, int64_t payload) {
+  tuple(int key, int payload) {
     this->key = key;
     this->payload = payload;
   }
@@ -35,11 +35,6 @@ class relation {
     this->num_tuples = num_tuples;
     this->tuples = tuples;
   }
-  void print() const {
-    for (int64_t i = 0; i < num_tuples; i++) {
-      std::printf("t val : %ld\n", tuples[i].getKey());
-    }
-  }
 
   relation(const relation &other) {
     num_tuples = other.num_tuples;
@@ -56,8 +51,8 @@ class relation {
 };
 
 struct result_item {
-  int64_t rowid_1;
-  int64_t rowid_2;
+  int rowid_1;
+  int rowid_2;
 };
 
 struct result {
@@ -74,14 +69,14 @@ struct result {
 
   result(const result &other) : pairs{other.pairs} {}
 
-  result_item &operator[](int64_t index) { return pairs[index]; }
+  result_item &operator[](int index) { return pairs[index]; }
 };
 
 struct result_mt {
   result *r;
-  int64_t subresult_count;  // how many different results have been created
+  int subresult_count;  // how many different results have been created
   // avoid having to join them in one
-  result_mt(result *r, int64_t subresult_count)
+  result_mt(result *r, int subresult_count)
       : r{r}, subresult_count{subresult_count} {}
 };
 

@@ -47,7 +47,7 @@ void QueryExec::parse_names(char* rel_string) {
   char* rel;
 
   while ((rel = strtok_r(rel_string, " ", &buffr))) {
-    this->rel_names.add_back(std::strtol(rel, nullptr, 10));
+    this->rel_names.add_back((int)std::strtol(rel, nullptr, 10));
     rel_string = nullptr;
   }
 }
@@ -128,8 +128,8 @@ void QueryExec::parse_selections(char* selections) {
     char* rel = strtok_r(selection, ".", &buffr2);
     char* col = buffr2;
 
-    this->projections.add_back(project_rel{std::strtol(rel, nullptr, 10),
-                                           std::strtol(col, nullptr, 10)});
+    this->projections.add_back(project_rel{(int)std::strtol(rel, nullptr, 10),
+                                           (int)std::strtol(col, nullptr, 10)});
 
     selections = nullptr;
   }
@@ -237,9 +237,9 @@ uint64_t QueryExec::calculate_cost(size_t index) {
 
 void QueryExec::update_stats(size_t index, int flag) {
   if (flag == 0) {
-    int64_t rel = this->filters[index].rel;
-    int64_t actual_rel = this->rel_names[rel];
-    int64_t col = this->filters[index].col;
+    int rel = this->filters[index].rel;
+    int actual_rel = this->rel_names[rel];
+    int col = this->filters[index].col;
     uint64_t lit = this->filters[index].literal;
 
     if (filtered[rel].getSize() == 0 || rel_stats[rel][col].f == 0 ||
@@ -318,12 +318,12 @@ void QueryExec::update_stats(size_t index, int flag) {
     }
   }
   if (flag == 1) {
-    int64_t r_rel = this->joins[index].left_rel;
-    int64_t r_col = this->joins[index].left_col;
-    int64_t s_rel = this->joins[index].right_rel;
-    int64_t s_col = this->joins[index].right_col;
-    int64_t actual_r = this->rel_names[r_rel];
-    int64_t actual_s = this->rel_names[s_rel];
+    int r_rel = this->joins[index].left_rel;
+    int r_col = this->joins[index].left_col;
+    int s_rel = this->joins[index].right_rel;
+    int s_col = this->joins[index].right_col;
+    int actual_r = this->rel_names[r_rel];
+    int actual_s = this->rel_names[s_rel];
 
     if (joined[r_rel].getSize() == 0 || joined[s_rel].getSize() == 0 ||
         rel_stats[r_rel][r_col].f == 0 || rel_stats[s_rel][s_col].f == 0 ||
@@ -482,7 +482,7 @@ void QueryExec::filter_exec(size_t index) {
   int64_t lit = this->filters[index].literal;
   operators operation_type = this->filters[index].op;
 
-  simple_vector<int64_t> new_filtered;
+  simple_vector<int> new_filtered;
 
   // Relation hasn't been used in a filter predicate before
   if (rel_is_filtered[rel] == false) {
@@ -545,9 +545,9 @@ void QueryExec::do_join(size_t join_index) {
   memory_map mmap_r = rel_mmap[actual_rel_r];
   memory_map mmap_s = rel_mmap[actual_rel_s];
 
-  simple_vector<int64_t> new_joined[] = {
-      simple_vector<int64_t>{100}, simple_vector<int64_t>{100},
-      simple_vector<int64_t>{100}, simple_vector<int64_t>{100}};
+  simple_vector<int> new_joined[] = {
+      simple_vector<int>{100}, simple_vector<int>{100}, simple_vector<int>{100},
+      simple_vector<int>{100}};
 
   size_t relr_size;
   size_t rels_size;
@@ -566,13 +566,13 @@ void QueryExec::do_join(size_t join_index) {
       for (size_t i = 0; i < relr_size; i++) {
         int64_t row_id = filtered[rel_r][i];
         // value, rowid
-        rtuples[i] = {(int64_t)mmap_r.colptr[col_r][row_id], (int64_t)row_id};
+        rtuples[i] = {(int)mmap_r.colptr[col_r][row_id], (int)row_id};
       }
     } else {
       relr_size = mmap_r.rows;
       rtuples = new tuple[relr_size];
       for (size_t i = 0; i < relr_size; i++) {
-        rtuples[i] = {(int64_t)mmap_r.colptr[col_r][i], (int64_t)i};
+        rtuples[i] = {(int)mmap_r.colptr[col_r][i], (int)i};
       }
     }
 
@@ -581,13 +581,13 @@ void QueryExec::do_join(size_t join_index) {
       stuples = new tuple[rels_size];
       for (size_t i = 0; i < rels_size; i++) {
         int64_t row_id = filtered[rel_s][i];
-        stuples[i] = {(int64_t)mmap_s.colptr[col_s][row_id], (int64_t)row_id};
+        stuples[i] = {(int)mmap_s.colptr[col_s][row_id], (int)row_id};
       }
     } else {
       rels_size = mmap_s.rows;
       stuples = new tuple[rels_size];
       for (size_t i = 0; i < rels_size; i++) {
-        stuples[i] = {(int64_t)mmap_s.colptr[col_s][i], (int64_t)i};
+        stuples[i] = {(int)mmap_s.colptr[col_s][i], (int)i};
       }
     }
 
@@ -617,7 +617,7 @@ void QueryExec::do_join(size_t join_index) {
       rtuples = new tuple[relr_size];
       for (size_t i = 0; i < relr_size; i++) {
         int64_t row_id = joined[rel_r][i];
-        rtuples[i] = {(int64_t)mmap_r.colptr[col_r][row_id], (int64_t)i};
+        rtuples[i] = {(int)mmap_r.colptr[col_r][row_id], (int)i};
       }
 
       // create tuples for s
@@ -627,13 +627,13 @@ void QueryExec::do_join(size_t join_index) {
         for (size_t i = 0; i < rels_size; i++) {
           int64_t row_id = filtered[rel_s][i];
           // value, rowid
-          stuples[i] = {(int64_t)mmap_s.colptr[col_s][row_id], (int64_t)row_id};
+          stuples[i] = {(int)mmap_s.colptr[col_s][row_id], (int)row_id};
         }
       } else {
         rels_size = mmap_s.rows;
         stuples = new tuple[rels_size];
         for (size_t i = 0; i < rels_size; i++) {
-          stuples[i] = {(int64_t)mmap_s.colptr[col_s][i], (int64_t)i};
+          stuples[i] = {(int)mmap_s.colptr[col_s][i], (int)i};
         }
       }
 

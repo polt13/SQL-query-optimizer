@@ -20,13 +20,6 @@ bucket::bucket() : occupied{false}, Bitmap{} {}
 
 // ------------------------------------------------------------------
 
-bucket *hashTable::getBucket(int64_t index) const {
-  if ((int64_t)index >= this->num_buckets) return nullptr;
-  return &(this->buckets[index]);
-}
-
-int64_t hashTable::getBucketCount() const { return num_buckets; }
-
 int64_t hashTable::hash2(int64_t key) {
   if (this->num_buckets == 0) return -1;  // a mod 0 is undefined
   return key % this->num_buckets;
@@ -50,8 +43,6 @@ void hashTable::rehash() {
 
   delete[] old_buckets;
 }
-
-int64_t ins = 0;
 
 // Insert all tuples of a partition into the hashTable
 void hashTable::insert(tuple *t) {
