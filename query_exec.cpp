@@ -185,11 +185,15 @@ void QueryExec::join_enumeration() {
 
 //-----------------------------------------------------------------------------------------
 
-bool QueryExec::isConnected(simple_vector<join> joins_order, size_t index) {
+bool QueryExec::isConnected(simple_vector<join>& joins_order,
+                            size_t joins_index) {
   if (joins_order.getSize() == 0) return false;
   for (size_t i = 0; i < joins_order.getSize(); i++) {
-    // if (...)
-      // return true;
+    if (joins[joins_index].left_rel == joins_order[i].left_rel ||
+        joins[joins_index].left_rel == joins_order[i].right_rel ||
+        joins[joins_index].right_rel == joins_order[i].left_rel ||
+        joins[joins_index].right_rel == joins_order[i].right_rel)
+      return true;
   }
   return false;
 }
