@@ -150,6 +150,15 @@ void QueryExec::initialize_stats() {
 
 //-----------------------------------------------------------------------------------------
 
+void QueryExec::join_enumeration() {
+  for (size_t i = 0; i < rel_names.getSize(); i++) {
+  }
+  for (size_t i = 0; i < rel_names.getSize(); i++) {
+  }
+}
+
+//-----------------------------------------------------------------------------------------
+
 void QueryExec::update_stats(size_t index, int flag) {
   if (flag == 0) {
     int64_t rel = this->filters[index].rel;

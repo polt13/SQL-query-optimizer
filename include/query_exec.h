@@ -60,6 +60,7 @@ class QueryExec {
   void parse_selections(char *);
 
   void initialize_stats();
+  void join_enumeration();
   void update_stats(size_t, int);
 
   void do_query();
