@@ -7,16 +7,6 @@
 #include <cstdlib>
 #include <cstdio>
 
-int64_t _hash(const int &key) { return key; }
-
-int64_t _hash2(const char *const &key) {
-  int64_t sum = 0;
-  const char *t = key;
-  while (*t) sum += *(t++);
-
-  return sum;
-}
-
 template <typename U, typename R>
 class entry {
   U key;
@@ -67,7 +57,7 @@ class simple_ht {
 
     for (int64_t i = 0; i < old_bucket_count; i++) {
       simple_vector<entry<U, T>> &old_bucket_items = old_buckets[i];
-      for (int64_t j = 0; j < old_bucket_items.getSize(); j++) {
+      for (size_t j = 0; j < old_bucket_items.getSize(); j++) {
         U &_key = old_bucket_items[j].get_key();
         T &_val = old_bucket_items[j].get_val();
         int64_t index = this->hash(_key) % num_buckets;
