@@ -42,21 +42,26 @@ struct project_rel {
 
 class QueryExec {
   int qindex;  // which query
-
   simple_vector<int64_t> rel_names;
   simple_vector<join> joins;
   simple_vector<filter> filters;
   simple_vector<project_rel> projections;
+
   bool rel_is_filtered[4];
   bool rel_is_joined[4];
 
   simple_vector<int64_t> joined[4];  // Represents latest intermediate results
   simple_vector<int64_t> filtered[4];
 
+  statistics *rel_stats[4];
+
   void parse_query(char *);
   void parse_names(char *);
   void parse_predicates(char *);
   void parse_selections(char *);
+
+  void initialize_stats();
+  void update_stats(size_t, int);
 
   void do_query();
   void filter_exec(size_t);

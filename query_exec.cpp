@@ -1,5 +1,6 @@
 #include "query_exec.h"
 
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -19,6 +20,7 @@ QueryExec::QueryExec(int qindex)
 
 void QueryExec::execute(char* query) {
   parse_query(query);
+  initialize_stats();
   do_query();
   checksum();
   std::free(query);  // free strdup'd memory
@@ -135,6 +137,221 @@ void QueryExec::parse_selections(char* selections) {
 
 //-----------------------------------------------------------------------------------------
 
+void QueryExec::initialize_stats() {
+  for (size_t i = 0; i < rel_names.getSize(); i++) {
+    int64_t actual_rel = this->rel_names[i];
+    this->rel_stats[i] = new statistics[rel_mmap[actual_rel].cols];
+    for (size_t j = 0; j < rel_mmap[actual_rel].cols; j++) {
+      this->rel_stats[i][j].l = rel_mmap[actual_rel].stats[j].l;
+      this->rel_stats[i][j].u = rel_mmap[actual_rel].stats[j].u;
+      this->rel_stats[i][j].f = rel_mmap[actual_rel].stats[j].f;
+      this->rel_stats[i][j].d = rel_mmap[actual_rel].stats[j].d;
+    }
+  }
+}
+
+//-----------------------------------------------------------------------------------------
+
+void QueryExec::update_stats(size_t index, int flag) {
+  if (flag == 0) {
+    int64_t rel = this->filters[index].rel;
+    int64_t actual_rel = this->rel_names[rel];
+    int64_t col = this->filters[index].col;
+    uint64_t lit = this->filters[index].literal;
+
+    if (filtered[rel].getSize() == 0 || rel_stats[rel][col].f == 0 ||
+        rel_stats[rel][col].d == 0) {
+      //   rel_stats[rel][col].l = 0;
+      //   rel_stats[rel][col].u = 0;
+      //   rel_stats[rel][col].f = 0;
+      //   rel_stats[rel][col].d = 0;
+      return;
+    }
+
+    // Filter σ_A=k
+    if (this->filters[index].op == operators::EQ) {
+      uint64_t prev_f = this->rel_stats[rel][col].f;
+      uint64_t prev_d = this->rel_stats[rel][col].d;
+
+      this->rel_stats[rel][col].l = lit;
+      this->rel_stats[rel][col].u = lit;
+
+      this->rel_stats[rel][col].d = 0;
+      this->rel_stats[rel][col].f = 0;
+      for (uint64_t i = 0; i < rel_mmap[actual_rel].rows; i++)
+        if (rel_mmap[actual_rel].colptr[col][i] == lit) {
+          this->rel_stats[rel][col].d = 1;
+          rel_stats[rel][col].f = prev_f / prev_d;
+          break;
+        }
+
+      for (size_t i = 0; i < rel_mmap[actual_rel].cols; i++)
+        if ((int64_t)i != col) {
+          double base = (1 - ((double)rel_stats[rel][col].f / prev_f));
+          double power = ((double)rel_stats[rel][i].f / rel_stats[rel][i].d);
+          double res = pow(base, power);
+          res = rel_stats[rel][i].d * (1 - res);
+          rel_stats[rel][i].d = (uint64_t)res;
+
+          rel_stats[rel][i].f = rel_stats[rel][col].f;
+        }
+    }
+
+    // Filter σ_A>k OR σ_A<k
+    else {
+      uint64_t prev_l = rel_stats[rel][col].l;
+      uint64_t prev_u = rel_stats[rel][col].u;
+      uint64_t prev_f = rel_stats[rel][col].f;
+
+      // Filter σ_A>k
+      if (this->filters[index].op == operators::GREATER) {
+        if ((uint64_t)lit < rel_stats[rel][col].l) lit = rel_stats[rel][col].l;
+        rel_stats[rel][col].l = lit;
+      }
+
+      // Filter σ_A<k
+      if (this->filters[index].op == operators::LESS) {
+        if ((uint64_t)lit > rel_stats[rel][col].u) lit = rel_stats[rel][col].u;
+        rel_stats[rel][col].u = lit;
+      }
+
+      rel_stats[rel][col].d *=
+          (((double)rel_stats[rel][col].u - rel_stats[rel][col].l) /
+           ((double)prev_u - prev_l));
+      rel_stats[rel][col].f *=
+          (((double)rel_stats[rel][col].u - rel_stats[rel][col].l) /
+           ((double)prev_u - prev_l));
+
+      for (size_t i = 0; i < rel_mmap[actual_rel].cols; i++)
+        if ((int64_t)i != col) {
+          double base = (1 - ((double)rel_stats[rel][col].f / prev_f));
+          double power = ((double)rel_stats[rel][i].f / rel_stats[rel][i].d);
+          double res = pow(base, power);
+          res = rel_stats[rel][i].d * (1 - res);
+          rel_stats[rel][i].d = (uint64_t)res;
+
+          rel_stats[rel][i].f = rel_stats[rel][col].f;
+        }
+    }
+  }
+  if (flag == 1) {
+    int64_t r_rel = this->joins[index].left_rel;
+    int64_t r_col = this->joins[index].left_col;
+    int64_t s_rel = this->joins[index].right_rel;
+    int64_t s_col = this->joins[index].right_col;
+    int64_t actual_r = this->rel_names[r_rel];
+    int64_t actual_s = this->rel_names[s_rel];
+
+    if (joined[r_rel].getSize() == 0 || joined[s_rel].getSize() == 0 ||
+        rel_stats[r_rel][r_col].f == 0 || rel_stats[s_rel][s_col].f == 0 ||
+        rel_stats[r_rel][r_col].d == 0 || rel_stats[s_rel][s_col].d == 0) {
+      //   rel_stats[r_rel][r_col].l = rel_stats[s_rel][s_col].l = 0;
+      //   rel_stats[r_rel][r_col].u = rel_stats[s_rel][s_col].u = 0;
+      //   rel_stats[r_rel][r_col].f = rel_stats[s_rel][s_col].f = 0;
+      //   rel_stats[r_rel][r_col].d = rel_stats[s_rel][s_col].d =0;
+      return;
+    }
+
+    // Filter σ_A=B (e.g 0 1 | 0.1=0.2&...)
+    if (r_rel == s_rel) {
+      uint64_t prev_f = rel_stats[r_rel][r_col].f;
+      uint64_t prev_d = rel_stats[r_rel][r_col].d;
+      if (rel_stats[r_rel][r_col].l > rel_stats[s_rel][s_col].l)
+        rel_stats[s_rel][s_col].l = rel_stats[r_rel][r_col].l;
+      else
+        rel_stats[r_rel][r_col].l = rel_stats[s_rel][s_col].l;
+
+      if (rel_stats[r_rel][r_col].u < rel_stats[s_rel][s_col].u)
+        rel_stats[s_rel][s_col].u = rel_stats[r_rel][r_col].u;
+      else
+        rel_stats[r_rel][r_col].u = rel_stats[s_rel][s_col].u;
+
+      rel_stats[r_rel][r_col].f = rel_stats[s_rel][s_col].f =
+          prev_f / (rel_stats[r_rel][r_col].u - rel_stats[r_rel][r_col].l + 1);
+
+      double base = (1 - ((double)rel_stats[r_rel][r_col].f / prev_f));
+      double power = ((double)prev_f / prev_d);
+      double res = pow(base, power);
+      res = prev_d * (1 - res);
+      rel_stats[r_rel][r_col].d = rel_stats[s_rel][s_col].d = (uint64_t)res;
+
+      for (size_t i = 0; i < rel_mmap[actual_r].cols; i++)
+        if ((int64_t)i != r_col && (int64_t)i != s_col) {
+          double base = (1 - ((double)rel_stats[r_rel][r_col].f / prev_f));
+          double power =
+              ((double)rel_stats[r_rel][i].f / rel_stats[r_rel][i].d);
+          double res = pow(base, power);
+          res = rel_stats[r_rel][i].d * (1 - res);
+          rel_stats[r_rel][i].d = (uint64_t)res;
+
+          rel_stats[r_rel][i].f = rel_stats[r_rel][r_col].f;
+        }
+    }
+
+    // Self-Join (e.g 0 0 | 0.1=1.1...)
+    else if (actual_r == actual_s) {
+      uint64_t prev_f = rel_stats[r_rel][r_col].f;
+      rel_stats[r_rel][r_col].f =
+          (prev_f * prev_f) /
+          (rel_stats[r_rel][r_col].u - rel_stats[r_rel][r_col].l + 1);
+
+      for (size_t i = 0; i < rel_mmap[actual_r].cols; i++)
+        if ((int64_t)i != r_col)
+          rel_stats[r_rel][i].f = rel_stats[r_rel][r_col].f;
+    }
+
+    // Join between 2 different relations
+    else if ((actual_r != actual_s) && (r_rel != s_rel)) {
+      uint64_t lower = rel_stats[r_rel][r_col].l;
+      uint64_t upper = rel_stats[r_rel][r_col].u;
+      uint64_t prev_d_r = rel_stats[r_rel][r_col].d;
+      uint64_t prev_d_s = rel_stats[s_rel][s_col].d;
+
+      if (rel_stats[s_rel][s_col].l > lower) lower = rel_stats[s_rel][s_col].l;
+      if (rel_stats[s_rel][s_col].u < upper) upper = rel_stats[s_rel][s_col].u;
+
+      rel_stats[r_rel][r_col].l = rel_stats[s_rel][s_col].l = lower;
+      rel_stats[r_rel][r_col].u = rel_stats[s_rel][s_col].u = upper;
+
+      rel_stats[r_rel][r_col].f = rel_stats[s_rel][s_col].f =
+          (rel_stats[r_rel][r_col].f * rel_stats[s_rel][s_col].f) /
+          (upper - lower + 1);
+
+      rel_stats[r_rel][r_col].d = rel_stats[s_rel][s_col].d =
+          (rel_stats[r_rel][r_col].d * rel_stats[s_rel][s_col].d) /
+          (upper - lower + 1);
+
+      for (size_t i = 0; i < rel_mmap[actual_r].cols; i++)
+        if ((int64_t)i != r_col) {
+          uint64_t prev_f_c = rel_stats[r_rel][i].f;
+          uint64_t prev_d_c = rel_stats[r_rel][i].d;
+          rel_stats[r_rel][i].f = rel_stats[r_rel][r_col].f;
+
+          double base = (1 - ((double)rel_stats[r_rel][r_col].d / prev_d_r));
+          double power = ((double)prev_f_c / prev_d_c);
+          double res = pow(base, power);
+          res = rel_stats[r_rel][i].d * (1 - res);
+          rel_stats[r_rel][i].d = (uint64_t)res;
+        }
+
+      for (size_t i = 0; i < rel_mmap[actual_s].cols; i++)
+        if ((int64_t)i != s_col) {
+          uint64_t prev_f_c = rel_stats[s_rel][i].f;
+          uint64_t prev_d_c = rel_stats[s_rel][i].d;
+          rel_stats[s_rel][i].f = rel_stats[r_rel][r_col].f;
+
+          double base = (1 - ((double)rel_stats[s_rel][s_col].d / prev_d_s));
+          double power = ((double)prev_f_c / prev_d_c);
+          double res = pow(base, power);
+          res = rel_stats[s_rel][i].d * (1 - res);
+          rel_stats[s_rel][i].d = (uint64_t)res;
+        }
+    }
+  }
+}
+
+//-----------------------------------------------------------------------------------------
+
 void QueryExec::do_query() {
   const size_t filter_count = this->filters.getSize();
   const size_t joins_count = this->joins.getSize();
@@ -145,7 +362,10 @@ void QueryExec::do_query() {
   }
 
   // Check whether there are filters in order to execute them first
-  for (size_t i = 0; i < filter_count; i++) filter_exec(i);
+  for (size_t i = 0; i < filter_count; i++) {
+    filter_exec(i);
+    update_stats(i, 0);
+  }
 
   for (size_t i = 0; i < joins_count; i++) {
     // swap relations so that the left is always the one that's joined
@@ -158,6 +378,11 @@ void QueryExec::do_query() {
       joins[i].right_col = temp_col;
     }
     do_join(i);
+    update_stats(i, 1);
+  }
+
+  for (size_t i = 0; i < rel_names.getSize(); i++) {
+    delete[] rel_stats[i];
   }
 }
 
