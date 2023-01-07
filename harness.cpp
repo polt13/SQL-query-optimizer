@@ -16,7 +16,9 @@ using namespace std;
 const unsigned long MAX_FAILED_QUERIES = 100;
 //---------------------------------------------------------------------------
 static void usage() {
-  cerr << "Usage: harness <init-file> <workload-file> <result-file> <test-executable>" << endl;
+  cerr << "Usage: harness <init-file> <workload-file> <result-file> "
+          "<test-executable>"
+       << endl;
 }
 //---------------------------------------------------------------------------
 static int set_nonblocking(int fd)
@@ -106,7 +108,7 @@ int main(int argc, char *argv[]) {
         // Copy input and results
         input_batches.push_back(input_chunk);
         result_batches.push_back(result_chunk);
-        input_chunk="";
+        input_chunk = "";
         result_chunk.clear();
       }
     }
@@ -171,7 +173,6 @@ int main(int argc, char *argv[]) {
     exit(EXIT_FAILURE);
   }
 
-
 #if 1
   // Wait for 1 second
   this_thread::sleep_for(1s);
@@ -179,20 +180,23 @@ int main(int argc, char *argv[]) {
 #else
   // Wait for the ready signal
   char status_buffer[6];
-  status_bytes = read_bytes(stdout_pipe[0], status_buffer, sizeof(status_buffer));
+  status_bytes =
+      read_bytes(stdout_pipe[0], status_buffer, sizeof(status_buffer));
   if (status_bytes < 0) {
     perror("read");
     exit(EXIT_FAILURE);
   }
 
-  if (status_bytes != sizeof(status_buffer) || (status_buffer[0] != 'R' && status_buffer[0] != 'r') ||
+  if (status_bytes != sizeof(status_buffer) ||
+      (status_buffer[0] != 'R' && status_buffer[0] != 'r') ||
       status_buffer[5] != '\n') {
     cerr << "Test program did not return ready status" << endl;
     exit(EXIT_FAILURE);
   }
 #endif
 
-  // Use select with non-blocking files to read and write from the child process, avoiding deadlocks
+  // Use select with non-blocking files to read and write from the child
+  // process, avoiding deadlocks
   if (set_nonblocking(stdout_pipe[0]) == -1) {
     perror("fcntl");
     exit(EXIT_FAILURE);
@@ -211,23 +215,29 @@ int main(int argc, char *argv[]) {
   unsigned long failure_cnt = 0;
 
   // Loop over all batches
-  for (unsigned long batch = 0; batch != input_batches.size() && failure_cnt < MAX_FAILED_QUERIES; ++batch) {
+  for (unsigned long batch = 0;
+       batch != input_batches.size() && failure_cnt < MAX_FAILED_QUERIES;
+       ++batch) {
     string output;  // raw output is collected here
     output.reserve(1000000);
 
     size_t input_ofs = 0;    // byte position in the input batch
     size_t output_read = 0;  // number of lines read from the child output
 
-    while (input_ofs != input_batches[batch].length() || output_read < result_batches[batch].size()) {
+    while (input_ofs != input_batches[batch].length() ||
+           output_read < result_batches[batch].size()) {
       fd_set read_fd, write_fd;
       FD_ZERO(&read_fd);
       FD_ZERO(&write_fd);
 
-      if (input_ofs != input_batches[batch].length()) FD_SET(stdin_pipe[1], &write_fd);
+      if (input_ofs != input_batches[batch].length())
+        FD_SET(stdin_pipe[1], &write_fd);
 
-      if (output_read != result_batches[batch].size()) FD_SET(stdout_pipe[0], &read_fd);
+      if (output_read != result_batches[batch].size())
+        FD_SET(stdout_pipe[0], &read_fd);
 
-      int retval = select(max(stdin_pipe[1], stdout_pipe[0]) + 1, &read_fd, &write_fd, NULL, NULL);
+      int retval = select(max(stdin_pipe[1], stdout_pipe[0]) + 1, &read_fd,
+                          &write_fd, NULL, NULL);
       if (retval == -1) {
         perror("select");
         exit(EXIT_FAILURE);
@@ -252,7 +262,8 @@ int main(int argc, char *argv[]) {
       // Feed another chunk of data from this batch to the test program
       if (FD_ISSET(stdin_pipe[1], &write_fd)) {
         int bytes =
-            write(stdin_pipe[1], input_batches[batch].data() + input_ofs, input_batches[batch].length() - input_ofs);
+            write(stdin_pipe[1], input_batches[batch].data() + input_ofs,
+                  input_batches[batch].length() - input_ofs);
         if (bytes < 0) {
           if (errno == EINTR) continue;
           perror("write");
@@ -265,7 +276,9 @@ int main(int argc, char *argv[]) {
     // Parse and compare the batch result
     stringstream result(output);
 
-    for (unsigned i = 0; i != result_batches[batch].size() && failure_cnt < MAX_FAILED_QUERIES; ++i) {
+    for (unsigned i = 0;
+         i != result_batches[batch].size() && failure_cnt < MAX_FAILED_QUERIES;
+         ++i) {
       string val;
 
       // result >> val;
@@ -277,8 +290,9 @@ int main(int argc, char *argv[]) {
 
       bool matched = val == result_batches[batch][i];
       if (!matched) {
-        cerr << "Result mismatch for query " << query_no << ", expected: " << result_batches[batch][i]
-                  << ", actual: " << val << endl;
+        cerr << "Result mismatch for query " << query_no
+             << ", expected: " << result_batches[batch][i]
+             << ", actual: " << val << endl;
         ++failure_cnt;
       }
       /*if (matched)
@@ -294,7 +308,8 @@ int main(int argc, char *argv[]) {
 
   if (failure_cnt == 0) {
     // Output the elapsed time in milliseconds
-    double elapsed_sec = (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0;
+    double elapsed_sec =
+        (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0;
     cout << (long)(elapsed_sec * 1000) << endl;
     return EXIT_SUCCESS;
   }

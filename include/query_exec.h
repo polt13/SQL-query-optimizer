@@ -41,6 +41,7 @@ struct project_rel {
 };
 
 class QueryExec {
+  int qindex;  // which query
   simple_vector<int64_t> rel_names;
   simple_vector<join> joins;
   simple_vector<filter> filters;
@@ -52,7 +53,7 @@ class QueryExec {
   simple_vector<int64_t> joined[4];  // Represents latest intermediate results
   simple_vector<int64_t> filtered[4];
 
-  statistics* rel_stats[4];
+  statistics *rel_stats[4];
 
   void parse_query(char *);
   void parse_names(char *);
@@ -71,6 +72,7 @@ class QueryExec {
   void clear();
 
  public:
+  QueryExec(int);
   void execute(char *);
 };
 

@@ -5,6 +5,8 @@
 #include "list.h"
 #include "partitioner.h"
 #include "simple_vector.h"
+#include "simple_queue.h"
+#include "simple_ht.h"
 
 void test_partitioning_function() {
   tuple a{3, 6};
@@ -29,8 +31,7 @@ void test_partitions_1() {
 
   Partitioner p;
 
-  // try with tiny cache size to force partitioning
-  relation r_ = p.partition(r, 1);
+  relation r_ = p.partition(r, 1, 2, 4);
 
   TEST_CHECK(r_.getAmount() == r.getAmount());
   TEST_CHECK(r_[0].getKey() == 12);
@@ -52,7 +53,7 @@ void test_partitions_2() {
   relation r(tuples, 4);
 
   Partitioner p;
-  relation r_ = p.partition(r, 2);
+  relation r_ = p.partition(r, 2, 2, 4);
 
   TEST_CHECK(r_.getAmount() == r.getAmount());
   TEST_CHECK(r_[0].getKey() == 0);
@@ -77,7 +78,7 @@ void test_partitions_3() {
   relation r(tuples, 26);
 
   Partitioner rp;
-  relation r_ = rp.partition(r, 1);
+  relation r_ = rp.partition(r, 1, 2, 4);
   Histogram* hist = rp.getHistogram();
   const int64_t* psum = hist->getPsum();
 
@@ -128,7 +129,7 @@ void test_partitions_4() {
   relation r(tuples, 99);
 
   Partitioner rp;
-  relation r_ = rp.partition(r, 2);
+  relation r_ = rp.partition(r, 2, 2, 4);
   Histogram* hist = rp.getHistogram();
   const int64_t* psum = hist->getPsum();
 
@@ -627,7 +628,7 @@ void test_join_1() {
   relation r(tuples1, 6);
   relation s(tuples2, 3);
 
-  result t = PartitionedHashJoin(r, s, 1, 4, 8);
+  result t = PartitionedHashJoin_ST(r, s, 1, 4, 8);
 
   TEST_CHECK(t.getSize() == 5);
 
@@ -675,7 +676,7 @@ void test_join_2() {
 
   relation r(tuples1, 6);
   relation s(tuples2, 3);
-  result t = PartitionedHashJoin(r, s, 2, 4, 8);
+  result t = PartitionedHashJoin_ST(r, s, 2, 4, 8);
   /* for (int64_t i = 0; i < t.result_size; i++) {
     std::printf("\nr_id: %ld, r_row: %ld\ns_id: %ld, s_row: %ld\n",
                 t[i].a.getKey(), t[i].a.getPayload(), t[i].b.getKey(),
@@ -714,7 +715,7 @@ void test_join_3() {
 
   relation r(tuples1, 3);
   relation s(tuples2, 5);
-  result t = PartitionedHashJoin(r, s, 0, 4, 8);
+  result t = PartitionedHashJoin_ST(r, s, 0, 4, 8);
 
   TEST_CHECK(t.getSize() == 3);
 
@@ -774,7 +775,7 @@ void test_join_4() {
   relation r(tuples1, 100);
   relation s(tuples2, 200);
 
-  result t = PartitionedHashJoin(r, s);
+  result t = PartitionedHashJoin_ST(r, s);
   TEST_CHECK(t.getSize() == 219);
 }
 
@@ -2537,10 +2538,10 @@ void test_join_5() {
   relation r(tuples1, 10000);
   relation s(tuples2, 15000);
 
-  result t1 = PartitionedHashJoin(r, s);
+  result t1 = PartitionedHashJoin_ST(r, s);
   TEST_CHECK(t1.getSize() == 149814);
 
-  result t2 = PartitionedHashJoin(s, r);
+  result t2 = PartitionedHashJoin_ST(s, r);
   TEST_CHECK(t2.getSize() == t1.getSize());
 }
 
@@ -2594,6 +2595,54 @@ void test_linked_list() {
   TEST_CHECK(l.find(s[3]));
 }
 
+void test_squeue() {
+  simple_queue<int> sq;
+  sq.enqueue(3);
+  sq.enqueue(5);
+  sq.enqueue(11);
+  sq.enqueue(10);
+  TEST_CHECK(sq.getLen() == 4);
+  TEST_CHECK(sq.pop() == 3);
+  TEST_CHECK(sq.pop() == 5);
+  TEST_CHECK(sq.pop() == 11);
+  TEST_CHECK(sq.pop() == 10);
+  TEST_CHECK(sq.getLen() == 0);
+}
+
+// use for hashtable testing
+// each HT needs a hash function as constructor argument
+int64_t _hashint(const int& u) { return u; }
+int64_t _hashstr(const char* const& u) {
+  const char* x = u;
+  int64_t sum = 0;
+  while (*x) sum += *(x++);
+
+  return sum;
+}
+
+void test_sht() {
+  simple_ht<int, int> ht(_hashint);
+  ht[3] = 9;
+  ht[ht[3]] = 8;
+  ht[5000] = 15;
+
+  TEST_CHECK(ht[5000] == 15);
+  TEST_CHECK(ht[9] == 8);
+  TEST_CHECK(ht[3] == 9);
+  // default construct a VALUE_TYPE object when it doesn't exist
+  TEST_CHECK(ht[2] == 0);
+}
+
+void test_sht_2() {
+  simple_ht<const char*, int> ht(_hashstr);
+
+  ht["Hello"] = strlen("Hello");
+  ht["TBD"] = strlen("TBD");
+
+  TEST_CHECK(++ht["Hello"] == 6);
+  TEST_CHECK(--ht["TBD"] == 2);
+}
+
 TEST_LIST = {{"Partitioning function", test_partitioning_function},
              {"Partitioning - small test (One pass)", test_partitions_1},
              {"Partitioning - small test 2 (Two Pass)", test_partitions_2},
@@ -2617,4 +2666,7 @@ TEST_LIST = {{"Partitioning function", test_partitioning_function},
              {"Join Huge", test_join_5},
              {"Test Simple Vector", test_svector},
              {"Test List", test_linked_list},
+             {"Test Simple Queue,", test_squeue},
+             {"Test Simple Hash Table", test_sht},
+             {"Test Simple Hash Table 2", test_sht_2},
              {NULL, NULL}};

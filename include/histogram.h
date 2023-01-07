@@ -8,6 +8,7 @@ class Histogram {
   int64_t* entries;
   int64_t* psum;
   int64_t size;
+  char pad[40];
 
  public:
   Histogram(int64_t);
@@ -25,4 +26,7 @@ class Histogram {
   // for later use in the hashtable insertion and traversing
   const int64_t* getPsum() const { return psum; }
 };
+
+void calcHist(relation&, size_t, size_t, Histogram*&, int64_t);
+
 #endif

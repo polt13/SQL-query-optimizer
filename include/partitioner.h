@@ -3,14 +3,12 @@
 #include "dataForm.h"
 #include <cstdint>
 #include "histogram.h"
-
-#define USE_BITS 2       // first partitioning
-#define USE_BITS_NEXT 4  // 2nd partitioning
-#define L2_SIZE 1024
+#include "hashTable.h"
+#include "config.h"
 
 class Partitioner {
   Histogram* hist;
-  // how many partition phases the R relation went through
+  //  how many partition phases the R relation went through
   int64_t partitioningLevel;
 
   relation partition1(relation&, int64_t = USE_BITS);
@@ -36,7 +34,16 @@ class Partitioner {
 };
 
 /* Partitioned Hash Join */
-result PartitionedHashJoin(relation&, relation&, int64_t = -1,
-                           int64_t = USE_BITS, int64_t = USE_BITS_NEXT);
+result_mt PartitionedHashJoin(relation&, relation&, int64_t = -1,
+                              int64_t = USE_BITS, int64_t = USE_BITS_NEXT);
+
+void joinBuckets(relation&, int64_t, int64_t, hashTable*, result&);
+
+void buildHT(relation&, int64_t, int64_t, hashTable*);
+
+/// only for unit testing
+
+result PartitionedHashJoin_ST(relation&, relation&, int64_t = -1,
+                              int64_t = USE_BITS, int64_t = USE_BITS_NEXT);
 
 #endif
