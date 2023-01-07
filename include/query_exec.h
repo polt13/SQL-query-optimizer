@@ -62,6 +62,8 @@ class QueryExec {
 
   void initialize_stats();
   void join_enumeration();
+  bool isConnected(simple_vector, size_t);
+  uint64_t calculate_cost(size_t);
   void update_stats(size_t, int);
 
   void do_query();

@@ -78,5 +78,14 @@ class simple_vector {
     objarr = new T[capacity];
     size = 0;
   }
+  
+  void remove(int64_t indx) {
+    // if removing last element do nothing
+    if (indx < size - 1)
+      std::memmmove(objarr + indx, objarr + indx + 1,
+                    (size - indx - 1) * sizeof(T));
+
+    size--;
+  }
 };
 #endif

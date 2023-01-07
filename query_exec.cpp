@@ -8,8 +8,8 @@
 #include "dataForm.h"
 #include "map_info.h"
 #include "partitioner.h"
-#include "simple_vector.h"
 #include "query_results.h"
+#include "simple_vector.h"
 
 extern QueryResults qres[100];
 
@@ -153,9 +153,80 @@ void QueryExec::initialize_stats() {
 //-----------------------------------------------------------------------------------------
 
 void QueryExec::join_enumeration() {
-  for (size_t i = 0; i < rel_names.getSize(); i++) {
+  size_t initial_size = joins.getSize();
+  simple_vector<join> joins_order;
+
+  while (joins.getSize() > 0) {
+    uint64_t min_cost = UINT64_MAX;
+    size_t min_index;
+    for (size_t i = 0; i < joins.getSize(); i++) {
+      if ((joins.getSize() != initial_size) && (!isConnected(joins_order, i)))
+        continue;
+      uint64_t curr_cost = calculate_cost(i);
+      if (curr_cost < min_cost) {
+        min_cost = curr_cost;
+        min_index = i;
+      }
+    }
+    if (rel_is_joined[joins[min_index].left_rel] == false) {
+      int64_t temp = joins[min_index].left_rel;
+      int64_t temp_col = joins[min_index].left_col;
+      joins[min_index].left_rel = joins[min_index].right_rel;
+      joins[min_index].left_col = joins[min_index].right_col;
+      joins[min_index].right_rel = temp;
+      joins[min_index].right_col = temp_col;
+    }
+    do_join(min_index);
+    update_stats(min_index);
+    joins_order.add_back(joins[min_index]);
+    joins.remove(min_index);
   }
-  for (size_t i = 0; i < rel_names.getSize(); i++) {
+}
+
+//-----------------------------------------------------------------------------------------
+
+bool QueryExec::isConnected(simple_vector<join> joins_order, size_t index) {
+  if (joins_order.getSize() == 0) return false;
+  for (size_t i = 0; i < joins_order.getSize(); i++) {
+    // if (...)
+      // return true;
+  }
+  return false;
+}
+
+//-----------------------------------------------------------------------------------------
+
+uint64_t QueryExec::calculate_cost(size_t index) {
+  int64_t r_rel = this->joins[index].left_rel;
+  int64_t r_col = this->joins[index].left_col;
+  int64_t s_rel = this->joins[index].right_rel;
+  int64_t s_col = this->joins[index].right_col;
+  int64_t actual_r = this->rel_names[r_rel];
+  int64_t actual_s = this->rel_names[s_rel];
+  uint64_t numerator, denominator, res;
+
+  // Self-Join (e.g 0 0 | 0.1=1.1...)
+  if ((actual_r == actual_s) && (r_col == s_col)) {
+    numerator = rel_stats[r_rel][r_col].f * rel_stats[r_rel][r_col].f;
+    denominator = rel_stats[r_rel][r_col].u - rel_stats[r_rel][r_col].l + 1;
+    res = numerator / denominator;
+    return res;
+  }
+
+  // Join between 2 different relations
+  else {
+    uint64_t lower = rel_stats[r_rel][r_col].l;
+    uint64_t upper = rel_stats[r_rel][r_col].u;
+    uint64_t prev_d_r = rel_stats[r_rel][r_col].d;
+    uint64_t prev_d_s = rel_stats[s_rel][s_col].d;
+
+    if (rel_stats[s_rel][s_col].l > lower) lower = rel_stats[s_rel][s_col].l;
+    if (rel_stats[s_rel][s_col].u < upper) upper = rel_stats[s_rel][s_col].u;
+
+    numerator = rel_stats[r_rel][r_col].f * rel_stats[s_rel][s_col].f;
+    denominator = upper - lower + 1;
+    res = numerator / denominator;
+    return res;
   }
 }
 
@@ -298,7 +369,7 @@ void QueryExec::update_stats(size_t index, int flag) {
     }
 
     // Self-Join (e.g 0 0 | 0.1=1.1...)
-    else if (actual_r == actual_s) {
+    else if ((actual_r == actual_s) && (r_col == s_col)) {
       uint64_t prev_f = rel_stats[r_rel][r_col].f;
       rel_stats[r_rel][r_col].f =
           (prev_f * prev_f) /
@@ -310,7 +381,7 @@ void QueryExec::update_stats(size_t index, int flag) {
     }
 
     // Join between 2 different relations
-    else if ((actual_r != actual_s) && (r_rel != s_rel)) {
+    else {
       uint64_t lower = rel_stats[r_rel][r_col].l;
       uint64_t upper = rel_stats[r_rel][r_col].u;
       uint64_t prev_d_r = rel_stats[r_rel][r_col].d;
@@ -376,19 +447,22 @@ void QueryExec::do_query() {
     update_stats(i, 0);
   }
 
-  for (size_t i = 0; i < joins_count; i++) {
-    // swap relations so that the left is always the one that's joined
-    if (rel_is_joined[joins[i].left_rel] == false) {
-      int64_t temp = joins[i].left_rel;
-      int64_t temp_col = joins[i].left_col;
-      joins[i].left_rel = joins[i].right_rel;
-      joins[i].left_col = joins[i].right_col;
-      joins[i].right_rel = temp;
-      joins[i].right_col = temp_col;
-    }
-    do_join(i);
-    update_stats(i, 1);
-  }
+  // Rearrangement of joins
+  // Ascending order of cost
+  join_enumeration();
+
+  //   for (size_t i = 0; i < joins_count; i++) {
+  //     // swap relations so that the left is always the one that's joined
+  //     if (rel_is_joined[joins[i].left_rel] == false) {
+  //       int64_t temp = joins[i].left_rel;
+  //       int64_t temp_col = joins[i].left_col;
+  //       joins[i].left_rel = joins[i].right_rel;
+  //       joins[i].left_col = joins[i].right_col;
+  //       joins[i].right_rel = temp;
+  //       joins[i].right_col = temp_col;
+  //     }
+  //     do_join(i);
+  //   }
 
   for (size_t i = 0; i < rel_names.getSize(); i++) {
     delete[] rel_stats[i];
