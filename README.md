@@ -211,3 +211,4 @@ A different array of simple vectors contains the rowIDs for the relation that ha
 **NOTE 1: We assume that at most 4 relations are part of a query for simplicity purposes. This can easily be tweaked if needed.**
 
 **NOTE 2 [Part 2]: When it comes to joins, we expect to only have a single intermediate result at a given time. If a situation arises where more than one intermediate result is needed, we can later work around it by changing the order of predicate execution, so that we always end up with 1 intermediate result**
+
