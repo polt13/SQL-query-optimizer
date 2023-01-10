@@ -4,8 +4,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include "map_info.h"
-
-#define UPPER_LIMIT 50000000  // 50,000,000
+#include "config.h"
 
 memory_map parse_relation(const char* fileName) {
   int fd = open(fileName, O_RDONLY);

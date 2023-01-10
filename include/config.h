@@ -12,4 +12,6 @@
 
 #define NBHD_SIZE 32  // Neigbourhood size
 
+#define UPPER_LIMIT 50000000  // 50,000,000
+
 #endif

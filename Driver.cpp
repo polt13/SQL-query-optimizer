@@ -5,9 +5,10 @@
 #include "job_scheduler.h"
 #include "query_results.h"
 #include "config.h"
+
 memory_map rel_mmap[14];
 
-QueryResults qres[100];
+QueryResults qres[70];
 
 JobScheduler js(THREAD_COUNT);
 JobScheduler qe_jobs(THREAD_COUNT);

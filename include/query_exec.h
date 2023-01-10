@@ -6,8 +6,6 @@
 #include "map_info.h"
 #include "simple_vector.h"
 
-constexpr size_t relation_count = 14;
-
 enum operators { EQ, GREATER, LESS };
 
 struct filter {

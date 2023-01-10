@@ -51,8 +51,6 @@ void hashTable::rehash() {
   delete[] old_buckets;
 }
 
-int64_t ins = 0;
-
 // Insert all tuples of a partition into the hashTable
 void hashTable::insert(tuple *t) {
   int64_t hashVal = hash2(t->getKey());
