@@ -687,7 +687,7 @@ void QueryExec::checksum() {
   int64_t curr_rel;
   int64_t curr_col;
   int64_t curr_row;
-  int64_t sum;
+  uint64_t sum;
   int64_t actual_rel;
 
   QueryResults& qr = qres[qindex];
