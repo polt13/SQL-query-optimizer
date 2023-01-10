@@ -169,19 +169,11 @@ void QueryExec::join_enumeration() {
       }
     }
     if (min_index == SIZE_MAX) exit(EXIT_FAILURE);
-    if (rel_is_joined[joins[min_index].left_rel] == false) {
-      int64_t temp = joins[min_index].left_rel;
-      int64_t temp_col = joins[min_index].left_col;
-      joins[min_index].left_rel = joins[min_index].right_rel;
-      joins[min_index].left_col = joins[min_index].right_col;
-      joins[min_index].right_rel = temp;
-      joins[min_index].right_col = temp_col;
-    }
-    do_join(min_index);
     update_stats(min_index, 1);
     joins_order.add_back(joins[min_index]);
     joins.remove(min_index);
   }
+  joins.steal(joins_order);
 }
 
 //-----------------------------------------------------------------------------------------
@@ -437,7 +429,7 @@ void QueryExec::update_stats(size_t index, int flag) {
 
 void QueryExec::do_query() {
   const size_t filter_count = this->filters.getSize();
-  //   const size_t joins_count = this->joins.getSize();
+  const size_t joins_count = this->joins.getSize();
 
   for (size_t i = 0; i < 4; i++) {
     rel_is_filtered[i] = false;
@@ -454,18 +446,18 @@ void QueryExec::do_query() {
   // Ascending order of cost
   join_enumeration();
 
-  //   for (size_t i = 0; i < joins_count; i++) {
-  //     // swap relations so that the left is always the one that's joined
-  //     if (rel_is_joined[joins[i].left_rel] == false) {
-  //       int64_t temp = joins[i].left_rel;
-  //       int64_t temp_col = joins[i].left_col;
-  //       joins[i].left_rel = joins[i].right_rel;
-  //       joins[i].left_col = joins[i].right_col;
-  //       joins[i].right_rel = temp;
-  //       joins[i].right_col = temp_col;
-  //     }
-  //     do_join(i);
-  //   }
+  for (size_t i = 0; i < joins_count; i++) {
+    // swap relations so that the left is always the one that's joined
+    if (rel_is_joined[joins[i].left_rel] == false) {
+      int64_t temp = joins[i].left_rel;
+      int64_t temp_col = joins[i].left_col;
+      joins[i].left_rel = joins[i].right_rel;
+      joins[i].left_col = joins[i].right_col;
+      joins[i].right_rel = temp;
+      joins[i].right_col = temp_col;
+    }
+    do_join(i);
+  }
 
   for (size_t i = 0; i < rel_names.getSize(); i++) {
     delete[] rel_stats[i];
