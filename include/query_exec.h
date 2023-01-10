@@ -71,7 +71,6 @@ class QueryExec {
   void do_join(size_t);
 
   void checksum();
-  void clear();
 
  public:
   QueryExec(int);

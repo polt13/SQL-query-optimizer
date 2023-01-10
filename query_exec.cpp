@@ -44,6 +44,8 @@ void QueryExec::parse_query(char* query) {
   parse_selections(selections);
 }
 
+//-----------------------------------------------------------------------------------------
+
 void QueryExec::parse_names(char* rel_string) {
   char* buffr;
   char* rel;
@@ -53,6 +55,8 @@ void QueryExec::parse_names(char* rel_string) {
     rel_string = nullptr;
   }
 }
+
+//-----------------------------------------------------------------------------------------
 
 void QueryExec::parse_predicates(char* predicates) {
   char *buffr, *buffr2, *buffr3;
@@ -121,6 +125,8 @@ void QueryExec::parse_predicates(char* predicates) {
     predicates = nullptr;
   }
 }
+
+//-----------------------------------------------------------------------------------------
 
 void QueryExec::parse_selections(char* selections) {
   char *buffr, *buffr2;
@@ -457,9 +463,11 @@ void QueryExec::do_query() {
     do_join(i);
   }
 
+#ifdef Q_OPT
   for (size_t i = 0; i < rel_names.getSize(); i++) {
     delete[] rel_stats[i];
   }
+#endif
 }
 
 //-----------------------------------------------------------------------------------------
@@ -523,6 +531,8 @@ void QueryExec::filter_exec(size_t index) {
 
   filtered[rel].steal(new_filtered);
 }
+
+//-----------------------------------------------------------------------------------------
 
 void QueryExec::do_join(size_t join_index) {
   int64_t rel_r = joins[join_index].left_rel;
@@ -671,6 +681,8 @@ void QueryExec::do_join(size_t join_index) {
   }
 }
 
+//-----------------------------------------------------------------------------------------
+
 void QueryExec::checksum() {
   int64_t curr_rel;
   int64_t curr_col;
@@ -704,18 +716,5 @@ void QueryExec::checksum() {
     }
 
     qr.sums[qr.projections++] = sum;
-  }
-}
-
-//-----------------------------------------------------------------------------------------
-
-void QueryExec::clear() {
-  this->rel_names.clear();
-  this->joins.clear();
-  this->filters.clear();
-  this->projections.clear();
-  for (int64_t i = 0; i < 4; i++) {
-    joined[i].clear();
-    filtered[i].clear();
   }
 }

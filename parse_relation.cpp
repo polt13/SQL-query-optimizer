@@ -40,8 +40,10 @@ memory_map parse_relation(const char* fileName) {
   addr += sizeof(mapper.rows);
   mapper.cols = *(size_t*)(addr);
 
+#ifdef Q_OPT
   // For Query Optimizer - Statistics
   mapper.stats = new statistics[mapper.cols];
+#endif
 
   // create an array to replace the vector in the original file
   // each element is a pointer to a column
@@ -53,6 +55,7 @@ memory_map parse_relation(const char* fileName) {
     mapper.colptr[i] = (uint64_t*)(addr);
     addr += mapper.rows * sizeof(uint64_t);
 
+#ifdef Q_OPT
     // For Query Optimizer - Find and Store Statistics
     uint64_t min = mapper.colptr[i][0];
     uint64_t max = mapper.colptr[i][0];
@@ -80,6 +83,7 @@ memory_map parse_relation(const char* fileName) {
         mapper.stats[i].d++;
 
     delete[] d_array;
+#endif
   }
 
   return mapper;
