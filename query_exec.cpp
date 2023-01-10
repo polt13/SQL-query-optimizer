@@ -20,7 +20,9 @@ QueryExec::QueryExec(int qindex)
 
 void QueryExec::execute(char* query) {
   parse_query(query);
+#ifdef Q_OPT
   initialize_stats();
+#endif
   do_query();
   checksum();
   std::free(query);  // free strdup'd memory
@@ -236,10 +238,6 @@ void QueryExec::update_stats(size_t index, int flag) {
 
     if (filtered[rel].getSize() == 0 || rel_stats[rel][col].f == 0 ||
         rel_stats[rel][col].d == 0) {
-      //   rel_stats[rel][col].l = 0;
-      //   rel_stats[rel][col].u = 0;
-      //   rel_stats[rel][col].f = 0;
-      //   rel_stats[rel][col].d = 0;
       return;
     }
 
@@ -320,10 +318,6 @@ void QueryExec::update_stats(size_t index, int flag) {
     if (joined[r_rel].getSize() == 0 || joined[s_rel].getSize() == 0 ||
         rel_stats[r_rel][r_col].f == 0 || rel_stats[s_rel][s_col].f == 0 ||
         rel_stats[r_rel][r_col].d == 0 || rel_stats[s_rel][s_col].d == 0) {
-      //   rel_stats[r_rel][r_col].l = rel_stats[s_rel][s_col].l = 0;
-      //   rel_stats[r_rel][r_col].u = rel_stats[s_rel][s_col].u = 0;
-      //   rel_stats[r_rel][r_col].f = rel_stats[s_rel][s_col].f = 0;
-      //   rel_stats[r_rel][r_col].d = rel_stats[s_rel][s_col].d =0;
       return;
     }
 
@@ -439,12 +433,16 @@ void QueryExec::do_query() {
   // Check whether there are filters in order to execute them first
   for (size_t i = 0; i < filter_count; i++) {
     filter_exec(i);
+#ifdef Q_OPT
     update_stats(i, 0);
+#endif
   }
 
   // Rearrangement of joins
   // Ascending order of cost
+#ifdef Q_OPT
   join_enumeration();
+#endif
 
   for (size_t i = 0; i < joins_count; i++) {
     // swap relations so that the left is always the one that's joined

@@ -13,6 +13,9 @@ JobScheduler js(THREAD_COUNT);
 JobScheduler qe_jobs(THREAD_COUNT);
 
 int main(int argc, char* argv[]) {
+#ifdef Q_OPT
+  fprintf(stderr, "-DQ_OPT\n");
+#endif
   int64_t relations_count = 0;
   char line[4096];
   while (std::fgets(line, sizeof(line), stdin)) {
