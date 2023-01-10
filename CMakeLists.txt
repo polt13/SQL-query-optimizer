@@ -5,11 +5,12 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -fsanitize=address -Wall")
-set(CMAKE_CXX_FLAGS_Q_OPT "${CMAKE_CXX_FLAGS_Q_OPT} -DQ_OPT")
 
 enable_testing()
 
 include_directories(include)
+
+add_definitions(-DQ_OPT)
 
 #unit test
 add_executable(utest hashTable.cpp histogram.cpp list.cpp tests/partitioner_old.cpp tests/join_old.cpp tests/test.cpp )
