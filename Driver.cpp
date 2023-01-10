@@ -14,8 +14,11 @@ JobScheduler qe_jobs(THREAD_COUNT);
 
 int main(int argc, char* argv[]) {
 #ifdef Q_OPT
-  fprintf(stderr, "-DQ_OPT\n");
+  fprintf(stderr, "Query Optimizer is ON.\n");
+#else
+  fprintf(stderr, "Query Optimizer is OFF.\n");
 #endif
+  fprintf(stderr, "Scheduler is using %d threads.\n", THREAD_COUNT);
   int64_t relations_count = 0;
   char line[4096];
   while (std::fgets(line, sizeof(line), stdin)) {

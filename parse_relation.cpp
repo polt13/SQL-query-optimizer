@@ -5,7 +5,7 @@
 #include <sys/stat.h>
 #include "map_info.h"
 
-#define UPPER_LIMIT 50000000    // 50,000,000
+#define UPPER_LIMIT 50000000  // 50,000,000
 
 memory_map parse_relation(const char* fileName) {
   int fd = open(fileName, O_RDONLY);
@@ -60,27 +60,23 @@ memory_map parse_relation(const char* fileName) {
     uint64_t min = mapper.colptr[i][0];
     uint64_t max = mapper.colptr[i][0];
     for (unsigned j = 0; j < mapper.rows; j++) {
-      if (mapper.colptr[i][j] < min)
-        min = mapper.colptr[i][j];
-      if (mapper.colptr[i][j] > max)
-        max = mapper.colptr[i][j];
+      if (mapper.colptr[i][j] < min) min = mapper.colptr[i][j];
+      if (mapper.colptr[i][j] > max) max = mapper.colptr[i][j];
     }
     mapper.stats[i].l = min;
     mapper.stats[i].u = max;
     mapper.stats[i].f = mapper.rows;
 
     int64_t arr_size = max - min + 1;
-    if (arr_size > UPPER_LIMIT)
-      arr_size = UPPER_LIMIT;
-    bool *d_array = new bool[arr_size]{};    // initialize all with "false"
+    if (arr_size > UPPER_LIMIT) arr_size = UPPER_LIMIT;
+    bool* d_array = new bool[arr_size]{};  // initialize all with "false"
 
     for (unsigned j = 0; j < mapper.rows; j++) {
       uint64_t val = mapper.colptr[i][j];
       d_array[(val - min) % UPPER_LIMIT] = true;
     }
     for (unsigned j = 0; j < arr_size; j++)
-      if (d_array[j])
-        mapper.stats[i].d++;
+      if (d_array[j]) mapper.stats[i].d++;
 
     delete[] d_array;
 #endif
