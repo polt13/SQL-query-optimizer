@@ -1,7 +1,7 @@
 #ifndef HT_H
 #define HT_H
 #include "list.h"
-#define NBHD_SIZE 32  // Neigbourhood size
+#include "config.h"
 
 class bucket {
   List tuples;
