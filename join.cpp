@@ -66,26 +66,29 @@ result_mt PartitionedHashJoin(relation& r, relation& s, int64_t forceDepth,
   }
   // no partitioning case
   else {
-    // use the vector inside for the results in the case where only one
-    // subresult exists
-    result* result_join = new result[1];
+    // use the vector inside for the results in the case where no partitioning
+    result* result_join = new result[THREAD_COUNT];
+
     int64_t r_entries = r.getAmount();
+
     int64_t s_entries = s.getAmount();
+
     hashTable h{r_entries};
+
     for (int64_t i = 0; i < r_entries; i++) h.insert(&r[i]);
-    for (int64_t j = 0; j < s_entries; j++) {
-      List* tuple_list = h.findEntry(s[j].getKey());
-      if (tuple_list) {
-        Node* traverse = tuple_list->getRoot();
-        while (traverse) {
-          result_item entry{traverse->mytuple->getPayload(), s[j].getPayload()};
-          result_join->push(entry);
-          traverse = traverse->next;
-        }
-      }
+
+    int64_t per_thread = s_entries / THREAD_COUNT;
+
+    for (int64_t i = 0; i < THREAD_COUNT; i++) {
+      int64_t start = i * per_thread;
+      int64_t end = (i + 1) * per_thread;
+      if ((i == THREAD_COUNT - 1) && (end < s_entries)) end = s_entries;
+      js.add_job(new JoinJob(s, start, end, &h, result_join[i]));
     }
 
-    return result_mt{result_join, 1};
+    js.wait_all();
+
+    return result_mt{result_join, THREAD_COUNT};
   }
 }
 
