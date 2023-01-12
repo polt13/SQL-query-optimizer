@@ -11,7 +11,7 @@ memory_map rel_mmap[14];
 QueryResults qres[70];
 
 JobScheduler js(THREAD_COUNT);
-JobScheduler qe_jobs(THREAD_COUNT);
+JobScheduler qe_jobs(THREAD_COUNT_QUERIES);
 
 int main(int argc, char* argv[]) {
 #ifdef Q_OPT

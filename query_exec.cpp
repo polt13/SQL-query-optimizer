@@ -13,7 +13,7 @@
 
 extern QueryResults qres[100];
 
-QueryExec::QueryExec(int qindex)
+QueryExec::QueryExec(int32_t qindex)
     : qindex{qindex}, rel_names{4}, projections{4} {}
 
 //-----------------------------------------------------------------------------------------
@@ -82,7 +82,7 @@ void QueryExec::parse_predicates(char* predicates) {
 
     if (std::strchr(left, '.') == nullptr) {
       // left contains literal - 100% filter
-      long literal = std::strtol(left, nullptr, 10);
+      int32_t literal = (int32_t)std::strtol(left, nullptr, 10);
 
       if (operation_type == operators::GREATER)
         operation_type = operators::LESS;
@@ -93,30 +93,32 @@ void QueryExec::parse_predicates(char* predicates) {
 
       char* right = buffr2;
 
-      long right_rel = std::strtol(strtok_r(right, ".", &buffr3), nullptr, 10);
+      int32_t right_rel =
+          (int32_t)std::strtol(strtok_r(right, ".", &buffr3), nullptr, 10);
 
-      long right_col = std::strtol(buffr3, nullptr, 10);
+      int32_t right_col = (int32_t)std::strtol(buffr3, nullptr, 10);
 
       filter myfilter(right_rel, right_col, operation_type, literal);
       this->filters.add_back(myfilter);
 
     } else {
       // e.g 0.2 (relation.column) - Could be filter OR join
-      long left_rel = std::strtol(strtok_r(left, ".", &buffr3), nullptr, 10);
-      long left_col = std::strtol(buffr3, nullptr, 10);
+      int32_t left_rel =
+          (int32_t)std::strtol(strtok_r(left, ".", &buffr3), nullptr, 10);
+      int32_t left_col = (int32_t)std::strtol(buffr3, nullptr, 10);
 
       char* right = buffr2;
       if (std::strchr(right, '.') == nullptr) {
         // right contains literal - 100% filter
-        long literal = std::strtol(right, nullptr, 10);
+        int32_t literal = (int32_t)std::strtol(right, nullptr, 10);
 
         filter myfilter(left_rel, left_col, operation_type, literal);
         this->filters.add_back(myfilter);
       } else {
         // e.g 1.4 (relation.column) - 100% join (but can be same relation!!!)
-        long right_rel =
-            std::strtol(strtok_r(right, ".", &buffr3), nullptr, 10);
-        long right_col = std::strtol(buffr3, nullptr, 10);
+        int32_t right_rel =
+            (int32_t)std::strtol(strtok_r(right, ".", &buffr3), nullptr, 10);
+        int32_t right_col = (int32_t)std::strtol(buffr3, nullptr, 10);
 
         join myjoin(left_rel, left_col, operation_type, right_rel, right_col);
         this->joins.add_back(myjoin);
@@ -136,8 +138,9 @@ void QueryExec::parse_selections(char* selections) {
     char* rel = strtok_r(selection, ".", &buffr2);
     char* col = buffr2;
 
-    this->projections.add_back(project_rel{(int)std::strtol(rel, nullptr, 10),
-                                           (int)std::strtol(col, nullptr, 10)});
+    this->projections.add_back(
+        project_rel{(int32_t)std::strtol(rel, nullptr, 10),
+                    (int32_t)std::strtol(col, nullptr, 10)});
 
     selections = nullptr;
   }
@@ -147,7 +150,7 @@ void QueryExec::parse_selections(char* selections) {
 
 void QueryExec::initialize_stats() {
   for (size_t i = 0; i < rel_names.getSize(); i++) {
-    int64_t actual_rel = this->rel_names[i];
+    int32_t actual_rel = this->rel_names[i];
     this->rel_stats[i] = new statistics[rel_mmap[actual_rel].cols];
     for (size_t j = 0; j < rel_mmap[actual_rel].cols; j++) {
       this->rel_stats[i][j].l = rel_mmap[actual_rel].stats[j].l;
@@ -202,12 +205,12 @@ bool QueryExec::isConnected(simple_vector<join>& joins_order,
 //-----------------------------------------------------------------------------------------
 
 uint64_t QueryExec::calculate_cost(size_t index) {
-  int64_t r_rel = this->joins[index].left_rel;
-  int64_t r_col = this->joins[index].left_col;
-  int64_t s_rel = this->joins[index].right_rel;
-  int64_t s_col = this->joins[index].right_col;
-  int64_t actual_r = this->rel_names[r_rel];
-  int64_t actual_s = this->rel_names[s_rel];
+  int32_t r_rel = this->joins[index].left_rel;
+  int32_t r_col = this->joins[index].left_col;
+  int32_t s_rel = this->joins[index].right_rel;
+  int32_t s_col = this->joins[index].right_col;
+  int32_t actual_r = this->rel_names[r_rel];
+  int32_t actual_s = this->rel_names[s_rel];
   uint64_t numerator, denominator, res;
 
   // Self-Join (e.g 0 0 | 0.1=1.1...)
@@ -235,11 +238,11 @@ uint64_t QueryExec::calculate_cost(size_t index) {
 
 //-----------------------------------------------------------------------------------------
 
-void QueryExec::update_stats(size_t index, int flag) {
+void QueryExec::update_stats(size_t index, int32_t flag) {
   if (flag == 0) {
-    int64_t rel = this->filters[index].rel;
-    int64_t actual_rel = this->rel_names[rel];
-    int64_t col = this->filters[index].col;
+    int32_t rel = this->filters[index].rel;
+    int32_t actual_rel = this->rel_names[rel];
+    int32_t col = this->filters[index].col;
     uint64_t lit = this->filters[index].literal;
 
     if (filtered[rel].getSize() == 0 || rel_stats[rel][col].f == 0 ||
@@ -265,7 +268,7 @@ void QueryExec::update_stats(size_t index, int flag) {
         }
 
       for (size_t i = 0; i < rel_mmap[actual_rel].cols; i++)
-        if ((int64_t)i != col) {
+        if ((int32_t)i != col) {
           double base = (1 - ((double)rel_stats[rel][col].f / prev_f));
           double power = ((double)rel_stats[rel][i].f / rel_stats[rel][i].d);
           double res = pow(base, power);
@@ -284,13 +287,13 @@ void QueryExec::update_stats(size_t index, int flag) {
 
       // Filter σ_A>k
       if (this->filters[index].op == operators::GREATER) {
-        if ((uint64_t)lit < rel_stats[rel][col].l) lit = rel_stats[rel][col].l;
+        if (lit < rel_stats[rel][col].l) lit = rel_stats[rel][col].l;
         rel_stats[rel][col].l = lit;
       }
 
       // Filter σ_A<k
       if (this->filters[index].op == operators::LESS) {
-        if ((uint64_t)lit > rel_stats[rel][col].u) lit = rel_stats[rel][col].u;
+        if (lit > rel_stats[rel][col].u) lit = rel_stats[rel][col].u;
         rel_stats[rel][col].u = lit;
       }
 
@@ -302,7 +305,7 @@ void QueryExec::update_stats(size_t index, int flag) {
            ((double)prev_u - prev_l));
 
       for (size_t i = 0; i < rel_mmap[actual_rel].cols; i++)
-        if ((int64_t)i != col) {
+        if ((int32_t)i != col) {
           double base = (1 - ((double)rel_stats[rel][col].f / prev_f));
           double power = ((double)rel_stats[rel][i].f / rel_stats[rel][i].d);
           double res = pow(base, power);
@@ -314,12 +317,12 @@ void QueryExec::update_stats(size_t index, int flag) {
     }
   }
   if (flag == 1) {
-    int64_t r_rel = this->joins[index].left_rel;
-    int64_t r_col = this->joins[index].left_col;
-    int64_t s_rel = this->joins[index].right_rel;
-    int64_t s_col = this->joins[index].right_col;
-    int64_t actual_r = this->rel_names[r_rel];
-    int64_t actual_s = this->rel_names[s_rel];
+    int32_t r_rel = this->joins[index].left_rel;
+    int32_t r_col = this->joins[index].left_col;
+    int32_t s_rel = this->joins[index].right_rel;
+    int32_t s_col = this->joins[index].right_col;
+    int32_t actual_r = this->rel_names[r_rel];
+    int32_t actual_s = this->rel_names[s_rel];
 
     if (joined[r_rel].getSize() == 0 || joined[s_rel].getSize() == 0 ||
         rel_stats[r_rel][r_col].f == 0 || rel_stats[s_rel][s_col].f == 0 ||
@@ -351,7 +354,7 @@ void QueryExec::update_stats(size_t index, int flag) {
       rel_stats[r_rel][r_col].d = rel_stats[s_rel][s_col].d = (uint64_t)res;
 
       for (size_t i = 0; i < rel_mmap[actual_r].cols; i++)
-        if ((int64_t)i != r_col && (int64_t)i != s_col) {
+        if ((int32_t)i != r_col && (int32_t)i != s_col) {
           double base = (1 - ((double)rel_stats[r_rel][r_col].f / prev_f));
           double power =
               ((double)rel_stats[r_rel][i].f / rel_stats[r_rel][i].d);
@@ -371,7 +374,7 @@ void QueryExec::update_stats(size_t index, int flag) {
           (rel_stats[r_rel][r_col].u - rel_stats[r_rel][r_col].l + 1);
 
       for (size_t i = 0; i < rel_mmap[actual_r].cols; i++)
-        if ((int64_t)i != r_col)
+        if ((int32_t)i != r_col)
           rel_stats[r_rel][i].f = rel_stats[r_rel][r_col].f;
     }
 
@@ -397,7 +400,7 @@ void QueryExec::update_stats(size_t index, int flag) {
           (upper - lower + 1);
 
       for (size_t i = 0; i < rel_mmap[actual_r].cols; i++)
-        if ((int64_t)i != r_col) {
+        if ((int32_t)i != r_col) {
           uint64_t prev_f_c = rel_stats[r_rel][i].f;
           uint64_t prev_d_c = rel_stats[r_rel][i].d;
           rel_stats[r_rel][i].f = rel_stats[r_rel][r_col].f;
@@ -410,7 +413,7 @@ void QueryExec::update_stats(size_t index, int flag) {
         }
 
       for (size_t i = 0; i < rel_mmap[actual_s].cols; i++)
-        if ((int64_t)i != s_col) {
+        if ((int32_t)i != s_col) {
           uint64_t prev_f_c = rel_stats[s_rel][i].f;
           uint64_t prev_d_c = rel_stats[s_rel][i].d;
           rel_stats[s_rel][i].f = rel_stats[r_rel][r_col].f;
@@ -431,7 +434,7 @@ void QueryExec::do_query() {
   const size_t filter_count = this->filters.getSize();
   const size_t joins_count = this->joins.getSize();
 
-  for (size_t i = 0; i < 4; i++) {
+  for (int32_t i = 0; i < 4; i++) {
     rel_is_filtered[i] = false;
     rel_is_joined[i] = false;
   }
@@ -453,8 +456,8 @@ void QueryExec::do_query() {
   for (size_t i = 0; i < joins_count; i++) {
     // swap relations so that the left is always the one that's joined
     if (rel_is_joined[joins[i].left_rel] == false) {
-      int64_t temp = joins[i].left_rel;
-      int64_t temp_col = joins[i].left_col;
+      int32_t temp = joins[i].left_rel;
+      int32_t temp_col = joins[i].left_col;
       joins[i].left_rel = joins[i].right_rel;
       joins[i].left_col = joins[i].right_col;
       joins[i].right_rel = temp;
@@ -473,14 +476,14 @@ void QueryExec::do_query() {
 //-----------------------------------------------------------------------------------------
 
 void QueryExec::filter_exec(size_t index) {
-  int64_t rel = this->filters[index].rel;
-  int64_t actual_rel = this->rel_names[rel];
+  int32_t rel = this->filters[index].rel;
+  int32_t actual_rel = this->rel_names[rel];
 
-  int64_t col = this->filters[index].col;
-  int64_t lit = this->filters[index].literal;
+  int32_t col = this->filters[index].col;
+  int32_t lit = this->filters[index].literal;
   operators operation_type = this->filters[index].op;
 
-  simple_vector<int> new_filtered;
+  simple_vector<int32_t> new_filtered;
 
   // Relation hasn't been used in a filter predicate before
   if (rel_is_filtered[rel] == false) {
@@ -490,15 +493,15 @@ void QueryExec::filter_exec(size_t index) {
     for (uint64_t row = 0; row < rel_mmap[actual_rel].rows; row++) {
       switch (operation_type) {
         case operators::EQ:
-          if ((int64_t)rel_mmap[actual_rel].colptr[col][row] == lit)
+          if ((int32_t)rel_mmap[actual_rel].colptr[col][row] == lit)
             new_filtered.add_back(row);
           break;
         case operators::GREATER:
-          if ((int64_t)rel_mmap[actual_rel].colptr[col][row] > lit)
+          if ((int32_t)rel_mmap[actual_rel].colptr[col][row] > lit)
             new_filtered.add_back(row);
           break;
         case operators::LESS:
-          if ((int64_t)rel_mmap[actual_rel].colptr[col][row] < lit)
+          if ((int32_t)rel_mmap[actual_rel].colptr[col][row] < lit)
             new_filtered.add_back(row);
           break;
         default:
@@ -508,18 +511,18 @@ void QueryExec::filter_exec(size_t index) {
     }
   } else {
     for (size_t i = 0; i < filtered[rel].getSize(); i++) {
-      int64_t curr_row = filtered[rel][i];
+      int32_t curr_row = filtered[rel][i];
       switch (operation_type) {
         case operators::EQ:
-          if ((int64_t)rel_mmap[actual_rel].colptr[col][curr_row] == lit)
+          if ((int32_t)rel_mmap[actual_rel].colptr[col][curr_row] == lit)
             new_filtered.add_back(curr_row);
           break;
         case operators::GREATER:
-          if ((int64_t)rel_mmap[actual_rel].colptr[col][curr_row] > lit)
+          if ((int32_t)rel_mmap[actual_rel].colptr[col][curr_row] > lit)
             new_filtered.add_back(curr_row);
           break;
         case operators::LESS:
-          if ((int64_t)rel_mmap[actual_rel].colptr[col][curr_row] < lit)
+          if ((int32_t)rel_mmap[actual_rel].colptr[col][curr_row] < lit)
             new_filtered.add_back(curr_row);
           break;
         default:
@@ -535,19 +538,19 @@ void QueryExec::filter_exec(size_t index) {
 //-----------------------------------------------------------------------------------------
 
 void QueryExec::do_join(size_t join_index) {
-  int64_t rel_r = joins[join_index].left_rel;
-  int64_t col_r = joins[join_index].left_col;
-  int64_t rel_s = joins[join_index].right_rel;
-  int64_t col_s = joins[join_index].right_col;
-  int64_t actual_rel_r = this->rel_names[rel_r];
-  int64_t actual_rel_s = this->rel_names[rel_s];
+  int32_t rel_r = joins[join_index].left_rel;
+  int32_t col_r = joins[join_index].left_col;
+  int32_t rel_s = joins[join_index].right_rel;
+  int32_t col_s = joins[join_index].right_col;
+  int32_t actual_rel_r = this->rel_names[rel_r];
+  int32_t actual_rel_s = this->rel_names[rel_s];
 
   memory_map mmap_r = rel_mmap[actual_rel_r];
   memory_map mmap_s = rel_mmap[actual_rel_s];
 
-  simple_vector<int> new_joined[] = {simple_vector<int>{}, simple_vector<int>{},
-                                     simple_vector<int>{},
-                                     simple_vector<int>{}};
+  simple_vector<int32_t> new_joined[] = {
+      simple_vector<int32_t>{}, simple_vector<int32_t>{},
+      simple_vector<int32_t>{}, simple_vector<int32_t>{}};
 
   size_t relr_size;
   size_t rels_size;
@@ -564,15 +567,15 @@ void QueryExec::do_join(size_t join_index) {
       relr_size = filtered[rel_r].getSize();
       rtuples = new tuple[relr_size];
       for (size_t i = 0; i < relr_size; i++) {
-        int row_id = filtered[rel_r][i];
+        int32_t row_id = filtered[rel_r][i];
         // value, rowid
-        rtuples[i] = {(int)mmap_r.colptr[col_r][row_id], (int)row_id};
+        rtuples[i] = {(int32_t)mmap_r.colptr[col_r][row_id], (int32_t)row_id};
       }
     } else {
       relr_size = mmap_r.rows;
       rtuples = new tuple[relr_size];
       for (size_t i = 0; i < relr_size; i++) {
-        rtuples[i] = {(int)mmap_r.colptr[col_r][i], (int)i};
+        rtuples[i] = {(int32_t)mmap_r.colptr[col_r][i], (int32_t)i};
       }
     }
 
@@ -580,14 +583,14 @@ void QueryExec::do_join(size_t join_index) {
       rels_size = filtered[rel_s].getSize();
       stuples = new tuple[rels_size];
       for (size_t i = 0; i < rels_size; i++) {
-        int row_id = filtered[rel_s][i];
-        stuples[i] = {(int)mmap_s.colptr[col_s][row_id], (int)row_id};
+        int32_t row_id = filtered[rel_s][i];
+        stuples[i] = {(int32_t)mmap_s.colptr[col_s][row_id], (int32_t)row_id};
       }
     } else {
       rels_size = mmap_s.rows;
       stuples = new tuple[rels_size];
       for (size_t i = 0; i < rels_size; i++) {
-        stuples[i] = {(int)mmap_s.colptr[col_s][i], (int)i};
+        stuples[i] = {(int32_t)mmap_s.colptr[col_s][i], (int32_t)i};
       }
     }
 
@@ -607,7 +610,7 @@ void QueryExec::do_join(size_t join_index) {
     delete[] res.r;
 
   } else {
-    // if r is in joined intmds and s isn't
+    // if r is in joined int32_tmds and s isn't
     // join using existing join result
     // the left rel is always the one thats joined if only 1/2 is joined
     if (rel_is_joined[rel_r] && rel_is_joined[rel_s] == false) {
@@ -616,8 +619,8 @@ void QueryExec::do_join(size_t join_index) {
       relr_size = joined[rel_r].getSize();
       rtuples = new tuple[relr_size];
       for (size_t i = 0; i < relr_size; i++) {
-        int row_id = joined[rel_r][i];
-        rtuples[i] = {(int)mmap_r.colptr[col_r][row_id], (int)i};
+        int32_t row_id = joined[rel_r][i];
+        rtuples[i] = {(int32_t)mmap_r.colptr[col_r][row_id], (int32_t)i};
       }
 
       // create tuples for s
@@ -625,15 +628,15 @@ void QueryExec::do_join(size_t join_index) {
         rels_size = filtered[rel_s].getSize();
         stuples = new tuple[rels_size];
         for (size_t i = 0; i < rels_size; i++) {
-          int row_id = filtered[rel_s][i];
+          int32_t row_id = filtered[rel_s][i];
           // value, rowid
-          stuples[i] = {(int)mmap_s.colptr[col_s][row_id], (int)row_id};
+          stuples[i] = {(int32_t)mmap_s.colptr[col_s][row_id], (int32_t)row_id};
         }
       } else {
         rels_size = mmap_s.rows;
         stuples = new tuple[rels_size];
         for (size_t i = 0; i < rels_size; i++) {
-          stuples[i] = {(int)mmap_s.colptr[col_s][i], (int)i};
+          stuples[i] = {(int32_t)mmap_s.colptr[col_s][i], (int32_t)i};
         }
       }
 
@@ -648,7 +651,7 @@ void QueryExec::do_join(size_t join_index) {
         for (size_t i = 0; i < r.getSize(); i++) {
           new_joined[rel_s].add_back(r[i].rowid_2);
           for (size_t j = 0; j < rel_names.getSize(); j++) {
-            if ((int64_t)j != rel_s && joined[j].getSize() > 0) {
+            if ((int32_t)j != rel_s && joined[j].getSize() > 0) {
               new_joined[j].add_back(joined[j][r[i].rowid_1]);
             }
           }
@@ -659,14 +662,14 @@ void QueryExec::do_join(size_t join_index) {
 
     } else if (rel_is_joined[rel_r] && rel_is_joined[rel_s]) {
       for (size_t i = 0; i < joined[rel_r].getSize(); i++) {
-        int64_t row_id_r = joined[rel_r][i];
-        int64_t row_id_s = joined[rel_s][i];
+        int32_t row_id_r = joined[rel_r][i];
+        int32_t row_id_s = joined[rel_s][i];
         if (mmap_r.colptr[col_r][row_id_r] == mmap_s.colptr[col_s][row_id_s]) {
           new_joined[rel_r].add_back(row_id_r);
           new_joined[rel_s].add_back(row_id_s);
 
           for (size_t k = 0; k < rel_names.getSize(); k++) {
-            if ((int64_t)k != rel_s && (int64_t)k != rel_r &&
+            if ((int32_t)k != rel_s && (int32_t)k != rel_r &&
                 joined[k].getSize() > 0) {
               new_joined[k].add_back(joined[k][i]);
             }
@@ -684,11 +687,11 @@ void QueryExec::do_join(size_t join_index) {
 //-----------------------------------------------------------------------------------------
 
 void QueryExec::checksum() {
-  int64_t curr_rel;
-  int64_t curr_col;
-  int64_t curr_row;
+  int32_t curr_rel;
+  int32_t curr_col;
+  int32_t curr_row;
   uint64_t sum;
-  int64_t actual_rel;
+  int32_t actual_rel;
 
   QueryResults& qr = qres[qindex];
 

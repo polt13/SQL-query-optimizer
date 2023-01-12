@@ -7,17 +7,14 @@
 
 /* Type definition for a tuple */
 class tuple {
-  int key;      // value (R.a)
-  int payload;  // rowID
+  int32_t key;      // value (R.a)
+  int32_t payload;  // rowID
 
  public:
-  int getKey() { return key; }
-  int getPayload() { return payload; }
+  int32_t getKey() { return key; }
+  int32_t getPayload() { return payload; }
 
-  tuple(int key, int payload) {
-    this->key = key;
-    this->payload = payload;
-  }
+  tuple(int32_t key, int32_t payload) : key{key}, payload{payload} {}
 
   tuple() = default;
 };
@@ -28,14 +25,11 @@ class tuple {
  */
 class relation {
   tuple *tuples;
-  int64_t num_tuples;
+  int32_t num_tuples;
 
  public:
-  relation(tuple *tuples, int64_t num_tuples) {
-    this->num_tuples = num_tuples;
-    this->tuples = tuples;
-  }
-
+  relation(tuple *tuples, int32_t num_tuples)
+      : tuples{tuples}, num_tuples{num_tuples} {}
 
   relation(const relation &other) {
     num_tuples = other.num_tuples;
@@ -46,14 +40,14 @@ class relation {
 
   ~relation() { delete[] tuples; }
 
-  tuple &operator[](int64_t index) { return tuples[index]; }
+  tuple &operator[](int32_t index) { return tuples[index]; }
 
-  int64_t getAmount() { return num_tuples; }
+  int32_t getAmount() { return num_tuples; }
 };
 
 struct result_item {
-  int rowid_1;
-  int rowid_2;
+  int32_t rowid_1;
+  int32_t rowid_2;
 };
 
 struct result {
@@ -70,14 +64,14 @@ struct result {
 
   result(const result &other) : pairs{other.pairs} {}
 
-  result_item &operator[](int64_t index) { return pairs[index]; }
+  result_item &operator[](int32_t index) { return pairs[index]; }
 };
 
 struct result_mt {
   result *r;
-  int subresult_count;  // how many different results have been created
+  int32_t subresult_count;  // how many different results have been created
   // avoid having to join them in one
-  result_mt(result *r, int subresult_count)
+  result_mt(result *r, int32_t subresult_count)
       : r{r}, subresult_count{subresult_count} {}
 };
 

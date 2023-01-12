@@ -6,8 +6,8 @@
 
 extern JobScheduler js;
 
-result_mt PartitionedHashJoin(relation& r, relation& s, int64_t forceDepth,
-                              int64_t bits_pass1, int64_t bits_pass2) {
+result_mt PartitionedHashJoin(relation& r, relation& s, int forceDepth,
+                              int bits_pass1, int bits_pass2) {
   // partitioning phase
   Partitioner rpartitioner, spartitioner;
 
@@ -28,7 +28,7 @@ result_mt PartitionedHashJoin(relation& r, relation& s, int64_t forceDepth,
     hashTable** partitionsHT = new hashTable*[partitions];
 
     // build phase
-    for (int64_t i = 0; i < partitions; i++) {
+    for (int i = 0; i < partitions; i++) {
       int64_t entries = (*rHist)[i];
 
       int64_t start = rpsum[i];
@@ -48,7 +48,7 @@ result_mt PartitionedHashJoin(relation& r, relation& s, int64_t forceDepth,
 
     result* thread_results = new result[partitions];
 
-    for (int64_t j = 0; j < partitions; j++) {
+    for (int j = 0; j < partitions; j++) {
       int64_t start = spsum[j];
       int64_t end = (j < (partitions - 1)) ? (spsum[j + 1]) : (s_.getAmount());
 
@@ -58,7 +58,7 @@ result_mt PartitionedHashJoin(relation& r, relation& s, int64_t forceDepth,
 
     js.wait_all();
 
-    for (int64_t i = 0; i < partitions; i++) delete partitionsHT[i];
+    for (int i = 0; i < partitions; i++) delete partitionsHT[i];
     delete[] partitionsHT;
 
     return result_mt{thread_results, (int)partitions};
@@ -79,7 +79,7 @@ result_mt PartitionedHashJoin(relation& r, relation& s, int64_t forceDepth,
 
     int64_t per_thread = s_entries / THREAD_COUNT;
 
-    for (int64_t i = 0; i < THREAD_COUNT; i++) {
+    for (int i = 0; i < THREAD_COUNT; i++) {
       int64_t start = i * per_thread;
       int64_t end = (i + 1) * per_thread;
       if ((i == THREAD_COUNT - 1) && (end < s_entries)) end = s_entries;

@@ -16,13 +16,12 @@ class HistogramJob : public Job {
   size_t start;
   size_t end;
   Histogram*& h;
-  int64_t bits;
+  int bits;
 
  public:
   void run() { calcHist(r, start, end, h, bits); }
 
-  HistogramJob(relation& r, size_t start, size_t end, Histogram*& h,
-               int64_t bits)
+  HistogramJob(relation& r, size_t start, size_t end, Histogram*& h, int bits)
       : r{r}, start{start}, end{end}, h{h}, bits{bits} {}
 };
 

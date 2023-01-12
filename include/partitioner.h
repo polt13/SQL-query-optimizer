@@ -11,9 +11,9 @@ class Partitioner {
   //  how many partition phases the R relation went through
   int64_t partitioningLevel;
 
-  relation partition1(relation&, int64_t = USE_BITS);
+  relation partition1(relation&, int = USE_BITS);
 
-  relation partition2(relation&, int64_t = USE_BITS_NEXT);
+  relation partition2(relation&, int = USE_BITS_NEXT);
 
  public:
   static int64_t hash1(uint64_t, uint64_t);
@@ -25,8 +25,7 @@ class Partitioner {
 
   // optionally : force partition-1 pass or 2 passes, change bits used for
   // partitioning
-  relation partition(relation&, int64_t = -1, int64_t = USE_BITS,
-                     int64_t = USE_BITS_NEXT);
+  relation partition(relation&, int = -1, int = USE_BITS, int = USE_BITS_NEXT);
 
   Histogram* getHistogram() const;
 
@@ -34,8 +33,8 @@ class Partitioner {
 };
 
 /* Partitioned Hash Join */
-result_mt PartitionedHashJoin(relation&, relation&, int64_t = -1,
-                              int64_t = USE_BITS, int64_t = USE_BITS_NEXT);
+result_mt PartitionedHashJoin(relation&, relation&, int = -1, int = USE_BITS,
+                              int = USE_BITS_NEXT);
 
 void joinBuckets(relation&, int64_t, int64_t, hashTable*, result&);
 

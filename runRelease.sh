@@ -1,7 +1,7 @@
 chmod +x run.sh
 chmod +x runTestharness.sh
-cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake -B build -DCMAKE_BUILD_TYPE=Release > /dev/null
 cd build
-make
+make > /dev/null
 cd .. 
 ./runTestharness.sh

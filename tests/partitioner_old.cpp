@@ -16,7 +16,7 @@ int64_t Partitioner::hash1(uint64_t key, uint64_t n) {
   return key & (num - 1);
 }
 
-relation Partitioner::partition1(relation& r, int64_t bits_pass1) {
+relation Partitioner::partition1(relation& r, int bits_pass1) {
   int64_t r_entries = r.getAmount();
   // if partitioning is needed at least once
   // std::printf("\nOne pass needed\n");
@@ -57,7 +57,7 @@ relation Partitioner::partition1(relation& r, int64_t bits_pass1) {
   return r2;
 }
 
-relation Partitioner::partition2(relation& r2, int64_t bits_pass2) {
+relation Partitioner::partition2(relation& r2, int bits_pass2) {
   // std::printf("Second pass needed\n");
   partitioningLevel = 2;
 
@@ -96,8 +96,8 @@ relation Partitioner::partition2(relation& r2, int64_t bits_pass2) {
   return r3;
 }
 
-relation Partitioner::partition(relation& r, int64_t force_partition_depth,
-                                int64_t bits_pass1, int64_t bits_pass2) {
+relation Partitioner::partition(relation& r, int force_partition_depth,
+                                int bits_pass1, int bits_pass2) {
   if (force_partition_depth == 0) {
     return r;
   } else if (force_partition_depth == 1) {

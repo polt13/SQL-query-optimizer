@@ -18,13 +18,13 @@ int64_t Partitioner::hash1(uint64_t key, uint64_t n) {
   return key & (num - 1);
 }
 
-relation Partitioner::partition1(relation& r, int64_t bits_pass1) {
+relation Partitioner::partition1(relation& r, int bits_pass1) {
   int64_t r_entries = r.getAmount();
   // if partitioning is needed at least once
   // std::printf("\nOne pass needed\n");
   partitioningLevel = 1;
 
-  int64_t partitions = 1 << bits_pass1;
+  int partitions = 1 << bits_pass1;
 
   // main hist
   hist = new Histogram{partitions};
@@ -33,7 +33,7 @@ relation Partitioner::partition1(relation& r, int64_t bits_pass1) {
 
   int64_t per_thread = r_entries / THREAD_COUNT;
 
-  for (int64_t i = 0; i < THREAD_COUNT; i++) {
+  for (int i = 0; i < THREAD_COUNT; i++) {
     int64_t start = i * per_thread;
     int64_t end = (i + 1) * per_thread;
     if ((i == THREAD_COUNT - 1) && (end < r_entries)) end = r_entries;
@@ -42,7 +42,7 @@ relation Partitioner::partition1(relation& r, int64_t bits_pass1) {
 
   js.wait_all();
 
-  for (int64_t i = 0; i < THREAD_COUNT; i++) {
+  for (int i = 0; i < THREAD_COUNT; i++) {
     Histogram& histogram_i = *hvector[i];
     for (int64_t j = 0; j < partitions; j++) {
       (*hist)[j] += histogram_i[j];
@@ -76,7 +76,7 @@ relation Partitioner::partition1(relation& r, int64_t bits_pass1) {
   return r2;
 }
 
-relation Partitioner::partition2(relation& r2, int64_t bits_pass2) {
+relation Partitioner::partition2(relation& r2, int bits_pass2) {
   // std::printf("Second pass needed\n");
   partitioningLevel = 2;
 
@@ -85,7 +85,7 @@ relation Partitioner::partition2(relation& r2, int64_t bits_pass2) {
   // discard old histogram, create a new using n2
   Histogram* oldHist = hist;
 
-  int64_t partitions2 = 1 << bits_pass2;
+  int partitions2 = 1 << bits_pass2;
 
   hist = new Histogram(partitions2);
 
@@ -95,7 +95,7 @@ relation Partitioner::partition2(relation& r2, int64_t bits_pass2) {
 
   int64_t per_thread = r2_entries / THREAD_COUNT;
 
-  for (int64_t i = 0; i < THREAD_COUNT; i++) {
+  for (int i = 0; i < THREAD_COUNT; i++) {
     int64_t start = i * per_thread;
     int64_t end = (i + 1) * per_thread;
     if ((i == THREAD_COUNT - 1) && (end < r2_entries)) end = r2_entries;
@@ -104,7 +104,7 @@ relation Partitioner::partition2(relation& r2, int64_t bits_pass2) {
 
   js.wait_all();
 
-  for (int64_t i = 0; i < THREAD_COUNT; i++) {
+  for (int i = 0; i < THREAD_COUNT; i++) {
     Histogram& histogram_i = *hvector[i];
     for (int64_t j = 0; j < partitions2; j++) {
       (*hist)[j] += histogram_i[j];
@@ -136,8 +136,8 @@ relation Partitioner::partition2(relation& r2, int64_t bits_pass2) {
   return r3;
 }
 
-relation Partitioner::partition(relation& r, int64_t force_partition_depth,
-                                int64_t bits_pass1, int64_t bits_pass2) {
+relation Partitioner::partition(relation& r, int force_partition_depth,
+                                int bits_pass1, int bits_pass2) {
   if (force_partition_depth == 0) {
     return r;
   } else if (force_partition_depth == 1) {
@@ -153,9 +153,9 @@ relation Partitioner::partition(relation& r, int64_t force_partition_depth,
 
   relation r2 = partition1(r, bits_pass1);
 
-  int64_t partitions = hist->getSize();
+  int partitions = hist->getSize();
 
-  for (int64_t i = 0; i < partitions; i++) {
+  for (int i = 0; i < partitions; i++) {
     if (((*hist)[i] * sizeof(tuple)) > L2_SIZE) {
       return partition2(r2, bits_pass2);
     }

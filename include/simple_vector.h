@@ -83,7 +83,7 @@ class simple_vector {
     // if removing last element do nothing
     if (indx < size - 1)
       std::memmove(objarr + indx, objarr + indx + 1,
-                    (size - indx - 1) * sizeof(T));
+                   (size - indx - 1) * sizeof(T));
 
     size--;
   }

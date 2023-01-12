@@ -12,7 +12,7 @@ class JobScheduler {
   pthread_cond_t eq;
   pthread_cond_t jobs_done;
   simple_queue<Job*> job_pool;
-  int busy;
+  int32_t busy;
 
   static void* do_job(void* _this) {
     JobScheduler* obj = (JobScheduler*)_this;
@@ -42,13 +42,13 @@ class JobScheduler {
   }
 
  public:
-  JobScheduler(int threads) {
+  JobScheduler(int32_t threads) {
     total_threads = new pthread_t[threads];
     busy = 0;
     pthread_cond_init(&eq, nullptr);
     pthread_cond_init(&jobs_done, nullptr);
     pthread_mutex_init(&qmtx, nullptr);
-    for (int i = 0; i < threads; i++)
+    for (int32_t i = 0; i < threads; i++)
       pthread_create(total_threads + i, nullptr, do_job, this);
   }
 

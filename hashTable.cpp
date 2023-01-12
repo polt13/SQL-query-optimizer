@@ -21,7 +21,7 @@ bucket::bucket() : occupied{false}, Bitmap{} {}
 // ------------------------------------------------------------------
 
 bucket *hashTable::getBucket(int64_t index) const {
-  if ((int64_t)index >= this->num_buckets) return nullptr;
+  if (index >= this->num_buckets) return nullptr;
   return &(this->buckets[index]);
 }
 
@@ -67,7 +67,7 @@ void hashTable::insert(tuple *t) {
   } else {
     // Check if Neighbourhood is FULL and Check for Duplicates
     flag = true;  // Assume it's full
-    for (int64_t i = 0; i < NBHD_SIZE; i++) {
+    for (int i = 0; i < NBHD_SIZE; i++) {
       if (this->buckets[hashVal].getBitmapIndex(i) == false)
         flag = false;  // Neighbourhood NOT full - Empty slot FOUND
       else {
@@ -127,7 +127,7 @@ void hashTable::insert(tuple *t) {
       if (k < 0) k = num_buckets + k;
 
       // Search NBHD_SIZE - 1
-      for (int64_t x = 0; x < NBHD_SIZE - 1; x++) {
+      for (int x = 0; x < NBHD_SIZE - 1; x++) {
         if (this->buckets[k].getBitmapIndex(x) == true) {
           flag = true;  // Element found
 
@@ -183,7 +183,7 @@ List *hashTable::findEntry(int64_t key) {
     }
 
   // Search inside neighbourhood
-  for (int64_t i = 0; i < NBHD_SIZE; i++)
+  for (int i = 0; i < NBHD_SIZE; i++)
     if (this->buckets[(hashVal + i) % num_buckets].getTuples().getLen() >
         0)  // so that we won't try to access mytuple if root is nullptr
       if (this->buckets[(hashVal + i) % num_buckets]
