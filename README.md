@@ -14,6 +14,7 @@
 ## Table of contents
 * [Requirements](#requirements)
 * [How To Run](#how-to-run)
+* [Application Report](https://github.com/polt13/JJ_Project/blob/master/Project_Report.pdf)
 * [Type Description](#type-description)
 * [Creating Relations](#creating-relations)
 * [Partitioning](#partitioning)
@@ -51,42 +52,13 @@ and `cstring` over `string.h` (the latter is useful because of `memmove`). Every
 
 ## How To Run 
 
-**Building:**
-
 When on the root directory of the project:
 
-  ```sh
-  cmake -B build
-  ```
-  
-```sh
-cd build
-```
+* `chmod +x runRelease.sh`
+
+* `./runRelease` -> Compiles and runs `runTestharness` with the defined workload.
  
-<!-- tsk -->
-  ```sh
-  make
-  ```
- 
-**If any of the above steps don't work, use `cmake . && make && cp Driver harness ./build`**
- 
-***
-
-**Testing with harness:**
-
-Having built the project, jump to the root directory of the project and make the scripts executable:
-<!-- tsk -->
-```sh
-chmod +x run.sh
-chmod +x runTestharness.sh
-````
-
-Then:
-
-<!-- tsk -->
-  ```sh
-  ./runTestharness.sh
-  ```
+**If the above steps don't work, use `cmake . && make && cp Driver harness ./build`**
  
 ***
 
