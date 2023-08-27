@@ -11,6 +11,15 @@
 </table>
 <br></br>
 
+## About the project
+
+The goal of the project is the development of an application that performs SQL queries to a database. Each query uses a number of relations on which different filters and joins are applied. 
+
+A very efficient way of optimizing database queries is through the use of Partitioned Hash Joins. Since joins tend to be some of the most computationally expensive operations when it comes to database queries, optimizing them can greatly speed up the execution of a program. The optimizer takes advantage of cache locality, partitioning and hash joins to achieve this.
+
+The step by step process is explained in detail <a href="Project_Report.pdf" class="">here</a>.
+
+
 ## Table of contents
 * [Requirements](#requirements)
 * [How To Run](#how-to-run)
